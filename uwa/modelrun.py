@@ -44,7 +44,8 @@ class SimParams:
         'nsteps':int, \
         'stoptime':float, \
         'cpevery':int, \
-        'dumpevery':int }
+        'dumpevery':int, \
+        'restartstep':int }
 
     def __init__(self, nsteps=None, stoptime=None, cpevery=1, dumpevery=1, \
      restartstep=None ):
