@@ -6,10 +6,11 @@ class ModelRun:
     '''A class to keep records about a StgDomain/Underworld Model Run, \
     including access to the underlying XML of the actual model'''
     def __init__(self, name, modelInputFiles, outputPath, logPath="./log",\
-     nproc=1):
+     cpReadPath=None, nproc=1):
         self.name = name
         self.modelInputFiles = modelInputFiles
         self.outputPath = outputPath
+        self.cpReadPath = cpReadPath
         self.logPath = logPath
         self.jobParams = JobParams(nproc) 
         # TODO: should the below actually be compulsory?
@@ -36,7 +37,8 @@ class SimParams:
         'nsteps':"maxTimeSteps", \
         'stoptime':"stopTime", \
         'cpevery':"checkpointEvery", \
-        'dumpevery':"dumpEvery" }
+        'dumpevery':"dumpEvery", \
+        'restartstep':"restartTimestep" }
 
     types = { \
         'nsteps':int, \
@@ -44,11 +46,15 @@ class SimParams:
         'cpevery':int, \
         'dumpevery':int }
 
-    def __init__(self, nsteps=None, stoptime=None, cpevery=1, dumpevery=1):
+    def __init__(self, nsteps=None, stoptime=None, cpevery=1, dumpevery=1, \
+     restartstep=None ):
+        #TODO: bout time for a class to manage these Stg Params, then can
+        # handle as Keyword Args
         self.nsteps = nsteps
         self.stoptime = stoptime
         self.cpevery = int(cpevery)
         self.dumpevery = int(dumpevery)
+        self.restartstep = restartstep
 
     def checkValidParams(self):
         check = (self.nsteps is not None) or (self.stoptime is not None)
@@ -233,6 +239,8 @@ def writeModelRunXML(modelRun, outputPath="", filename="", update=False, \
         modFile = etree.SubElement(filesList, 'inputFile')
         modFile.text = xmlFilename
     etree.SubElement(root, 'outputPath').text = modelRun.outputPath
+    if modelRun.cpReadPath:
+        etree.SubElement(root, 'cpReadPath').text = modelRun.cpReadPath
     modelRun.jobParams.writeInfoXML(root)
     if not modelRun.simParams:
         simParams = SimParams(0)
@@ -263,6 +271,8 @@ def analysisXMLGen(modelRun, filename="analysis.xml"):
     xmlDoc = etree.ElementTree(root)
     # Write key entries:
     stgxml.writeParam(root, 'outputPath', modelRun.outputPath, mt='replace')
+    if modelRun.cpReadPath:
+        stgxml.writeParam(root, 'checkpointReadPath', modelRun.cpReadPath, mt='replace')
     if modelRun.simParams:
         modelRun.simParams.writeStgDataXML(root)
     if not modelRun.fieldTests.fromXML:
