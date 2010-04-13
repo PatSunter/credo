@@ -10,10 +10,10 @@ import uwa.analysis
 
 #process input args
 
-#modelName, options = uwa.processInput( argv, argc )
+#modelName, options = uwa.processInput(argv, argc )
 # Keep allowing options file for now in default scripts:- though for a 
  # custom script, user could easily write their own
-#uwa.processOptionsFile( options, "./options.dat" )
+#uwa.processOptionsFile(options, "./options.dat" )
 
 # This is where we create the key data structure, the mRun.
  # It will be a key data structure storing info about the directories
@@ -29,7 +29,7 @@ outputPath = 'output'+os.sep+modelName
 expectedPath = 'expected'+os.sep+modelName
 nproc=1
 
-mRun = ModelRun( modelName, inputFiles, outputPath, nproc=nproc )
+mRun = ModelRun(modelName, inputFiles, outputPath, nproc=nproc )
 
 # TODO: responsibility of SystemTest class?
 createReference = False
@@ -38,37 +38,38 @@ standardFields = ['VelocityField','PressureField']
 runSteps=10
 
 if createReference:
-	mRun.outputPath = expectedPath
-	mRun.simParams = SimParams( nsteps=runSteps, cpevery=runSteps, dumpevery=0 )
-	mRun.cpFields = standardFields
+    mRun.outputPath = expectedPath
+    mRun.simParams = SimParams(nsteps=runSteps, cpevery=runSteps, dumpevery=0 )
+    mRun.cpFields = standardFields
 else:
-	mRun.simParams = SimParams( nsteps=runSteps, cpevery=0, dumpevery=0 )
-	mRun.fieldTests.testTimestep = runSteps
-	mRun.fieldTests.useReference = True
-	mRun.fieldTests.referencePath = expectedPath
-	defFieldTol = 1e-2
-	for fieldName in standardFields:
-		mRun.fieldTests.add( FieldTest(fieldName, tol=defFieldTol) )
+    mRun.simParams = SimParams(nsteps=runSteps, cpevery=0, dumpevery=0 )
+    mRun.fieldTests.testTimestep = runSteps
+    mRun.fieldTests.useReference = True
+    mRun.fieldTests.referencePath = expectedPath
+    defFieldTol = 1e-2
+    for fieldName in standardFields:
+        mRun.fieldTests.add(FieldTest(fieldName, tol=defFieldTol))
 
-uwa.modelrun.writeModelRunXML( mRun )
+uwa.modelrun.writeModelRunXML(mRun )
 
-# This will generate an additional XML to require StGermain/Underworld to do any requested
-# extra analysis (eg compare fields), and run for the appropriate number of timesteps etc.
-mRun.analysisXML = uwa.modelrun.analysisXMLGen( mRun )
+# This will generate an additional XML to require StGermain/Underworld to do
+# any requested extra analysis (eg compare fields), and run for the
+# appropriate number of timesteps etc.
+mRun.analysisXML = uwa.modelrun.analysisXMLGen(mRun )
 
-uwa.prepareOutputLogDirs( mRun.outputPath, mRun.logPath )
+uwa.prepareOutputLogDirs(mRun.outputPath, mRun.logPath )
 
 # This will run the model, and also save basic results (e.g. walltime)
-results = uwa.modelrun.runModel( mRun )
+results = uwa.modelrun.runModel(mRun )
 
 if not createReference:
-	# TODO: This step necessary since currently convergence files saved in directory of run
-	# may be better handled within the runModel
-	uwa.moveConvergenceResults( os.getcwd(), mRun.outputPath )
+    # TODO: This step necessary since currently convergence files saved
+    # in directory of run may be better handled within the runModel
+    uwa.moveConvergenceResults(os.getcwd(), mRun.outputPath )
 
-	results.fieldResults = uwa.analysis.testConvergence( mRun )
+    results.fieldResults = uwa.analysis.testConvergence(mRun )
 
-	uwa.modelresult.writeModelResultsXML( results, path=mRun.outputPath )
+    uwa.modelresult.writeModelResultsXML(results, path=mRun.outputPath )
 
-	#Now do any required post-processing, depending on type of script
-	uwa.cleanupOutputLogDirs( mRun.outputPath, mRun.logPath )
+    #Now do any required post-processing, depending on type of script
+    uwa.cleanupOutputLogDirs(mRun.outputPath, mRun.logPath )

@@ -37,37 +37,40 @@ print "Running all resolutions in resolution set:"
 print resSet
 
 for res in resSet:
-	mOutputPath = outputPath+os.sep+mrun.strRes(res)
+    mOutputPath = outputPath+os.sep+mrun.strRes(res)
 
-	mRun = mrun.ModelRun( modelName, inputFiles, mOutputPath, nproc=nproc )
+    mRun = mrun.ModelRun( modelName, inputFiles, mOutputPath, nproc=nproc )
 
-	customOpts = "--pluginData.appendToAnalysisFile=True "
-	customOpts += mrun.generateResOpts(res)
+    customOpts = "--pluginData.appendToAnalysisFile=True "
+    customOpts += mrun.generateResOpts(res)
 
-	# For analytic test, assume the user has specified what fields to analyse in the XML
-	# (In the background this will generate the flattened XML for the model
-	mRun.fieldTests.readFromStgXML( mRun.modelInputFiles )
-	# Set all field tolerances at once. Of course, should allow this to be over-ridden
-	mRun.fieldTests.setAllTols( defaultFieldTol )
+    # For analytic test, assume the user has specified what fields to analyse
+    # in the XML (In the background this will generate the flattened XML
+    # for the model
+    mRun.fieldTests.readFromStgXML( mRun.modelInputFiles )
+    # Set all field tolerances at once. Of course, should allow this to
+    # be over-ridden
+    mRun.fieldTests.setAllTols( defaultFieldTol )
 
-	mrun.writeModelRunXML( mRun )
+    mrun.writeModelRunXML( mRun )
 
-	# This will generate an additional XML to require StGermain/Underworld to do any requested
-	# extra analysis (eg compare fields), and run for the appropriate number of timesteps etc.
-	mRun.analysisXML = mrun.analysisXMLGen( mRun )
+    # This will generate an additional XML to require StGermain/Underworld
+    # to do any requested extra analysis (eg compare fields), and run 
+    # for the appropriate number of timesteps etc.
+    mRun.analysisXML = mrun.analysisXMLGen( mRun )
 
-	uwa.prepareOutputLogDirs( mRun.outputPath, mRun.logPath )
+    uwa.prepareOutputLogDirs( mRun.outputPath, mRun.logPath )
 
-	# This will run the model, and also save basic results (e.g. walltime)
-	results = mrun.runModel( mRun, customOpts )
+    # This will run the model, and also save basic results (e.g. walltime)
+    results = mrun.runModel( mRun, customOpts )
 
-	# TODO: This step necessary since currently convergence files saved in directory of run,
-	# may be better handled within the runModel
-	uwa.moveConvergenceResults( os.getcwd(), mRun.outputPath )
+    # TODO: This step necessary since currently convergence files saved
+    # in directory of run, may be better handled within the runModel
+    uwa.moveConvergenceResults( os.getcwd(), mRun.outputPath )
 
-	results.fieldResults = uwa.analysis.testConvergence( mRun )
+    results.fieldResults = uwa.analysis.testConvergence( mRun )
 
-	mres.writeModelResultsXML( results, path=mRun.outputPath )
+    mres.writeModelResultsXML( results, path=mRun.outputPath )
 
-	#Now do any required post-processing, depending on type of script
-	uwa.cleanupOutputLogDirs( mRun.outputPath, mRun.logPath )
+    #Now do any required post-processing, depending on type of script
+    uwa.cleanupOutputLogDirs( mRun.outputPath, mRun.logPath )
