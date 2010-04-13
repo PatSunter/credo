@@ -39,7 +39,7 @@ def main(argv):
 
         if val == "":
             print "UWA ModelResults XML Writer: Error with provided argument"\
-                "'%s', needs a value provided for the parameter to be"\
+                " '%s', needs a value provided for the parameter to be"\
                 " written\n" % param
             sys.exit(2)
 

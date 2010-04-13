@@ -66,8 +66,8 @@ def main(argv):
 
     for kw, val in assigned.iteritems():
         if val != True:
-            print "UWA ModelRun XML Writer: Error, necessary parameter "\
-                "'%s' not specified.\n" % kw
+            print "UWA ModelRun XML Writer: Error, necessary parameter"\
+                " '%s' not specified.\n" % kw
             print "Parameters that need to be assigned are:"
             print assigned.keys()
             sys.exit(2)
