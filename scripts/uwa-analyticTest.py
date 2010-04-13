@@ -27,6 +27,7 @@ opts, args = getopt.getopt(sys.argv[1:], "h", ["help"])
 #For now just copy all args as input files
 inputFiles = args
 modelName, ext = os.path.splitext(args[0])
+modelName += "-analyticTest"
 # Do the following live on an options struct?
 outputPath = 'output/'+modelName
 nproc=1
