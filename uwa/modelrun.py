@@ -29,69 +29,104 @@ class JobParams:
         jpNode = etree.SubElement(parentNode, 'jobParams')
         etree.SubElement(jpNode, 'nproc').text = str(self.nproc)
 
+class StgParamInfo:
+    '''A simple Class that keeps track of the type of a StgParam, and it's full
+    name'''
+    def __init__( self, stgName, pType, defVal ):
+        self.stgName = str(stgName)
+        assert isinstance(pType, type)
+        assert pType in [int,float,str,bool]
+        self.pType = pType
+        # Allow None as a special value, else the default value should be of
+        # correct type during construction
+        if defVal is not None:
+            assert isinstance(defVal, self.pType)
+        self.defVal = defVal
+
+    def checkType( self, value ):
+        if (value is not None) and (not isinstance(value, self.pType)):
+            raise ValueError("Tried to set StgParam \"%s\" to %s, of type %s,"\
+                "but this param is of type %s" % \
+                (self.stgName, str(value), str(type(value)), str(self.pType)))
+
+
 class SimParams:
     '''A class to keep records about the simulation parameters used for a
      StgDomain/Underworld Model Run, such as number of timesteps to run for'''
 
-    stgXMLMappings = { \
-        'nsteps':"maxTimeSteps", \
-        'stoptime':"stopTime", \
-        'cpevery':"checkpointEvery", \
-        'dumpevery':"dumpEvery", \
-        'restartstep':"restartTimestep" }
+    stgParamInfos = { \
+        'nsteps':StgParamInfo("maxTimeSteps", int, None), \
+        'stoptime':StgParamInfo("stopTime",float, None), \
+        'cpevery':StgParamInfo("checkpointEvery",int, 1), \
+        'dumpevery':StgParamInfo("dumpEvery",int, 1), \
+        'restartstep':StgParamInfo("restartTimestep",int, None) }
 
-    types = { \
-        'nsteps':int, \
-        'stoptime':float, \
-        'cpevery':int, \
-        'dumpevery':int, \
-        'restartstep':int }
+    def __init__(self, **kwargs):
 
-    def __init__(self, nsteps=None, stoptime=None, cpevery=1, dumpevery=1, \
-     restartstep=None ):
-        #TODO: bout time for a class to manage these Stg Params, then can
-        # handle as Keyword Args
-        self.nsteps = nsteps
-        self.stoptime = stoptime
-        self.cpevery = int(cpevery)
-        self.dumpevery = int(dumpevery)
-        self.restartstep = restartstep
+        for paramName, stgParamInfo in self.stgParamInfos.iteritems():
+            self.setParam(paramName, stgParamInfo.defVal)
+
+        # Set all parameters provided to init function
+        for param, val in kwargs.iteritems():
+            paramFound = False
+            # Allow the user to set by param name on this class, or actual name
+            if param in self.stgParamInfos.keys():
+                paramFound = True
+                self.setParam(param, val)
+            else:    
+                for paramName, stgParamInfo in self.stgParamInfos.iteritems():
+                    if param == stgParamInfo.stgName:
+                        paramFound = True
+                        self.setParam(param, val)
+                        break
+                    
+            if paramFound == False:        
+                valueErrorStr = "provided Sim Parameter %s not in allowed"\
+                    " list of parameters to set" % param
+                raise ValueError(valueErrorStr)
+
+    def setParam(self, paramName, val):    
+        assert paramName in self.stgParamInfos.keys()
+        self.__dict__[paramName] = val
+        self.stgParamInfos[paramName].checkType(val)
+
+    def getParam(self, paramName):    
+        return self.__dict__[paramName]
 
     def checkValidParams(self):
-        check = (self.nsteps is not None) or (self.stoptime is not None)
-        return check
+        if (self.nsteps is None) and (self.stoptime is None):
+            raise ValueError("neither nsteps nor stoptime set")
 
     def writeInfoXML(self, parentNode):
         '''Writes information about this class into an existing, open XML doc
          node, in a child list'''
         spNode = etree.SubElement(parentNode, 'simParams')
-        for param in self.stgXMLMappings:
+        for param in self.stgParamInfos:
             assert(param in self.__dict__)
             etree.SubElement(spNode, param).text = str(self.__dict__[param])
     
     def writeStgDataXML(self, xmlNode):
         '''Writes the parameters of this class as parameters in a StGermain
          XML file'''
-        for param, stgParamName in self.stgXMLMappings.iteritems():
-            assert(param in self.__dict__)
-            paramVal = self.__dict__[param]
-            if paramVal is not None:
-                stgxml.writeParam(xmlNode, stgParamName, paramVal,\
+        for paramName, stgParam in self.stgParamInfos.iteritems():
+            val = self.getParam(paramName)
+            if val is not None:
+                stgxml.writeParam(xmlNode, stgParam.stgName, val,\
                     mt='replace')
 
-    def readFromStgXML(self, inputFilesList):        
+    def readFromStgXML(self, inputFilesList):
+        '''Reads all the parameters of this class from a given StGermain 
+        set of input files'''
         ffile=stgxml.createFlattenedXML(inputFilesList)
-
-        # Necessary, because the parser will prefix this to tag names
         xmlDoc = etree.parse(ffile)
         stgRoot = xmlDoc.getroot()
-        stgNSText = stgxml.stgNSText
-
-        for param, stgXMLName in self.stgXMLMappings.iteritems():
+        for param, stgParam in self.stgParamInfos.iteritems():
             # some of these may be none, but is ok since will check below
-            self.__dict__[param] = stgxml.getParamValue(stgRoot, stgXMLName, self.types[param])
+            val = stgxml.getParamValue(stgRoot, stgParam.stgName,\
+                stgParam.pType)
+            self.setParam(param, val)
 
-        assert(self.checkValidParams())
+        self.checkValidParams()
         os.remove(ffile)
 
 
@@ -244,7 +279,7 @@ def writeModelRunXML(modelRun, outputPath="", filename="", update=False, \
         etree.SubElement(root, 'cpReadPath').text = modelRun.cpReadPath
     modelRun.jobParams.writeInfoXML(root)
     if not modelRun.simParams:
-        simParams = SimParams(0)
+        simParams = SimParams()
         simParams.readFromStgXML(modelRun.modelInputFiles)
         simParams.writeInfoXML(root)
     else:    
@@ -339,7 +374,7 @@ def runModel(modelRun, extraCmdLineOpts=None):
     # Pre-run checks for validity - e.g. at least one input file,
     # nproc is sensible value
     if (modelRun.simParams):
-        assert(modelRun.simParams.checkValidParams())
+        modelRun.simParams.checkValidParams()
 
     # Construct run line
     mpiPart = "%s -np %d " % (mpiCommand, modelRun.jobParams.nproc)
