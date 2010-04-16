@@ -47,10 +47,11 @@ for res in resSet:
     # For analytic test, assume the user has specified what fields to analyse
     # in the XML (In the background this will generate the flattened XML
     # for the model
-    mRun.fieldTests.readFromStgXML( mRun.modelInputFiles )
+    fTests = mRun.analysis['fieldTests']
+    fTests.readFromStgXML( mRun.modelInputFiles )
     # Set all field tolerances at once. Of course, should allow this to
     # be over-ridden
-    mRun.fieldTests.setAllTols( defaultFieldTol )
+    fTests.setAllTols( defaultFieldTol )
 
     mrun.writeModelRunXML( mRun )
 

@@ -37,10 +37,11 @@ mRun = mrun.ModelRun(modelName, inputFiles, outputPath, nproc=nproc)
 # For analytic test, assume the user has specified what fields to analyse
 # in the XML
 # (In the background this will generate the flattened XML for the model)
-mRun.fieldTests.readFromStgXML(mRun.modelInputFiles)
+fTests = mRun.analysis['fieldTests']
+fTests.readFromStgXML(mRun.modelInputFiles)
 # Set all field tolerances at once. Of course, should allow this to
 # be over-ridden
-mRun.fieldTests.setAllTols(defaultFieldTol)
+mRun.analysis['fieldTests'].setAllTols(defaultFieldTol)
 customOpts = "--pluginData.appendToAnalysisFile=True"
 
 mrun.writeModelRunXML(mRun)
@@ -57,8 +58,7 @@ results = mrun.runModel(mRun, customOpts)
 # TODO: This step necessary since currently convergence files saved in
 # directory of run, may be better handled within the runModel
 uwa.moveConvergenceResults(os.getcwd(), mRun.outputPath)
-
-results.fieldResults = uwa.analysis.testConvergence(mRun)
+results.fieldResults = uwa.analysis.testConvergence(fTests, mRun.outputPath)
 
 mres.writeModelResultsXML(results, path=mRun.outputPath)
 

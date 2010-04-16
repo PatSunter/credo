@@ -45,28 +45,6 @@ class UwaTestCase(unittest.TestCase):
         fr = results.recordFieldResult('PressureField', tol, [3.5e-2])
         mres.updateModelResultsXMLFieldInfo(resFile, fr)
 
-    def test_addFieldTest(self):
-        fieldTests = FieldTestsInfo()
-        self.assertEqual(fieldTests.fields, {})
-        fieldTests.setAllTols(0.02)
-        self.assertEqual(fieldTests.fields, {})
-        tempFT = mrun.FieldTest('TemperatureField')
-        fieldTests.add(tempFT)
-        velFT = mrun.FieldTest('VelocityField')
-        fieldTests.add(velFT)
-        self.assertEqual(fieldTests.fields, {'TemperatureField':tempFT,\
-            'VelocityField':velFT})
-
-    def test_setAllFieldTolerances(self):
-        fieldTests = FieldTestsInfo()
-        fieldTests.setAllTols(0.02)
-        tempFT = mrun.FieldTest('TemperatureField')
-        velFT = mrun.FieldTest('VelocityField', 0.07)
-        fieldTests.fields = {'TemperatureField':tempFT, 'VelocityField':velFT} 
-        fieldTol = 3e-2
-        fieldTests.setAllTols(fieldTol)
-        for fieldTest in fieldTests.fields.values():
-            self.assertEqual(fieldTest.tol, fieldTol)
 
 def suite():
     suite = unittest.TestSuite()

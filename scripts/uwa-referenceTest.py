@@ -44,12 +44,13 @@ if createReference:
     mRun.cpFields = standardFields
 else:
     mRun.simParams = SimParams(nsteps=runSteps, cpevery=0, dumpevery=0 )
-    mRun.fieldTests.testTimestep = runSteps
-    mRun.fieldTests.useReference = True
-    mRun.fieldTests.referencePath = expectedPath
+    fTests = mRun.analysis['fieldTests']
+    fTests.testTimestep = runSteps
+    fTests.useReference = True
+    fTests.referencePath = expectedPath
     defFieldTol = 1e-2
     for fieldName in standardFields:
-        mRun.fieldTests.add(FieldTest(fieldName, tol=defFieldTol))
+        fTests.add(FieldTest(fieldName, tol=defFieldTol))
 
 uwa.modelrun.writeModelRunXML(mRun )
 

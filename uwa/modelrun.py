@@ -1,9 +1,10 @@
 from lxml import etree
 import uwa.modelresult
 from uwa import stgxml
+from uwa import analysis
 
 class ModelRun:
-    '''A class to keep records about a StgDomain/Underworld Model Run, \
+    '''A class to keep records about a StgDomain/Underworld Model Run,
     including access to the underlying XML of the actual model'''
     def __init__(self, name, modelInputFiles, outputPath, logPath="./log",\
      cpReadPath=None, nproc=1):
@@ -15,7 +16,8 @@ class ModelRun:
         self.jobParams = JobParams(nproc) 
         # TODO: should the below actually be compulsory?
         self.simParams = None
-        self.fieldTests = FieldTestsInfo()
+        self.analysis = {}
+        self.analysis['fieldTests'] = analysis.FieldTestsInfo()
         self.cpFields = []
         self.analysisXML = None
 
@@ -130,130 +132,6 @@ class SimParams:
         os.remove(ffile)
 
 
-class FieldTest:
-    '''Class for maintaining info about a single field test'''
-    def __init__(self, fieldName, tol=None):
-        self.name = fieldName
-        self.tol = tol
-
-    def writeInfoXML(self, parentNode):
-        return etree.SubElement(parentNode, 'field', name=self.name, \
-            tol=str(self.tol))
-
-
-class FieldTestsInfo:
-    '''Class for maintaining and managing a list of field tests, including
-     IO from StGermain XML files'''
-
-    stgFTComp_Type = 'FieldTest'
-    stgFTComp_Name = 'uwaFieldTester'
-    stgFTSpecName = 'pluginData'
-    stgFTSpec_FList = 'NumericFields'
-    stgFTSpec_RList = 'ReferenceFields'
-
-    def __init__(self, fieldsList={}):
-        self.fields = fieldsList
-        self.fromXML = False
-        self.useReference = False
-        self.referencePath = None
-        self.testTimestep = 0
-
-    def add(self, fieldTest):
-        self.fields[fieldTest.name] = fieldTest    
-
-    def setAllTols(self, fieldTol):
-        for fieldTest in self.fields.values():
-            fieldTest.tol = fieldTol
-
-    def writeInfoXML(self, parentNode):
-        '''Writes information about this class into an existing, open XML
-         doc node, in a child element'''
-
-        if len(self.fields) == 0: return
-
-        ftNode = etree.SubElement(parentNode, 'fieldTestsInfo')
-        ftNode.attrib['fromXML']=str(self.fromXML)
-        ftNode.attrib['useReference']=str(self.useReference)
-        ftNode.attrib['referencePath']=str(self.referencePath)
-        ftNode.attrib['testTimestep']=str(self.testTimestep)
-        fListNode = etree.SubElement(parentNode, 'fields')
-        for fTest in self.fields.values():
-            fTest.writeInfoXML(fListNode)
-
-    def writeStgDataXML(self, rootNode):
-        '''Writes the necessary StGermain XML to enable these specified
-         fields to be tested'''
-
-        assert(self.fromXML == False)
-        # If there are no fields to test, no need to write StGermain XML
-        if len(self.fields) == 0: return
-
-        # Append the component to component list
-        compElt = stgxml.mergeComponent(rootNode, self.stgFTComp_Name, \
-            self.stgFTComp_Type)
-
-        # Create the plugin data
-        pluginDataElt = etree.SubElement(rootNode, stgxml.structTag, \
-            name=self.stgFTSpecName, mergeType="replace")
-        xmlFieldTestsList = self.fields.keys()
-        # This is necessary due to format of this list in the FieldTest plugin:
-        # <FieldName> <# of analytic func> - both as straight params
-        ii=0
-        for index in range(1,len(self.fields)*2,2):
-            xmlFieldTestsList.insert(index, str(ii))
-            ii+=1
-
-        stgxml.writeParamList(pluginDataElt, self.stgFTSpec_FList, \
-            xmlFieldTestsList)
-        if self.useReference:
-            stgxml.writeParamSet(pluginDataElt, {\
-                'referenceSolutionFilePath':self.referencePath,\
-                'useReferenceSolutionFromFile':self.useReference })
-            stgxml.writeParamList(pluginDataElt, self.stgFTSpec_RList, \
-                self.fields.keys())
-
-        stgxml.writeParamSet(pluginDataElt, {\
-            'IntegrationSwarm':'gaussSwarm',\
-            'ConstantMesh':'constantMesh',\
-            'testTimestep':self.testTimestep,\
-            'ElementMesh':'linearMesh',\
-            'normaliseByAnalyticSolution':'True',\
-            'context':'context',\
-            'appendToAnalysisFile':'True'})
-    
-    def readFromStgXML(self, inputFilesList):
-        '''Read in the list of fields that have already been specified to 
-         be tested from a set of StGermain input files. Useful when e.g. 
-         working with an Analytic Solution plugin'''
-        self.fromXML = True
-
-        # create a flattened file
-        ffile=stgxml.createFlattenedXML(inputFilesList)
-
-        # Necessary, because the parser will prefix this this to tag names
-        stgNSText = stgxml.stgNSText
-
-        xmlDoc = etree.parse(ffile)
-        stgRoot = xmlDoc.getroot()
-
-        # Go and grab necessary info from XML file
-        fieldTestDataEl = stgxml.getStruct(stgRoot, self.stgFTSpecName)
-        fieldTestListEl = stgxml.getList(fieldTestDataEl, self.stgFTSpec_FList)
-
-        fieldTestEls = fieldTestListEl.getchildren()
-        # As per the current spec, the field names are followed by an index 
-        # of analytic solution
-        ii = 0
-        while ii < len(fieldTestEls):
-            fieldName = fieldTestEls[ii].text
-            self.fields[fieldName] = FieldTest(fieldName)
-            # Skip the index
-            ii+=1
-            ii+=1
-
-        os.remove(ffile)
-
-
 def writeModelRunXML(modelRun, outputPath="", filename="", update=False, \
         prettyPrint=True):
     assert isinstance(modelRun, ModelRun)
@@ -285,7 +163,9 @@ def writeModelRunXML(modelRun, outputPath="", filename="", update=False, \
     else:    
         modelRun.simParams.writeInfoXML(root)
 
-    modelRun.fieldTests.writeInfoXML(root)
+    analysisNode = etree.SubElement(root, 'analysis')
+    for toolName, analysisTool in modelRun.analysis.iteritems():
+        analysisTool.writeInfoXML(analysisNode)
 
     # TODO : write info on cpFields?
 
@@ -311,8 +191,10 @@ def analysisXMLGen(modelRun, filename="analysis.xml"):
         stgxml.writeParam(root, 'checkpointReadPath', modelRun.cpReadPath, mt='replace')
     if modelRun.simParams:
         modelRun.simParams.writeStgDataXML(root)
-    if not modelRun.fieldTests.fromXML:
-        modelRun.fieldTests.writeStgDataXML(root)
+    for analysisName, analysisTool in modelRun.analysis.iteritems():
+        if not analysisTool.fromXML:
+            analysisTool.writeStgDataXML(root)
+
     # This is so we can checkpoint fields list: defined in FieldVariable.c
     if len(modelRun.cpFields):
         stgxml.writeParamList(root, 'FieldVariablesToCheckpoint', \
