@@ -5,8 +5,9 @@ import sys
 import os
 
 import uwa
-from uwa.modelrun import ModelRun, FieldTest, SimParams
+from uwa.modelrun import ModelRun, SimParams
 import uwa.analysis
+from uwa.analysis import FieldTest
 
 #process input args
 
@@ -69,7 +70,7 @@ if not createReference:
     # in directory of run may be better handled within the runModel
     uwa.moveConvergenceResults(os.getcwd(), mRun.outputPath )
 
-    results.fieldResults = uwa.analysis.testConvergence(mRun )
+    results.fieldResults = uwa.analysis.testConvergence(fTests, outputPath )
 
     uwa.modelresult.writeModelResultsXML(results, path=mRun.outputPath )
 

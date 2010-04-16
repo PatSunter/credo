@@ -5,8 +5,9 @@ import sys
 import os
 
 import uwa
-from uwa.modelrun import ModelRun, FieldTest, SimParams
-import uwa.analysis
+from uwa.modelrun import ModelRun, SimParams
+import uwa.analysis 
+from uwa.analysis import FieldTest
 
 # This test will run a model for n timesteps, checkpointing half-way:- then
 #  re-start the model mid way through, and check the values at the end are
@@ -61,12 +62,13 @@ mRun.cpReadPath = initialOutputPath
 # probably easier
 mRun.simParams = SimParams(nsteps=runSteps/2, cpevery=0, dumpevery=0, \
     restartstep=runSteps/2)
-mRun.fieldTests.testTimestep = runSteps
-mRun.fieldTests.useReference = True
-mRun.fieldTests.referencePath = initialOutputPath
+fTests = mRun.analysis['fieldTests']
+fTests.testTimestep = runSteps
+fTests.useReference = True
+fTests.referencePath = initialOutputPath
 defFieldTol = 1e-5
 for fieldName in standardFields:
-    mRun.fieldTests.add(FieldTest(fieldName, tol=defFieldTol))
+    fTests.add(FieldTest(fieldName, tol=defFieldTol))
 
 uwa.modelrun.writeModelRunXML(mRun)
 mRun.analysisXML = uwa.modelrun.analysisXMLGen(mRun)
@@ -82,7 +84,7 @@ print "Processing results"
 # in directory of run may be better handled within the runModel
 uwa.moveConvergenceResults(os.getcwd(), mRun.outputPath)
 
-results.fieldResults = uwa.analysis.testConvergence(mRun)
+results.fieldResults = uwa.analysis.testConvergence(fTests, mRun.outputPath)
 
 uwa.modelresult.writeModelResultsXML(results, path=mRun.outputPath)
 
