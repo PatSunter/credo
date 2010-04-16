@@ -6,11 +6,10 @@ import shutil
 import tempfile
 import unittest
 
-from uwa import modelrun as mrun
 from uwa import modelresult as mres
-from uwa.modelrun import FieldTestsInfo
+from uwa.modelresult import ModelResult
 
-class UwaTestCase(unittest.TestCase):
+class ModelResultTestCase(unittest.TestCase):
 
     def setUp(self):
         self.basedir = os.path.realpath(tempfile.mkdtemp())
@@ -19,13 +18,6 @@ class UwaTestCase(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.basedir)
-
-    def test_writeModelRunXML(self):
-        nproc = 2
-        modelRun = mrun.ModelRun('TestModel', ["testModel.xml"], \
-            'output/testModel', nproc)
-        modelRun.simParams = mrun.SimParams(nsteps=5, cpevery=10)
-        mrun.writeModelRunXML(modelRun)
 
     def test_writeModelResultsXML(self):
         results = mres.ModelResult('TestModel', 2.07)
@@ -45,10 +37,9 @@ class UwaTestCase(unittest.TestCase):
         fr = results.recordFieldResult('PressureField', tol, [3.5e-2])
         mres.updateModelResultsXMLFieldInfo(resFile, fr)
 
-
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(UwaTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(ModelResultTestCase, 'test'))
     return suite
 
 if __name__ == '__main__':
