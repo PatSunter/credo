@@ -4,6 +4,9 @@ import os
 class ModelResult:
     '''A class to keep records about the results of a StgDomain/Underworld
      model run'''
+
+    XML_INFO_TAG = 'StgModelResult'
+
     def __init__(self, modelName, simtime):
         self.modelName = modelName
         self.jobMetaInfo = JobMetaInfo(simtime)
@@ -21,18 +24,25 @@ class ModelResult:
 # standard write facilities.
 # Or maybe sub-class from dict, and just add some parameter checking.
 class JobMetaInfo:
+    '''A simple class for recording meta info about a job, such as walltime,
+    memory usage, etc'''
+    XML_INFO_TAG = "jobMetaInfo"
+
     def __init__(self, simtime):
         self.simtime = float(simtime)
 
     def writeInfoXML(self, xmlNode):
         '''Writes information about this class into an existing, open
          XML doc node'''
-        etree.SubElement(xmlNode, 'simtime').text = str(self.simtime)
+        jmNode = etree.SubElement(xmlNode, self.XML_INFO_TAG)
+        etree.SubElement(jmNode, 'simtime').text = str(self.simtime)
 
+
+#TODO: move into Analysis for fields.
 class FieldResult:
     '''Simple class for storing UWA FieldResults'''
-    xmlTag = "fieldResult"
-    xmlListTag = "fieldResults"
+    XML_INFO_TAG = "fieldResult"
+    XML_INFO_LIST_TAG = "fieldResults"
 
     def __init__(self, fieldName, tol, dofErrors):
         self.fieldName = fieldName
@@ -49,13 +59,15 @@ class FieldResult:
     def writeInfoXML(self, fieldResultsNode):
         '''Writes information about a FieldResult into an existing,
          open XML doc node'''
-        fr = etree.SubElement(fieldResultsNode, 'fieldResult')
+        fr = etree.SubElement(fieldResultsNode, self.XML_INFO_TAG)
         fr.attrib['fieldName'] = self.fieldName
         fr.attrib['tol'] = str(self.tol)
         for dofIndex in range(len(self.dofErrors)):
             dr = etree.SubElement(fr, 'dofResult')
             dr.attrib['dof'] = str(dofIndex)
             dr.attrib['error'] = str(self.dofErrors[dofIndex])
+
+# Key XML tags
 
 def writeModelResultsXML(modelResult, path="", filename="", prettyPrint=True):
     mres = modelResult
@@ -69,13 +81,13 @@ def writeModelResultsXML(modelResult, path="", filename="", prettyPrint=True):
 
     # Write extra model results, e.g.
     # create model file
-    root = etree.Element('StgModelResult')
-    xmlDoc = etree.ElementTree(root)
-    etree.SubElement(root, 'modelName').text = mres.modelName
-    jobMetaInfoNode = etree.SubElement(root, 'jobMetaInfo')
-    mres.jobMetaInfo.writeInfoXML(jobMetaInfoNode)
+    mrNode = etree.Element(modelResult.XML_INFO_TAG)
+    xmlDoc = etree.ElementTree(mrNode)
+    etree.SubElement(mrNode, 'modelName').text = mres.modelName
+    mres.jobMetaInfo.writeInfoXML(mrNode)
     if (mres.fieldResults):
-        fieldResultsNode = etree.SubElement(root, FieldResult.xmlListTag)
+        fieldResultsNode = etree.SubElement(mrNode,
+            FieldResult.XML_INFO_LIST_TAG)
         for fieldResult in mres.fieldResults:
             fieldResult.writeInfoXML(fieldResultsNode)
 
@@ -94,11 +106,11 @@ def updateModelResultsXMLFieldInfo(filename, newFieldResult, prettyPrint=True):
     
     # Because we just grabbed a reference to the root, the find will
     # look relative to the root
-    fieldResultsNode = xmlDoc.find(FieldResult.xmlListTag)
+    fieldResultsNode = xmlDoc.find(FieldResult.XML_INFO_LIST_TAG)
     # It may not exist, if there were no field results already,
     # in which case grab existing
     if fieldResultsNode is None:
-        fieldResultsNode = etree.SubElement(root, FieldResult.xmlListTag)
+        fieldResultsNode = etree.SubElement(root, FieldResult.XML_INFO_LIST_TAG)
     else:
         # TODO: Check the field to add is not in the list already
         pass
