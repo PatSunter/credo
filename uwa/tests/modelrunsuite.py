@@ -1,5 +1,3 @@
-# UWAnalysis Unit test
-
 import os
 import cPickle as pickle
 import shutil

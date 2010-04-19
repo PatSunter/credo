@@ -34,7 +34,7 @@ class AnalysisTestCase(unittest.TestCase):
         self.assertEqual(cvgInfo['VelocityField'].dofColMap, {0:1})
 
     def test_checkFieldConvergence(self):
-        fTest = uwa.modelrun.FieldTest('TemperatureField', tol=3e-2)
+        fTest = FieldTest('TemperatureField', tol=3e-2)
         cvgFileInfo = CvgFileInfo("./output/CosineHillRotate-analysis.cvg")
         cvgFileInfo.dofColMap[0]=1
         fRes = uwa.analysis.checkFieldConvergence(fTest, cvgFileInfo)
