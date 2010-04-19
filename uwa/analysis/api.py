@@ -1,9 +1,10 @@
-from uwa.modelresult import FieldResult
-from uwa import stgxml
 from lxml import etree
 
 import os
 import glob
+
+from uwa import stgxml
+from uwa.modelresult import FieldResult
 
 CVG_EXT='cvg'
 
