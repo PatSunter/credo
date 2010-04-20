@@ -1,5 +1,6 @@
 import os
 import glob
+import linecache
 
 from lxml import etree
 
@@ -7,6 +8,7 @@ from lxml import etree
 FieldTester Component.'''
 
 CVG_EXT='cvg'
+CVG_HEADER_LINESTART='#'
 
 class CvgFileInfo:
     '''A simple class to store info about what fields map to what 
@@ -50,68 +52,118 @@ def genConvergenceFileIndex(path):
 
     return cvgFileDict
 
-def getDofErrors_Final(cvgFileInfo):
-    '''For a given cvgFileInfo, get the errors in the specified dof from the
-    specified file - just for final timestep (line) in file'''
+# TODO: the files below could perhaps be converted to an O-O representation,
+# where operations are performed on a CVG file, and support e.g. slice notation?
 
-    cvgFile = open(cvgFileInfo.filename,"r")
+def getCheckStepsRange(cvgFile, steps):
+    lineTot = sum(1 for line in cvgFile)
+    cvgFile.seek(0)
 
-    # Just read the last line - this is last timestep that ran
-    # NB: this could be done more efficiently using file.seek, if performance
-    # becomes an issue with very large convergence files
-    for line in cvgFile: pass
+    # Given every 2nd line is a header
+    stepTot = lineTot/2
+
+    if steps == 'all':
+        stepRange = range(0,stepTot)
+    elif steps == 'last':
+        stepRange = [stepTot-1]
+    elif type(steps) == tuple:
+        if len(steps) != 2 or type(steps[0]) != int or type(steps[1]) != int:
+            raise TypeError("If arg 'steps' is a tuple, should be only two"\
+                " numbers.")
+                
+        start,end = steps
+
+        if start < 0:
+            raise ValueError("Error, 'steps' init number less than 0")
+        if end > stepTot:
+            raise ValueError("Error, 'steps' finish number %d "\
+                "greater than number of steps in the given file (%d)" % \
+                (end, stepTot))
+
+        stepRange = range(start,end)
+    else:
+        raise TypeError("arg 'steps' must be either 'all', 'last', or a tuple"\
+            " of start and ending numbers")
+
+    return stepRange        
+
+
+def getDofErrorsForStep(cvgFileInfo, stepNum):
+    # Given every 2nd line is a header, need to handle these
+    lineNum = stepNum*2+1
+    # The linecache.getline function indexes file lines from 1, hence
+    # adjustment below
+    line = linecache.getline(cvgFileInfo.filename, lineNum+1) 
+    if line == "":
+        raise IOError("Couldn't read step %d (line %d) from '%s'" %
+            (stepNum, lineNum, cvgFileInfo.filename))
+    elif line[0] == CVG_HEADER_LINESTART:
+        # Should have avoided header lines
+        raise IOError("Trying to read step %d (line %d) from '%s'"
+            " unexpectedly indexed to a header line" %
+            (stepNum, lineNum, cvgFileInfo.filename))
+
     colVals = line.split()
 
-    dofErrors=[]
-    for ii in range(len(cvgFileInfo.dofColMap)): dofErrors.append(0.0)
-
+    dofErrorsForStep = []
     for dof, colIndex in cvgFileInfo.dofColMap.iteritems():
         errorStr = colVals[colIndex]
-        dofErrors[dof] = float(errorStr)
+        dofErrorsForStep.append(float(errorStr))
+    
+    return dofErrorsForStep
 
-    cvgFile.close()
-    return dofErrors
 
 # Question: should we use Numeric for this? - as performance for very large
 #  CVG files could be a bit ordinary
-def getDofErrors_AllByDof(cvgFileInfo):
+def getDofErrors_ByDof(cvgFileInfo, steps='all'):
     '''For a given cvgFileInfo, get the errors in the specified dof from
-    the specified file - for each timestep, indexed primarily by Dof'''
+    the specified file, indexed primarily by Dof.
+    The 'steps' arg can be either 'all' (for all timesteps), 'last',
+    or a tuple specifying range.
+    If only one step result is asked for, the dofs are returned as a
+    simple 1D array.'''
 
     cvgFile = open(cvgFileInfo.filename,"r")
 
+    stepRange = getCheckStepsRange(cvgFile, steps)
+
     dofErrors = []
-    for ii in range(len(cvgFileInfo.dofColMap)): dofErrors.append([])
+    numDofs = len(cvgFileInfo.dofColMap)
+    for ii in range(numDofs): dofErrors.append([])
 
-    for line in cvgFile:
-        # In current format, every 2nd line is a header - skip these
-        if line[0] == '#': continue
-
-        colVals = line.split()
-        for dof, colIndex in cvgFileInfo.dofColMap.iteritems():
-            errorStr = colVals[colIndex]
-            dofErrors[dof].append(float(errorStr))
+    if len(stepRange) == 1:
+        dofErrors = getDofErrorsForStep(cvgFileInfo, stepRange[0])
+    else:
+        for stepNum in stepRange:
+            dofErrorsStep = getDofErrorsForStep(cvgFileInfo, stepNum)
+            for dofI in range(numDofs):
+                dofErrors[dofI].append(dofErrorsStep[dofI])
             
     cvgFile.close()
     return dofErrors
 
-def getDofErrors_AllByTimestep(cvgFileInfo):
+
+def getDofErrors_ByStep(cvgFileInfo, steps='all'):
     '''For a given cvgFileInfo, get the errors in the specified dof from
-    the specified file - for each timestep, indexed primarily by Timestep'''
+    the specified file - for each timestep, indexed primarily by Timestep.
+    The 'steps' arg can be either 'all' (for all timesteps), 'last',
+    or a tuple specifying range.
+    If only one step result is asked for, the dofs are returned as a
+    simple 1D array.'''
 
     cvgFile = open(cvgFileInfo.filename,"r")
 
+    stepRange = getCheckStepsRange(cvgFile, steps)
+
     dofErrors = []
+    numDofs = len(cvgFileInfo.dofColMap)
 
-    for line in cvgFile:
-        # In current format, every 2nd line is a header - skip these
-        if line[0] == '#': continue
-
-        colVals = line.split()
-        dofErrors.append([])
-        for dof, colIndex in cvgFileInfo.dofColMap.iteritems():
-            errorStr = colVals[colIndex]
-            dofErrors[-1].append(float(errorStr))
+    if len(stepRange) == 1:
+        dofErrors = getDofErrorsForStep(cvgFileInfo, stepRange[0])
+    else:
+        for stepNum in stepRange:
+            dofErrorsStep = getDofErrorsForStep(cvgFileInfo, stepNum)
+            dofErrors.append(dofErrorsStep)
             
     cvgFile.close()
     return dofErrors

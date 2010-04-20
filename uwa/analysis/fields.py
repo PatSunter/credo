@@ -22,7 +22,7 @@ class FieldTest:
         convergence file to get information from'''
 
         #TODO: should we do some comparison with tolerance here?
-        dofErrors = stgcvg.getDofErrors_Final(cvgFileInfo)
+        dofErrors = stgcvg.getDofErrors_ByDof(cvgFileInfo, steps="last")
 
         fieldResult = FieldResult(self.name, self.tol, dofErrors)
         return fieldResult
