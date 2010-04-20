@@ -31,12 +31,34 @@ class StgCVGTestCase(unittest.TestCase):
             './output/Analytic2-analysis.cvg')
         self.assertEqual(cvgInfo['VelocityField'].dofColMap, {0:1})
 
-    def test_checkFieldConvergence(self):
+    def test_getDofErrors_Final(self):
         cvgFileInfo = CvgFileInfo("./output/CosineHillRotate-analysis.cvg")
         cvgFileInfo.dofColMap[0]=1
         dofErrors = stgcvg.getDofErrors_Final(cvgFileInfo)
         self.assertEqual(len(dofErrors), 1)
         self.assertEqual(dofErrors[0], 0.00612235812)
+
+    def test_getDofErrors_AllByDof(self):
+        cvgFileInfo = CvgFileInfo("./output/CosineHillRotate-analysis.cvg")
+        cvgFileInfo.dofColMap[0]=1
+        dofErrorArray = stgcvg.getDofErrors_AllByDof(cvgFileInfo)
+        self.assertEqual(len(dofErrorArray), 1)
+        self.assertEqual(len(dofErrorArray[0]), 3)
+        self.assertEqual(dofErrorArray[0][0], 0.00616)
+        self.assertEqual(dofErrorArray[0][1], 0.00614)
+        self.assertEqual(dofErrorArray[0][2], 0.00612235812)
+
+    def test_getDofErrors_AllByTimestep(self):
+        cvgFileInfo = CvgFileInfo("./output/CosineHillRotate-analysis.cvg")
+        cvgFileInfo.dofColMap[0]=1
+        dofErrorArray = stgcvg.getDofErrors_AllByTimestep(cvgFileInfo)
+        self.assertEqual(len(dofErrorArray), 3)
+        self.assertEqual(len(dofErrorArray[0]), 1)
+        self.assertEqual(len(dofErrorArray[1]), 1)
+        self.assertEqual(len(dofErrorArray[2]), 1)
+        self.assertEqual(dofErrorArray[0][0], 0.00616)
+        self.assertEqual(dofErrorArray[1][0], 0.00614)
+        self.assertEqual(dofErrorArray[2][0], 0.00612235812)
 
 def suite():
     suite = unittest.TestSuite()

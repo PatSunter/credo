@@ -70,5 +70,48 @@ def getDofErrors_Final(cvgFileInfo):
         dofErrors[dof] = float(errorStr)
 
     cvgFile.close()
+    return dofErrors
 
+# Question: should we use Numeric for this? - as performance for very large
+#  CVG files could be a bit ordinary
+def getDofErrors_AllByDof(cvgFileInfo):
+    '''For a given cvgFileInfo, get the errors in the specified dof from
+    the specified file - for each timestep, indexed primarily by Dof'''
+
+    cvgFile = open(cvgFileInfo.filename,"r")
+
+    dofErrors = []
+    for ii in range(len(cvgFileInfo.dofColMap)): dofErrors.append([])
+
+    for line in cvgFile:
+        # In current format, every 2nd line is a header - skip these
+        if line[0] == '#': continue
+
+        colVals = line.split()
+        for dof, colIndex in cvgFileInfo.dofColMap.iteritems():
+            errorStr = colVals[colIndex]
+            dofErrors[dof].append(float(errorStr))
+            
+    cvgFile.close()
+    return dofErrors
+
+def getDofErrors_AllByTimestep(cvgFileInfo):
+    '''For a given cvgFileInfo, get the errors in the specified dof from
+    the specified file - for each timestep, indexed primarily by Timestep'''
+
+    cvgFile = open(cvgFileInfo.filename,"r")
+
+    dofErrors = []
+
+    for line in cvgFile:
+        # In current format, every 2nd line is a header - skip these
+        if line[0] == '#': continue
+
+        colVals = line.split()
+        dofErrors.append([])
+        for dof, colIndex in cvgFileInfo.dofColMap.iteritems():
+            errorStr = colVals[colIndex]
+            dofErrors[-1].append(float(errorStr))
+            
+    cvgFile.close()
     return dofErrors
