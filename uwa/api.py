@@ -12,10 +12,9 @@ def getVerifyStgExePath(exeName):
     stgPath = getStgBinPath()
     fullExePath = stgPath+os.sep+exeName
     if not os.path.exists(fullExePath):
-        print "Error, in %s(): executable requested %s doesn't" \
+        raise IOError("Error, in %s(): executable requested %s doesn't" \
             " exist/not valid in StGermain binary path (%s)." % \
-            (inspect.stack()[0][3], exeName, stgPath)
-        raise IOError
+            (inspect.stack()[0][3], exeName, stgPath))
 
     return fullExePath    
 
@@ -23,23 +22,22 @@ def getStgBinPath():
     try:
         stgBinPath=os.environ[STG_BINDIRKEY]
     except KeyError as keyE:
-        print "Error in %s(): since this script needs to use StGermain" \
+        raise EnvironmentError("Error in %s(): since this script needs to"\
+            " use StGermain" \
             " executables, please set the %s environment variable for use" \
             " within UWA.\n" \
-            % (inspect.stack()[0][3], STG_BINDIRKEY)
-        key = keyE
-        sys.exit(2)
+            % (inspect.stack()[0][3], STG_BINDIRKEY))
 
     if not os.path.exists(stgBinPath):
-        print "Error, in %s(): needed env variable %s is set, but path it's" \
+        raise EnvironmentError("Error, in %s(): needed env variable %s is"\
+            " set, but path it's" \
             " set to (%s) doesn't exist/not valid.\n" \
-            % (inspect.stack()[0][3], STG_BINDIRKEY, stgBinPath)
-        sys.exit(2)    
+            % (inspect.stack()[0][3], STG_BINDIRKEY, stgBinPath))
     elif not os.path.exists(stgBinPath+os.sep+'StGermain'):
-        print "Error, in %s(): needed env variable %s is set, path it's set" \
+        raise EnvironmentError("Error, in %s(): needed env variable %s is"\
+            " set, path it's set" \
             " to (%s) is valid, but doesn't contain a StGermain executable.\n"\
-            % (inspect.stack()[0][3], STG_BINDIRKEY, stgBinPath)
-        sys.exit(2)    
+            % (inspect.stack()[0][3], STG_BINDIRKEY, stgBinPath))
 
     return stgBinPath    
 
