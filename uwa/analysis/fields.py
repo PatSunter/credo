@@ -4,7 +4,6 @@ import os
 
 from uwa.analysis import AnalysisOperation
 from uwa.io import stgxml, stgcvg
-from uwa.modelresult import FieldResult
 
 class FieldTest:
     '''Class for maintaining info about a single field test'''
@@ -25,7 +24,84 @@ class FieldTest:
         dofErrors = stgcvg.getDofErrors_ByDof(cvgFileInfo, steps="last")
 
         fieldResult = FieldResult(self.name, self.tol, dofErrors)
+        fieldResult.cvgFileInfo = cvgFileInfo
         return fieldResult
+
+
+class FieldResult:
+    '''Simple class for storing UWA FieldResults'''
+    XML_INFO_TAG = "fieldResult"
+    XML_INFO_LIST_TAG = "fieldResults"
+
+    def __init__(self, fieldName, tol, dofErrors):
+        self.fieldName = fieldName
+        self.tol = float(tol)
+        self.dofErrors = []
+        # Allow the user to pass in just a single error value result for
+        # simple fields
+        if isinstance(dofErrors, int):
+            dofErrors = [dofErrors]
+
+        for errorStr in dofErrors:
+            self.dofErrors.append(float(errorStr))
+        
+        self.cvgFileInfo = None
+    
+    def writeInfoXML(self, fieldResultsNode):
+        '''Writes information about a FieldResult into an existing,
+         open XML doc node'''
+        fr = etree.SubElement(fieldResultsNode, self.XML_INFO_TAG)
+        fr.attrib['fieldName'] = self.fieldName
+        fr.attrib['tol'] = str(self.tol)
+        for dofIndex in range(len(self.dofErrors)):
+            dr = etree.SubElement(fr, 'dofResult')
+            dr.attrib['dof'] = str(dofIndex)
+            dr.attrib['error'] = str(self.dofErrors[dofIndex])
+    
+    def plotCvgOverTime(self, save=True, show=False, dofIndex=None, path="."):
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError:
+            print "Error, to use UWA built-in plot functions, please "\
+                " install the matplotlib python library."
+            return    
+        
+        assert self.cvgFileInfo
+
+        dofErrorsArray = stgcvg.getDofErrors_ByDof(self.cvgFileInfo)
+
+        numDofs = len(self.dofErrors)
+
+        if dofIndex is not None:
+            dofRange = [0]
+            dofIndices = [dofIndex]
+        else:
+            dofRange = range(numDofs)    
+            dofIndices = range(numDofs)
+            
+        plt.subplots_adjust(wspace=0.4)
+
+        for dofI in dofRange:
+            plt.subplot(1,len(dofRange),dofI+1)
+            plot = plt.plot(dofErrorsArray[dofIndices[dofI]])
+            plt.axhline(y=self.tol, label='tolerance', linewidth=3, color='r')
+
+            plt.xlabel("Timestep")
+            plt.ylabel("Dof %d: Error vs analytic soln" % dofIndices[dofI])
+            # Only display the title once on left
+            if len(dofRange) == 1:
+                plt.title("Convergence of field '%s' with analytic solution,"\
+                    " for DOF %d" % (self.fieldName, dofIndices[dofI]))
+            else:
+                if dofI == 0:
+                    plt.suptitle("Convergence of field '%s' with analytic"\
+                        " solution" % (self.fieldName), fontsize=14)
+                plt.title("DOF %d" % dofI)
+
+        if save:
+            filename=path+os.sep+self.fieldName+"-cvg.png"
+            plt.savefig(filename, format="png")
+        if show: plt.show()
 
 
 class FieldTestsInfo(AnalysisOperation):

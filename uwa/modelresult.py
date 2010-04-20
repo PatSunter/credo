@@ -1,6 +1,8 @@
 from lxml import etree
 import os
 
+from uwa.analysis import fields
+
 class ModelResult:
     '''A class to keep records about the results of a StgDomain/Underworld
      model run'''
@@ -12,11 +14,12 @@ class ModelResult:
         self.jobMetaInfo = JobMetaInfo(simtime)
         self.fieldResults = []
 
+    # TODO: is this function still appropriate?
     def recordFieldResult(self, fieldName, tol, errors):
         '''Records the info required for a FieldResult in the array of
          stored FieldResults kept by the ModelResult. Returns a reference
          to the just-added FieldResult.'''
-        fieldResult = FieldResult(fieldName, tol, errors)
+        fieldResult = fields.FieldResult(fieldName, tol, errors)
         self.fieldResults.append(fieldResult)
         return fieldResult
 
@@ -36,36 +39,6 @@ class JobMetaInfo:
          XML doc node'''
         jmNode = etree.SubElement(xmlNode, self.XML_INFO_TAG)
         etree.SubElement(jmNode, 'simtime').text = str(self.simtime)
-
-
-#TODO: move into Analysis for fields.
-class FieldResult:
-    '''Simple class for storing UWA FieldResults'''
-    XML_INFO_TAG = "fieldResult"
-    XML_INFO_LIST_TAG = "fieldResults"
-
-    def __init__(self, fieldName, tol, dofErrors):
-        self.fieldName = fieldName
-        self.tol = float(tol)
-        self.dofErrors = []
-        # Allow the user to pass in just a single error value result for
-        # simple fields
-        if isinstance(dofErrors, int):
-            dofErrors = [dofErrors]
-
-        for errorStr in dofErrors:
-            self.dofErrors.append(float(errorStr))
-    
-    def writeInfoXML(self, fieldResultsNode):
-        '''Writes information about a FieldResult into an existing,
-         open XML doc node'''
-        fr = etree.SubElement(fieldResultsNode, self.XML_INFO_TAG)
-        fr.attrib['fieldName'] = self.fieldName
-        fr.attrib['tol'] = str(self.tol)
-        for dofIndex in range(len(self.dofErrors)):
-            dr = etree.SubElement(fr, 'dofResult')
-            dr.attrib['dof'] = str(dofIndex)
-            dr.attrib['error'] = str(self.dofErrors[dofIndex])
 
 # Key XML tags
 
@@ -87,7 +60,7 @@ def writeModelResultsXML(modelResult, path="", filename="", prettyPrint=True):
     mres.jobMetaInfo.writeInfoXML(mrNode)
     if (mres.fieldResults):
         fieldResultsNode = etree.SubElement(mrNode,
-            FieldResult.XML_INFO_LIST_TAG)
+            fields.FieldResult.XML_INFO_LIST_TAG)
         for fieldResult in mres.fieldResults:
             fieldResult.writeInfoXML(fieldResultsNode)
 
@@ -106,11 +79,11 @@ def updateModelResultsXMLFieldInfo(filename, newFieldResult, prettyPrint=True):
     
     # Because we just grabbed a reference to the root, the find will
     # look relative to the root
-    fieldResultsNode = xmlDoc.find(FieldResult.XML_INFO_LIST_TAG)
+    fieldResultsNode = xmlDoc.find(fields.FieldResult.XML_INFO_LIST_TAG)
     # It may not exist, if there were no field results already,
     # in which case grab existing
     if fieldResultsNode is None:
-        fieldResultsNode = etree.SubElement(root, FieldResult.XML_INFO_LIST_TAG)
+        fieldResultsNode = etree.SubElement(root, fields.FieldResult.XML_INFO_LIST_TAG)
     else:
         # TODO: Check the field to add is not in the list already
         pass

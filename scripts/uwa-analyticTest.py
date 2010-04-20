@@ -58,8 +58,9 @@ results = mrun.runModel(mRun, customOpts)
 # TODO: This step necessary since currently convergence files saved in
 # directory of run, may be better handled within the runModel
 uwa.moveConvergenceResults(os.getcwd(), mRun.outputPath)
-results.fieldResults = fTests.testConvergence(mRun.outputPath)
 
+results.fieldResults = fTests.testConvergence(mRun.outputPath)
+results.fieldResults[0].plotCvgOverTime(path=mRun.outputPath)
 mres.writeModelResultsXML(results, path=mRun.outputPath)
 
 #Now do any required post-processing, depending on type of script
