@@ -1,4 +1,8 @@
 
+import os
+
+import uwa.systest
+from uwa.systest.api import SysTest
 import uwa.analysis
 
 # TODO: have a factory for these to register with, in the API?
@@ -14,27 +18,26 @@ class AnalyticTest(SysTest):
         and checks the outputted fields are within a given error tolerance
         of that analytic solution.'''
 
-    def __init__( inputFiles, outputPath ):
-        self.modelName, ext = os.path.splitext(firstInputFile)
+    def __init__(self, inputFiles, outputPathBase):
+        self.modelName, ext = os.path.splitext(inputFiles[0])
         self.modelName += "-analyticTest"
-        self.fieldTests = FieldTestsInfo()
-        self.
-
-    def configureTests(self):
-        # Have this as a separate method, to allow multi-res guy to override.
-        # For analytic test, read fields to analyse from the XML
-        self.fieldTests.readFromStgXML(inputFiles)
-        # Would be good to allow these to be over-ridden per field.
-        self.fieldTests.setAllTols(defaultFieldTol)
+        self.inputFiles = inputFiles
+        self.outputPathBase = outputPathBase
 
     def genSuite(self):
-        mSuite = ModelSuite( outputPathParent=outputPath )
-        mRun = mrun.ModelRun(self.modelName, inputFiles, outputPath,
-            nproc=nproc)
-        # TODO: how do we attach the know-how for any additional XML to be 
-        # Generated for the ModelRun, related specifically to the test?
+        mSuite = ModelSuite(outputPathParent=outputPath)
+        self.mSuite = mSuite    
+
+        mRun = mrun.ModelRun(self.modelName, self.inputFiles,
+            self.outputPathBase, nproc=nproc)
+        # For analytic test, read fields to analyse from the XML
+        mRun.fTests = FieldTestsInfo()
+        mRun.fTests.readFromStgXML(inputFiles)
+        # Would be good to allow these to be over-ridden per field.
+        mRun.fieldTests.setAllTols(defaultFieldTol)
         mSuite.addRun("analysis", "Run the model and generate analytic soln.",\
             mRun)
+
         return mSuite
 
     def checkResultValid(suiteResults):
@@ -47,88 +50,20 @@ class AnalyticTest(SysTest):
 
     def getStatus(suiteResults):
         self.checkResultValid(suiteResults)
+
+        mRun = self.mSuite.runs[0]
         mResult = suiteResults[0]
 
         testStatus = UWA_PASS
 
         # This could be refactored quite a bit, should be done in modelRun
-        cvgFileIndex = genConvergenceFileIndex(modelRun.outputPath)
-        uwa.analysis.testConvergence(mRun)
+        fTests = mRun.analysis['fieldTests']
+        mResult.fieldResults = fTests.testConvergence(mRun.outputPath)
 
-        fieldResults = []
-        for fieldTest in self.fieldTests.fields:
-            assert fieldTest.name in cvgFileIndex
-            fieldResults.append(checkFieldConvergence(fieldTest, \
-                cvgFileIndex[fieldTest.name]))
-
-        fTests = self.fieldTests.fields.values()
-        for ii in range(len(fTests)):
-            fTest = fTests[ii]
-            result = fTest.checkResultWithinTol(mResult.fieldResult[ii])
-            if result = False:
+        for fRes in mResult.fieldResults:
+            result = fRes.checkErrorsWithinTol()
+            if result == False:
                 testStatus=UWA_FAIL
+                break
 
-            self.fieldConvergences[ii] = result
-
-    return testStatus
-
-################################
-
-def MultiResTest(sysTest):
-    '''A Multiple Resolution system test.
-
-        This test can be used to convert any existing system test that
-        analyses fields, to check that the convergence improves as res.
-        improves'''
-
-    description = '''Runs an existing test with multiple resolutions.'''
-
-    def __init__( outputPath, innerTest, resSet, resConvChecker ):
-        assert isinstance(innerTest, SysTest)
-        self.innerTest = innerTest
-        self.modelName = innerTest+"-multiResCvg"
-        self.resSet = resSet
-        self.resConvChecker = resConvChecker
-
-    def configureTests(self):
-        # Have this as a separate method, to allow multi-res guy to override.
-        # For analytic test, read fields to analyse from the XML
-        self.fieldTests.readFromStgXML(inputFiles)
-        # Would be good to allow these to be over-ridden per field.
-        self.fieldTests.setAllTols(defaultFieldTol)
-
-    def genSuite(self):
-        mSuite = ModelSuite( outputPathParent=outputPath )
-        
-        mRun = mrun.ModelRun(self.modelName, inputFiles, outputPath,
-            nproc=nproc)
-
-        for res in self.resSet:
-            # TODO: how do we attach the know-how for any additional XML to be 
-            # Generated for the ModelRun, related specifically to the test?
-            mRun.outputPath += os.sep+mrun.strRes(res)
-            customOpts = mrun.generateResOpts(res)
-            mSuite.addRun("analysis", "Run the model at res"+mrun.strRes(res),
-                mRun, customOpts)
-
-        return mSuite
-
-    def checkResultValid(suiteResults):
-        # TODO check it's a result instance
-        # check number of results is correct
-        for mResult in suiteResults:
-            # Check fieldresults exists, and is right length
-            # Check each fieldResult contains correct fields
-            pass
-
-    def getStatus(suiteResults):
-        self.checkResultValid(suiteResults)
-        mResult = suiteResults[0]
-
-        testStatus = UWA_PASS
-
-        result = self.resConvChecker.check( self.resSet, self.suiteResults )
-        if result == False:
-            testStatus = UWA_FAIL
-
-    return testStatus
+        return testStatus

@@ -10,7 +10,7 @@ class SysTestRunner:
         # Generate a suite of models to run as part of the test
         mSuite = sysTest.genSuite()
 
-        suiteResults = mSuite.runSuite()
+        suiteResults = mSuite.runAll()
         suiteResults.writeAllXMLs(sysTest.outputPath)
 
         testResult = sysTest.getStatus(suiteResults)
@@ -18,21 +18,20 @@ class SysTestRunner:
        
 
 class SysTest:
-    def __init__():
-        
-
     def genSuite():
         print "Error, base class"
         assert 0
 
-    def getStatus( suiteResults ):
+    def getStatus(suiteResults):
         print "Error, base class"
         
-    def writeXML( outputPath ):    
+    def writeXML(outputPath):    
         # Create the XML file, and standard tags
         # Write standard stuff like descriptions, etc
-        print "Error, base class"
+        writeXMLContexts(outputPath)
+        # Write any necessary closing stuff, write the file
 
-    def writeXMLContents( outputPath ):
+    def writeXMLContents(outputPath):
         # Write the contents of this particular test
+        print "Error, base class"
 
