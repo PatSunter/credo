@@ -47,6 +47,11 @@ class FieldResult:
         
         self.cvgFileInfo = None
     
+    def checkErrorsWithinTol(self):
+        for dofError in self.dofErrors:
+            if dofError > self.tol: return False
+        return True    
+
     def writeInfoXML(self, fieldResultsNode):
         '''Writes information about a FieldResult into an existing,
          open XML doc node'''

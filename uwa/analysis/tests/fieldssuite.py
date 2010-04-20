@@ -6,7 +6,7 @@ import unittest
 
 from uwa.io.stgcvg import CvgFileInfo
 import uwa.analysis
-from uwa.analysis.fields import FieldTest, FieldTestsInfo
+from uwa.analysis.fields import FieldTest, FieldTestsInfo, FieldResult
 
 class AnalysisFieldsTestCase(unittest.TestCase):
 
@@ -36,6 +36,12 @@ class AnalysisFieldsTestCase(unittest.TestCase):
         self.assertEqual(fResults[0].fieldName, fTest.name)
         self.assertEqual(fResults[0].tol, fTest.tol)
         self.assertEqual(fResults[0].dofErrors[0], 0.00612235812)
+
+    def test_checkErrorsWithinTol(self):
+        fRes = FieldResult('TemperatureField', 0.3, [0.1,0.2])
+        self.assertTrue(fRes.checkErrorsWithinTol())
+        fRes = FieldResult('TemperatureField', 0.3, [0.4,0.2])
+        self.assertFalse(fRes.checkErrorsWithinTol())
 
     def test_addFieldTest(self):
         fieldTests = FieldTestsInfo()
