@@ -4,8 +4,9 @@ import shutil
 import tempfile
 import unittest
 
+from uwa.io.stgcvg import CvgFileInfo
 import uwa.analysis
-from uwa.analysis.fields import CvgFileInfo, FieldTest, FieldTestsInfo
+from uwa.analysis.fields import FieldTest, FieldTestsInfo
 
 class AnalysisFieldsTestCase(unittest.TestCase):
 
@@ -17,25 +18,11 @@ class AnalysisFieldsTestCase(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.basedir)
 
-    def test_genConvergenceFileIndex(self):
-        #TODO: should write the actual test convergence files,
-        # perhaps in set-up
-        cvgInfoEmpty = uwa.analysis.fields.genConvergenceFileIndex(".")
-        self.assertEqual(cvgInfoEmpty, {})
-        cvgInfo = uwa.analysis.fields.genConvergenceFileIndex("./output")
-        self.assertEqual(len(cvgInfo), 2)
-        self.assertEqual(cvgInfo['TemperatureField'].filename, \
-            './output/CosineHillRotate-analysis.cvg')
-        self.assertEqual(cvgInfo['TemperatureField'].dofColMap, {0:1})
-        self.assertEqual(cvgInfo['VelocityField'].filename, \
-            './output/Analytic2-analysis.cvg')
-        self.assertEqual(cvgInfo['VelocityField'].dofColMap, {0:1})
-
     def test_checkFieldConvergence(self):
         fTest = FieldTest('TemperatureField', tol=3e-2)
         cvgFileInfo = CvgFileInfo("./output/CosineHillRotate-analysis.cvg")
         cvgFileInfo.dofColMap[0]=1
-        fRes = uwa.analysis.fields.checkFieldConvergence(fTest, cvgFileInfo)
+        fRes = fTest.checkFieldConvergence(cvgFileInfo)
         self.assertEqual(fRes.fieldName, fTest.name)
         self.assertEqual(fRes.tol, fTest.tol)
         self.assertEqual(fRes.dofErrors[0], 0.00612235812)
@@ -44,7 +31,7 @@ class AnalysisFieldsTestCase(unittest.TestCase):
         fieldTests = FieldTestsInfo()
         fTest = FieldTest('TemperatureField', tol=3e-2)
         fieldTests.add(fTest)
-        fResults = uwa.analysis.fields.testConvergence(fieldTests,'./output')
+        fResults = fieldTests.testConvergence('./output')
         self.assertEqual(len(fResults), 1)
         self.assertEqual(fResults[0].fieldName, fTest.name)
         self.assertEqual(fResults[0].tol, fTest.tol)

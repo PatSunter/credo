@@ -7,7 +7,7 @@ import os
 import uwa
 from uwa.modelrun import ModelRun, SimParams
 import uwa.analysis 
-from uwa.analysis import FieldTest
+from uwa.analysis.fields import FieldTest
 
 # This test will run a model for n timesteps, checkpointing half-way:- then
 #  re-start the model mid way through, and check the values at the end are
@@ -83,8 +83,7 @@ print "Processing results"
 # TODO: This step necessary since currently convergence files saved
 # in directory of run may be better handled within the runModel
 uwa.moveConvergenceResults(os.getcwd(), mRun.outputPath)
-
-results.fieldResults = uwa.analysis.testConvergence(fTests, mRun.outputPath)
+results.fieldResults = fTests.testConvergence(mRun.outputPath)
 
 uwa.modelresult.writeModelResultsXML(results, path=mRun.outputPath)
 

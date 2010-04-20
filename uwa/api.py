@@ -4,6 +4,7 @@ import inspect
 import shutil
 import glob
 import uwa.analysis
+from uwa.io import stgcvg
 
 STG_BINDIRKEY = 'STG_BINDIR'
 
@@ -47,7 +48,7 @@ def moveConvergenceResults(path, outputPath):
     if not os.path.exists(outputPath):
         os.makedirs(outputPath)
 
-    for fname in glob.glob(path+os.sep+"*."+uwa.analysis.CVG_EXT):
+    for fname in glob.glob(path+os.sep+"*."+stgcvg.CVG_EXT):
         # These are convergence files, don't keep records of previous runs
         target=outputPath+os.sep+os.path.basename(fname)
         if (os.path.exists(target)): os.remove(target)

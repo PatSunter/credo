@@ -7,13 +7,13 @@ import os
 from uwa.modelrun import SuiteRunner
 from uwa.systest import AnalyticTest
 
-anTest = AnalyticTest( xmlFiles, outputPath, cmdLineOpts )
+anTest = AnalyticTest( xmlFiles, outputPath, cmdLineOpts)
 
 # Generate a suite of models to run as part of the test
 mSuite = anTest.genSuite()
 
 jobRunner = mpich2JobRunner()
-suiteResults = mSuite.runSuite( jobRunner )
+suiteResults = mSuite.runSuite( jobRunner)
 suiteResults.writeAllXMLs(anTest.outputPath)
 
 testResult = anTest.getStatus(suiteResults)

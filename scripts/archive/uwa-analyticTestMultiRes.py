@@ -46,7 +46,7 @@ for res in resSet:
     # For analytic test, assume the user has specified what fields to
     # analyse in the XML
     # (In the background this will generate the flattened XML for the model
-    mRun.fieldTests = mrun.getXMLFieldTestInfo(mRun.modelInputFiles)
+    mRun.analysis['fieldTests'] = mrun.getXMLFieldTestInfo(mRun.modelInputFiles)
     # Set all field tolerances at once. Of course, should allow this
     # to be over-ridden
     mRun.setAllFieldTolerances(defaultFieldTol)
@@ -67,9 +67,8 @@ for res in resSet:
     # in directory of run,
     # may be better handled within the runModel
     uwa.moveConvergenceResults(os.getcwd(), mRun.outputPath)
-
-    results.fieldResults = uwa.analysis.testConvergence(mRun)
-
+    results.fieldResults = \
+        mrun.analysis['fieldTests'].testConvergence(mRun.outputPath) 
     mres.writeModelResultsXML(results, path=mRun.outputPath)
 
     #Now do any required post-processing, depending on type of script
