@@ -4,7 +4,7 @@ import os
 import glob
 
 from uwa.analysis import AnalysisOperation
-from uwa import stgxml
+from uwa.io import stgxml
 from uwa.modelresult import FieldResult
 
 CVG_EXT='cvg'

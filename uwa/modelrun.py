@@ -1,7 +1,7 @@
 from lxml import etree
 import uwa.modelresult
-from uwa import stgxml
-from uwa import analysis
+from uwa.io import stgxml
+from uwa.analysis import fields
 
 class ModelRun:
     '''A class to keep records about a StgDomain/Underworld Model Run,
@@ -17,7 +17,7 @@ class ModelRun:
         # TODO: should the below actually be compulsory?
         self.simParams = None
         self.analysis = {}
-        self.analysis['fieldTests'] = analysis.FieldTestsInfo()
+        self.analysis['fieldTests'] = fields.FieldTestsInfo()
         self.cpFields = []
         self.analysisXML = None
 
