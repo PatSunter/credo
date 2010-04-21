@@ -1,5 +1,6 @@
 
 import os
+from lxml import etree
 
 from uwa.modelsuite import ModelSuite
 from uwa.modelrun import ModelRun
@@ -27,6 +28,7 @@ class AnalyticTest(SysTest):
         self.modelName += "-analyticTest"
         self.inputFiles = inputFiles
         self.outputPathBase = outputPathBase
+        self.testStatus = None
         self.nproc = nproc
 
     def genSuite(self):
@@ -75,4 +77,14 @@ class AnalyticTest(SysTest):
                     " tolerance %d" % (fRes.fieldName, fRes.tol))
                 break
 
+        self.status = testStatus
         return testStatus
+        
+    def writeXMLContents(self, baseNode):
+        descNode = etree.SubElement(baseNode, 'description')
+        descNode.text = self.description
+        analysisNode = etree.SubElement(baseNode, 'testComponents')
+        mRun = self.mSuite.runs[0]
+        fTests = mRun.analysis['fieldTests']
+        fTests.writeInfoXML(analysisNode)
+        status = etree.SubElement(baseNode, 'status')
