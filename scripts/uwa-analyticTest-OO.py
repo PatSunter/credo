@@ -23,10 +23,11 @@ mSuite = anTest.genSuite()
 
 #jobRunner = mpich2JobRunner()
 suiteResults = mSuite.runAll() # pass in jobRunner
-#suiteResults.writeAllXMLs(anTest.outputPath)
+mSuite.writeAllResultXMLs()
 
-#testResult = anTest.getStatus(suiteResults)
-#anTest.writeXML(anTest.outputPath)
+testResult = anTest.getStatus(suiteResults)
+print "Test result was %s" % testResult
+anTest.writeInfoXML()
 
 #==================
 

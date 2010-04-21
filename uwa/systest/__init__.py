@@ -1,2 +1,2 @@
 
-#Nothing for now
+from uwa.systest.api import *

@@ -44,21 +44,25 @@ class AnalyticTest(SysTest):
 
         return mSuite
 
-    def checkResultValid(suiteResults):
+    def checkResultValid(self, resultsSet):
         # TODO check it's a result instance
         # check number of results is correct
-        for mResult in suiteResults:
+        for mResult in resultsSet:
             # Check fieldresults exists, and is right length
             # Check each fieldResult contains correct fields
             pass
 
-    def getStatus(suiteResults):
-        self.checkResultValid(suiteResults)
+    def getStatus(self, resultsSet):
+        self.checkResultValid(resultsSet)
 
+        #TODO: fact it has to reference a saved set of suite results 
+        # suggests a not-so-good coupling. 
+        # Perhaps more a structure of TestComponents, that generate
+        #  Analytic updates to be added to the model runs?
         mRun = self.mSuite.runs[0]
-        mResult = suiteResults[0]
+        mResult = resultsSet[0]
 
-        testStatus = UWA_PASS
+        testStatus = uwa.systest.UWA_PASS()
 
         # This could be refactored quite a bit, should be done in modelRun
         fTests = mRun.analysis['fieldTests']
@@ -67,7 +71,8 @@ class AnalyticTest(SysTest):
         for fRes in mResult.fieldResults:
             result = fRes.checkErrorsWithinTol()
             if result == False:
-                testStatus=UWA_FAIL
+                testStatus=uwa.systest.UWA_FAIL("Field '%s' not within"
+                    " tolerance %d" % (fRes.fieldName, fRes.tol))
                 break
 
         return testStatus

@@ -1,4 +1,34 @@
 
+class SysTestResult:
+    detailMsg = None
+    statusStr = None
+
+    def __str__(self):
+        return self.statusStr
+    
+    def printDetailMsg(self):
+        if detailMsg:
+            print detailMsg
+
+class UWA_PASS(SysTestResult):
+    '''Simple class to represent an UWA pass'''
+    statusStr = 'Pass'
+
+class UWA_FAIL(SysTestResult):
+    '''Simple class to represent an UWA failure'''
+    def __init__(self, failMsg):
+        assert type(failMsg) == str
+        self.statusStr = 'Fail'
+        self.detailMsg = failMsg
+        
+class UWA_ERROR(SysTestResult):
+    '''Simple class to represent an UWA error'''
+    def __init__(self, errorMsg):
+        self.statusStr = 'Error'
+        assert type(errorMsg) == str
+        self.detailMsg = errorMsg
+
+
 class SysTestRunner:
 
     def __init__(self, sysTest):

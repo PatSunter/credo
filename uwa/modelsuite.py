@@ -9,9 +9,10 @@ class ModelSuite:
     or a System Test that requires multiple runs)'''
 
     def __init__(self, outputPathBase):
+        self.outputPathBase = outputPathBase
         self.runs = []
         self.runDescrips = []
-        self.outputPathBase = outputPathBase
+        self.resultsList = []
 
     def addRun(self, modelRun, runDescrip=None):
         if not isinstance( modelRun, mrun.ModelRun ):
@@ -23,8 +24,6 @@ class ModelSuite:
     def runAll(self):
         '''Run each modelRun in the suite'''
         # NB: may want to pass in a jobRunner argument, to do the run
-
-        resultsList=[]
 
         print "Running the %d modelRuns specified in the suite" % len(self.runs)
         for runI, modelRun in enumerate(self.runs):
@@ -42,9 +41,13 @@ class ModelSuite:
             # I.E. into a "post-run cleanup" for all analysis ?
             print "Doing post-run tidyup:"
             uwa.moveConvergenceResults(os.getcwd(), modelRun.outputPath)
-            resultsList.append(result)
+            self.resultsList.append(result)
 
-        return resultsList    
+        return self.resultsList    
     
+    def writeAllResultXMLs(self):
+        for runI, result in enumerate(self.resultsList):
+            mres.writeModelResultsXML(result, path=self.runs[runI].outputPath)
+            
     # TODO: here would be where we have tools to generate stats/plots
     # of various properties of the suite, e.g. memory usage
