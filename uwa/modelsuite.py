@@ -1,4 +1,5 @@
 
+import os
 import uwa
 from uwa import modelrun as mrun
 from uwa import modelresult as mres
@@ -7,9 +8,10 @@ class ModelSuite:
     '''A class for running a suite of Models (e.g. a group for profiling,
     or a System Test that requires multiple runs)'''
 
-    def __init__(self):
+    def __init__(self, outputPathBase):
         self.runs = []
         self.runDescrips = []
+        self.outputPathBase = outputPathBase
 
     def addRun(self, modelRun, runDescrip=None):
         if not isinstance( modelRun, mrun.ModelRun ):
@@ -29,7 +31,8 @@ class ModelSuite:
             if not isinstance(modelRun, mrun.ModelRun):
                 raise TypeError("Error, stored run %d not an instance of a"\
                     " ModelRun" % runI)
-            print "Doing run %d, of name '%s':" % (runI, modelRun.name)
+            print "Doing run %d, of name '%s', with description '%s'"\
+                % (runI, modelRun.name, self.runDescrips[runI])
             print "Generating analysis XML:"
             modelRun.analysisXMLGen()
             print "Running the Model:"

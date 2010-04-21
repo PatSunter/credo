@@ -1,9 +1,11 @@
 
 import os
 
+from uwa.modelsuite import ModelSuite
+from uwa.modelrun import ModelRun
 import uwa.systest
 from uwa.systest.api import SysTest
-import uwa.analysis
+from uwa.analysis import fields
 
 # TODO: have a factory for these to register with, in the API?
 
@@ -18,25 +20,27 @@ class AnalyticTest(SysTest):
         and checks the outputted fields are within a given error tolerance
         of that analytic solution.'''
 
-    def __init__(self, inputFiles, outputPathBase):
+    defaultFieldTol = 3e-2    
+
+    def __init__(self, inputFiles, outputPathBase, nproc=1):
         self.modelName, ext = os.path.splitext(inputFiles[0])
         self.modelName += "-analyticTest"
         self.inputFiles = inputFiles
         self.outputPathBase = outputPathBase
+        self.nproc = nproc
 
     def genSuite(self):
-        mSuite = ModelSuite(outputPathParent=outputPath)
-        self.mSuite = mSuite    
+        mSuite = ModelSuite(outputPathBase=self.outputPathBase)
+        self.mSuite = mSuite
 
-        mRun = mrun.ModelRun(self.modelName, self.inputFiles,
-            self.outputPathBase, nproc=nproc)
+        mRun = ModelRun(self.modelName, self.inputFiles,
+            self.outputPathBase, nproc=self.nproc)
         # For analytic test, read fields to analyse from the XML
-        mRun.fTests = FieldTestsInfo()
-        mRun.fTests.readFromStgXML(inputFiles)
+        fTests = mRun.analysis['fieldTests']
+        fTests.readFromStgXML(self.inputFiles)
         # Would be good to allow these to be over-ridden per field.
-        mRun.fieldTests.setAllTols(defaultFieldTol)
-        mSuite.addRun(mRun,"analysis", "Run the model and generate analytic soln.",\
-            )
+        fTests.setAllTols(self.defaultFieldTol)
+        mSuite.addRun(mRun, "Run the model and generate analytic soln.")
 
         return mSuite
 
