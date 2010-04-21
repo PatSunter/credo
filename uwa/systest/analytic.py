@@ -35,8 +35,8 @@ class AnalyticTest(SysTest):
         mRun.fTests.readFromStgXML(inputFiles)
         # Would be good to allow these to be over-ridden per field.
         mRun.fieldTests.setAllTols(defaultFieldTol)
-        mSuite.addRun("analysis", "Run the model and generate analytic soln.",\
-            mRun)
+        mSuite.addRun(mRun,"analysis", "Run the model and generate analytic soln.",\
+            )
 
         return mSuite
 

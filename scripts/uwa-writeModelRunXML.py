@@ -73,7 +73,7 @@ def main(argv):
             sys.exit(2)
 
     mRun = uwa.ModelRun(modelName, inputFiles, outputPath, nproc)
-    uwa.writeModelRunXML(mRun)
+    mRun.writeModelRunXML()
 
 def usage():
     print "Error in command line options passed to the XML writer script\n"

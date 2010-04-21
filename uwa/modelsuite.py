@@ -9,6 +9,14 @@ class ModelSuite:
 
     def __init__(self):
         self.runs = []
+        self.runDescrips = []
+
+    def addRun(self, modelRun, runDescrip=None):
+        if not isinstance( modelRun, mrun.ModelRun ):
+            raise TypeError("Error, given run not an instance of a"\
+                " ModelRun" % runI)
+        self.runs.append(modelRun)
+        self.runDescrips.append(runDescrip)
 
     def runAll(self):
         '''Run each modelRun in the suite'''
@@ -17,18 +25,20 @@ class ModelSuite:
         resultsList=[]
 
         print "Running the %d modelRuns specified in the suite" % len(self.runs)
-        for runI, run in enumerate(self.runs):
-            assert isinstance( run, mrun.ModelRun )
-            print "Doing run %d, of name '%s':" % (runI, run.name)
+        for runI, modelRun in enumerate(self.runs):
+            if not isinstance(modelRun, mrun.ModelRun):
+                raise TypeError("Error, stored run %d not an instance of a"\
+                    " ModelRun" % runI)
+            print "Doing run %d, of name '%s':" % (runI, modelRun.name)
             print "Generating analysis XML:"
-            mRun.analysisXML = mrun.analysisXMLGen(mRun)
+            modelRun.analysisXMLGen()
             print "Running the Model:"
-            result = mrun.runModel(mRun)
+            result = mrun.runModel(modelRun)
             assert isinstance( result, mres.ModelResult )
             # TODO: does this step need to be refactored/generalised?
             # I.E. into a "post-run cleanup" for all analysis ?
             print "Doing post-run tidyup:"
-            uwa.moveConvergenceResults(os.getcwd(), mRun.outputPath)
+            uwa.moveConvergenceResults(os.getcwd(), modelRun.outputPath)
             resultsList.append(result)
 
         return resultsList    

@@ -44,12 +44,12 @@ fTests.readFromStgXML(mRun.modelInputFiles)
 mRun.analysis['fieldTests'].setAllTols(defaultFieldTol)
 customOpts = "--pluginData.appendToAnalysisFile=True"
 
-mrun.writeModelRunXML(mRun)
-
+mRun.writeInfoXML()
 # This will generate an additional XML to require StGermain/Underworld
 # to do any requested extra analysis (eg compare fields), and run for
-# the appropriate number of timesteps etc.
-mRun.analysisXML = mrun.analysisXMLGen(mRun)
+# the appropriate number of timesteps etc. It is stored on the mRun
+# as a param named 'analysisXML'
+mRun.analysisXMLGen(mRun)
 
 uwa.prepareOutputLogDirs(mRun.outputPath, mRun.logPath)
 # This will run the model, and also save basic results (e.g. walltime)

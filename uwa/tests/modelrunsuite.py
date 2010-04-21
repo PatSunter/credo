@@ -22,8 +22,7 @@ class ModelRunTestCase(unittest.TestCase):
         modelRun = mrun.ModelRun('TestModel', ["testModel.xml"], \
             'output/testModel', nproc)
         modelRun.simParams = mrun.SimParams(nsteps=5, cpevery=10)
-        mrun.writeModelRunXML(modelRun)
-
+        modelRun.writeInfoXML()
 
 def suite():
     suite = unittest.TestSuite()

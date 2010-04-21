@@ -53,7 +53,7 @@ for res in resSet:
     # be over-ridden
     fTests.setAllTols(defaultFieldTol)
 
-    mrun.writeModelRunXML(mRun)
+    mRun.writeModelRunXML()
 
     # This will generate an additional XML to require StGermain/Underworld
     # to do any requested extra analysis (eg compare fields), and run 

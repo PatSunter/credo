@@ -7,7 +7,11 @@ import tempfile
 import unittest
 
 from uwa import modelsuite as msuite
+from uwa.modelrun import ModelRun
 from uwa.modelsuite import ModelSuite
+
+# Skeleton classes
+#class SkelModelRun(ModelRun):
 
 class ModelSuiteTestCase(unittest.TestCase):
 
@@ -23,8 +27,11 @@ class ModelSuiteTestCase(unittest.TestCase):
         results = self.mSuite.runAll()
         self.assertEqual(results,[])
         # Now add some runs
-        # TODO - perhaps add skeleton classes
-        self.fail("Need to write")
+        mRun1 = ModelRun("testRun1",["Input1.xml"],"./output/tr1")
+        mRun2 = ModelRun("testRun2",["Input2.xml"],"./output/tr2")
+        self.mSuite.addRun(mRun1, "Initial run")
+        self.mSuite.addRun(mRun2, "Second run")
+        results = self.mSuite.runAll()
 
 def suite():
     suite = unittest.TestSuite()

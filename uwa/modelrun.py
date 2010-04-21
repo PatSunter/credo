@@ -6,7 +6,7 @@ from uwa.analysis import fields
 class ModelRun:
     '''A class to keep records about a StgDomain/Underworld Model Run,
     including access to the underlying XML of the actual model'''
-    def __init__(self, name, modelInputFiles, outputPath, logPath="./log",\
+    def __init__(self, name, modelInputFiles, outputPath, logPath="./log",
      cpReadPath=None, nproc=1):
         self.name = name
         self.modelInputFiles = modelInputFiles
@@ -20,6 +20,81 @@ class ModelRun:
         self.analysis['fieldTests'] = fields.FieldTestsInfo()
         self.cpFields = []
         self.analysisXML = None
+
+    def defaultModelRunFilename(self):    
+        return 'ModelRun-'+self.name+'.xml'
+
+    def writeInfoXML(self, outputPath="", filename="", update=False,
+            prettyPrint=True):
+        if filename == "":
+            filename = self.defaultModelRunFilename()
+        if outputPath == "":
+            outputPath=self.outputPath
+        outputPath+=os.sep
+
+        # create XML document
+        root = etree.Element('StgModelRun')
+        xmlDoc = etree.ElementTree(root)
+        # Write key entries:
+        # Model description (grab from XML file perhaps)
+        name = etree.SubElement(root, 'name')
+        name.text = self.name
+        filesList = etree.SubElement(root, 'modelInputFiles')
+        for xmlFilename in self.modelInputFiles:
+            modFile = etree.SubElement(filesList, 'inputFile')
+            modFile.text = xmlFilename
+        etree.SubElement(root, 'outputPath').text = self.outputPath
+        if self.cpReadPath:
+            etree.SubElement(root, 'cpReadPath').text = self.cpReadPath
+        self.jobParams.writeInfoXML(root)
+        if not self.simParams:
+            simParams = SimParams()
+            simParams.readFromStgXML(self.modelInputFiles)
+            simParams.writeInfoXML(root)
+        else:    
+            self.simParams.writeInfoXML(root)
+
+        analysisNode = etree.SubElement(root, 'analysis')
+        for toolName, analysisTool in self.analysis.iteritems():
+            analysisTool.writeInfoXML(analysisNode)
+        # TODO : write info on cpFields?
+        # Write the file
+        if not os.path.exists(outputPath):
+            os.makedirs(outputPath)
+        outFile = open(outputPath+filename, 'w')
+        xmlDoc.write(outFile, pretty_print=prettyPrint)
+        outFile.close()
+        return outputPath+filename
+
+    def analysisXMLGen(self, filename="analysis.xml"):
+        # create XML document
+        nsMap = {None: "http://www.vpac.org/StGermain/XML_IO_Handler/Jun2003"}
+        root = etree.Element(stgxml.stgRootTag, nsmap=nsMap)
+        xmlDoc = etree.ElementTree(root)
+        # Write key entries:
+        stgxml.writeParam(root, 'outputPath', self.outputPath, mt='replace')
+        if self.cpReadPath:
+            stgxml.writeParam(root, 'checkpointReadPath', self.cpReadPath,
+                mt='replace')
+        if self.simParams:
+            self.simParams.writeStgDataXML(root)
+        for analysisName, analysisTool in self.analysis.iteritems():
+            if not analysisTool.fromXML:
+                analysisTool.writeStgDataXML(root)
+
+        # This is so we can checkpoint fields list: defined in FieldVariable.c
+        if len(self.cpFields):
+            stgxml.writeParamList(root, 'FieldVariablesToCheckpoint', \
+                self.cpFields, mt='replace')
+
+        # Write the file
+        outFile = open(filename, 'w')
+        xmlDoc.write(outFile, pretty_print=True)
+        outFile.close()
+        self.analysisXML = filename
+
+        return filename
+
 
 class JobParams:
     def __init__(self, nproc):
@@ -132,80 +207,6 @@ class SimParams:
         os.remove(ffile)
 
 
-def writeModelRunXML(modelRun, outputPath="", filename="", update=False, \
-        prettyPrint=True):
-    assert isinstance(modelRun, ModelRun)
-    if filename == "":
-        filename = defaultModelRunFilename(modelRun.name)
-    if outputPath == "":
-        outputPath=modelRun.outputPath
-    outputPath+=os.sep    
-
-    # create XML document
-    root = etree.Element('StgModelRun')
-    xmlDoc = etree.ElementTree(root)
-    # Write key entries:
-    # Model description (grab from XML file perhaps)
-    name = etree.SubElement(root, 'name')
-    name.text = modelRun.name
-    filesList = etree.SubElement(root, 'modelInputFiles')
-    for xmlFilename in modelRun.modelInputFiles:
-        modFile = etree.SubElement(filesList, 'inputFile')
-        modFile.text = xmlFilename
-    etree.SubElement(root, 'outputPath').text = modelRun.outputPath
-    if modelRun.cpReadPath:
-        etree.SubElement(root, 'cpReadPath').text = modelRun.cpReadPath
-    modelRun.jobParams.writeInfoXML(root)
-    if not modelRun.simParams:
-        simParams = SimParams()
-        simParams.readFromStgXML(modelRun.modelInputFiles)
-        simParams.writeInfoXML(root)
-    else:    
-        modelRun.simParams.writeInfoXML(root)
-
-    analysisNode = etree.SubElement(root, 'analysis')
-    for toolName, analysisTool in modelRun.analysis.iteritems():
-        analysisTool.writeInfoXML(analysisNode)
-
-    # TODO : write info on cpFields?
-
-    # Write the file
-    if not os.path.exists(outputPath):
-        os.makedirs(outputPath)
-    outFile = open(outputPath+filename, 'w')
-    xmlDoc.write(outFile, pretty_print=prettyPrint)
-    outFile.close()
-    return outputPath+filename
-
-def defaultModelRunFilename(modelName):    
-    return 'ModelRun-'+modelName+'.xml'
-
-def analysisXMLGen(modelRun, filename="analysis.xml"):
-    # create XML document
-    nsMap = { None: "http://www.vpac.org/StGermain/XML_IO_Handler/Jun2003" }
-    root = etree.Element(stgxml.stgRootTag, nsmap=nsMap)
-    xmlDoc = etree.ElementTree(root)
-    # Write key entries:
-    stgxml.writeParam(root, 'outputPath', modelRun.outputPath, mt='replace')
-    if modelRun.cpReadPath:
-        stgxml.writeParam(root, 'checkpointReadPath', modelRun.cpReadPath, mt='replace')
-    if modelRun.simParams:
-        modelRun.simParams.writeStgDataXML(root)
-    for analysisName, analysisTool in modelRun.analysis.iteritems():
-        if not analysisTool.fromXML:
-            analysisTool.writeStgDataXML(root)
-
-    # This is so we can checkpoint fields list: defined in FieldVariable.c
-    if len(modelRun.cpFields):
-        stgxml.writeParamList(root, 'FieldVariablesToCheckpoint', \
-            modelRun.cpFields, mt='replace')
-
-    # Write the file
-    outFile = open(filename, 'w')
-    xmlDoc.write(outFile, pretty_print=True)
-    outFile.close()
-    return filename
-
 ##################
 
 import sys
@@ -258,8 +259,7 @@ def runModel(modelRun, extraCmdLineOpts=None):
     if (modelRun.simParams):
         modelRun.simParams.checkValidParams()
 
-    # Construct run line
-    mpiPart = "%s -np %d " % (mpiCommand, modelRun.jobParams.nproc)
+    # Construct StGermain run command
     runExe=uwa.getVerifyStgExePath("StGermain")
     stgPart = "%s " % (runExe)
     for inputFile in modelRun.modelInputFiles:    
@@ -275,6 +275,9 @@ def runModel(modelRun, extraCmdLineOpts=None):
     if extraCmdLineOpts:
         stgPart += " "+extraCmdLineOpts
 
+    # BEGIN JOBRUNNER PART
+    # Construct run line
+    mpiPart = "%s -np %d " % (mpiCommand, modelRun.jobParams.nproc)
     runCommand = mpiPart + stgPart + " > logFile.txt"
 
     # Run the run command, sending stdout and stderr to defined log paths
@@ -282,6 +285,7 @@ def runModel(modelRun, extraCmdLineOpts=None):
     # TODO: the mpirunner should check things like mpd are set up properly,
     # in case of mpich2
     os.system(runCommand)
+    # END JOBRUNNER PART
 
     # Check status of run (eg error status)
 
