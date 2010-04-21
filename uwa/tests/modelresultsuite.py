@@ -41,7 +41,7 @@ class ModelResultTestCase(unittest.TestCase):
         self.assertEqual(jmChildren[0].text,str(simT))
 
     def test_writeModelResultsXML(self):
-        results = mres.ModelResult('TestModel', 2.07)
+        results = mres.ModelResult('TestModel', "./output", 2.07)
         tol = 0.01
         results.recordFieldResult('VelocityField', tol, [3.5e-4, 4.4e-3])
         results.recordFieldResult('PressureField', tol, [3.5e-2])
@@ -49,7 +49,7 @@ class ModelResultTestCase(unittest.TestCase):
 
     def test_updateModelResultsXMLFieldInfo(self):
         modName = 'TestModel'
-        results = mres.ModelResult(modName, 2.07)
+        results = mres.ModelResult(modName, "./output", 2.07)
         resFile = mres.writeModelResultsXML(results,\
             filename="ModelResult-TestModel-inc.xml")
         tol = 0.01

@@ -22,10 +22,11 @@ anTest = AnalyticTest(inputFiles, outputPath, nproc=1)
 mSuite = anTest.genSuite()
 
 #jobRunner = mpich2JobRunner()
+mSuite.writeAllModelRunXMLs()
 suiteResults = mSuite.runAll() # pass in jobRunner
-mSuite.writeAllResultXMLs()
-
 testResult = anTest.getStatus(suiteResults)
+mSuite.writeAllModelResultXMLs()
+
 print "Test result was %s" % testResult
 anTest.writeInfoXML()
 

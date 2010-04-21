@@ -24,24 +24,22 @@ class AnalyticTest(SysTest):
     defaultFieldTol = 3e-2    
 
     def __init__(self, inputFiles, outputPathBase, nproc=1):
-        self.modelName, ext = os.path.splitext(inputFiles[0])
-        self.modelName += "-analyticTest"
-        self.inputFiles = inputFiles
-        self.outputPathBase = outputPathBase
-        self.testStatus = None
-        self.nproc = nproc
+        SysTest.__init__(self, inputFiles, outputPathBase, nproc, "Analytic")
+        self.testComponents['fieldTests'] = fields.FieldTestsInfo()
 
     def genSuite(self):
         mSuite = ModelSuite(outputPathBase=self.outputPathBase)
         self.mSuite = mSuite
 
-        mRun = ModelRun(self.modelName, self.inputFiles,
+        mRun = ModelRun(self.testName, self.inputFiles,
             self.outputPathBase, nproc=self.nproc)
         # For analytic test, read fields to analyse from the XML
-        fTests = mRun.analysis['fieldTests']
+        fTests = self.testComponents['fieldTests']
         fTests.readFromStgXML(self.inputFiles)
         # Would be good to allow these to be over-ridden per field.
         fTests.setAllTols(self.defaultFieldTol)
+        # TODO: currently need to over-ride here...
+        mRun.analysis['fieldTests'] = fTests
         mSuite.addRun(mRun, "Run the model and generate analytic soln.")
 
         return mSuite
@@ -61,30 +59,26 @@ class AnalyticTest(SysTest):
         # suggests a not-so-good coupling. 
         # Perhaps more a structure of TestComponents, that generate
         #  Analytic updates to be added to the model runs?
-        mRun = self.mSuite.runs[0]
         mResult = resultsSet[0]
 
-        testStatus = uwa.systest.UWA_PASS()
+        testStatus = None
 
         # This could be refactored quite a bit, should be done in modelRun
-        fTests = mRun.analysis['fieldTests']
-        mResult.fieldResults = fTests.testConvergence(mRun.outputPath)
+        fTests = self.testComponents['fieldTests']
+        mResult.fieldResults = fTests.testConvergence(mResult.outputPath)
 
         for fRes in mResult.fieldResults:
             result = fRes.checkErrorsWithinTol()
             if result == False:
-                testStatus=uwa.systest.UWA_FAIL("Field '%s' not within"
+                testStatus = uwa.systest.UWA_FAIL("Field '%s' not within"
                     " tolerance %d" % (fRes.fieldName, fRes.tol))
                 break
 
-        self.status = testStatus
+        if testStatus == None:
+            testStatus = uwa.systest.UWA_PASS("All fields were within required"\
+                " tolerance %d of analytic solution at end of run." % fRes.tol )
+        self.testStatus = testStatus
         return testStatus
         
     def writeXMLContents(self, baseNode):
-        descNode = etree.SubElement(baseNode, 'description')
-        descNode.text = self.description
-        analysisNode = etree.SubElement(baseNode, 'testComponents')
-        mRun = self.mSuite.runs[0]
-        fTests = mRun.analysis['fieldTests']
-        fTests.writeInfoXML(analysisNode)
-        status = etree.SubElement(baseNode, 'status')
+        pass

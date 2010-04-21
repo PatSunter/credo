@@ -305,6 +305,6 @@ def runModel(modelRun, extraCmdLineOpts=None):
     tSteps = float(cols[0])
     simTime = float(cols[1])
 
-    result = uwa.modelresult.ModelResult(modelRun.name, simTime)
+    result = uwa.modelresult.ModelResult(modelRun.name, modelRun.outputPath, simTime)
     
     return result

@@ -9,8 +9,9 @@ class ModelResult:
 
     XML_INFO_TAG = 'StgModelResult'
 
-    def __init__(self, modelName, simtime):
+    def __init__(self, modelName, outputPath, simtime):
         self.modelName = modelName
+        self.outputPath = outputPath
         self.jobMetaInfo = JobMetaInfo(simtime)
         self.fieldResults = []
 
@@ -57,6 +58,7 @@ def writeModelResultsXML(modelResult, path="", filename="", prettyPrint=True):
     mrNode = etree.Element(modelResult.XML_INFO_TAG)
     xmlDoc = etree.ElementTree(mrNode)
     etree.SubElement(mrNode, 'modelName').text = mres.modelName
+    etree.SubElement(mrNode, 'outputPath').text = mres.outputPath
     mres.jobMetaInfo.writeInfoXML(mrNode)
     if (mres.fieldResults):
         fieldResultsNode = etree.SubElement(mrNode,

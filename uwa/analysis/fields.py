@@ -145,7 +145,7 @@ class FieldTestsInfo(AnalysisOperation):
         ftNode.attrib['useReference']=str(self.useReference)
         ftNode.attrib['referencePath']=str(self.referencePath)
         ftNode.attrib['testTimestep']=str(self.testTimestep)
-        fListNode = etree.SubElement(parentNode, 'fields')
+        fListNode = etree.SubElement(ftNode, 'fields')
         for fTest in self.fields.values():
             fTest.writeInfoXML(fListNode)
 

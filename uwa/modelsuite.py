@@ -45,7 +45,11 @@ class ModelSuite:
 
         return self.resultsList    
     
-    def writeAllResultXMLs(self):
+    def writeAllModelRunXMLs(self):
+        for runI, modelRun in enumerate(self.runs):
+            modelRun.writeInfoXML(outputPath=modelRun.outputPath)
+
+    def writeAllModelResultXMLs(self):
         for runI, result in enumerate(self.resultsList):
             mres.writeModelResultsXML(result, path=self.runs[runI].outputPath)
             
