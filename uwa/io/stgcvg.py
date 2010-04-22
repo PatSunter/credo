@@ -2,8 +2,6 @@ import os
 import glob
 import linecache
 
-from lxml import etree
-
 '''A Module for dealing with StGermain Convergence files, produced by the
 FieldTester Component.'''
 
