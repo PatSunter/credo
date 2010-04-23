@@ -45,10 +45,10 @@ mRun.outputPath = initialOutputPath
 mRun.simParams = SimParams(nsteps=runSteps, cpevery=runSteps/2, dumpevery=0)
 mRun.cpFields = standardFields
 
-mRun.writeModelRunXML(mRun)
+mRun.writeInfoXML()
 uwa.prepareOutputLogDirs(mRun.outputPath, mRun.logPath)
 # This will run the model, and also save basic results (e.g. walltime)
-mRun.analysisXMLGen(mRun)
+analysisXML = mRun.analysisXMLGen()
 results = uwa.modelrun.runModel(mRun)
 uwa.modelresult.writeModelResultsXML(results, path=mRun.outputPath)
 
@@ -68,8 +68,8 @@ defFieldTol = 1e-5
 for fieldName in standardFields:
     fTests.add(FieldTest(fieldName, tol=defFieldTol))
 
-uwa.writeModelRunXML(mRun)
-mRun.analysisXML = uwa.modelrun.analysisXMLGen(mRun)
+mRun.writeInfoXML()
+analysisXML = mRun.analysisXMLGen()
 uwa.prepareOutputLogDirs(mRun.outputPath, mRun.logPath)
 # This will run the model, and also save basic results (e.g. walltime)
 results = uwa.modelrun.runModel(mRun)

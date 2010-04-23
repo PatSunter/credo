@@ -49,7 +49,7 @@ mRun.writeInfoXML()
 # to do any requested extra analysis (eg compare fields), and run for
 # the appropriate number of timesteps etc. It is stored on the mRun
 # as a param named 'analysisXML'
-mRun.analysisXMLGen(mRun)
+mRun.analysisXMLGen()
 
 uwa.prepareOutputLogDirs(mRun.outputPath, mRun.logPath)
 # This will run the model, and also save basic results (e.g. walltime)

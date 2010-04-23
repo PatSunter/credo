@@ -52,12 +52,12 @@ else:
     for fieldName in standardFields:
         fTests.add(FieldTest(fieldName, tol=defFieldTol))
 
-mRun.writeModelRunXML()
+mRun.writeInfoXML()
 
 # This will generate an additional XML to require StGermain/Underworld to do
 # any requested extra analysis (eg compare fields), and run for the
 # appropriate number of timesteps etc.
-mRun.analysisXMLGen(mRun)
+mRun.analysisXMLGen()
 
 uwa.prepareOutputLogDirs(mRun.outputPath, mRun.logPath)
 
