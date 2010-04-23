@@ -67,6 +67,11 @@ class AnalyticTest(SysTest):
         fTests = self.testComponents['fieldTests']
         mResult.fieldResults = fTests.testConvergence(mResult.outputPath)
 
+        # TODO: perhaps this should be moved into a separate function, eg for
+        # plotting
+        for fRes in mResult.fieldResults:
+            fRes.plotCvgOverTime(show=False, path=mResult.outputPath)
+
         for fRes in mResult.fieldResults:
             result = fRes.checkErrorsWithinTol()
             if result == False:
