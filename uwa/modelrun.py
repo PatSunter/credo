@@ -286,13 +286,13 @@ def runModel(modelRun, extraCmdLineOpts=None):
     # in case of mpich2
     os.system(runCommand)
     # END JOBRUNNER PART
-
     # Check status of run (eg error status)
 
     # Construct a modelResult
     # Get necessary stuff from FrequentOutput.dat
     # TODO: this should be in a sub-module - is currently quite hacky
-    freqFile = open(modelRun.outputPath + os.sep + "FrequentOutput.dat", 'r')
+    freqFilename = modelRun.outputPath + os.sep + "FrequentOutput.dat"
+    freqFile = open(freqFilename, 'r')
 
     # Parse out the headings
     headerLine = freqFile.readline()
@@ -300,7 +300,13 @@ def runModel(modelRun, extraCmdLineOpts=None):
 
     # Obtain time and memory at time-stamp specified by problem.steps
     lines = freqFile.readlines()
-    lastLine = lines[-1]
+    try:
+        lastLine = lines[-1]
+    except IndexError:
+        # TODO: ModelFailError exception
+        raise IndexError("Error, a frequent output file exists at '%s'"
+            " but it contains no timestep info, suggesting model failed to"
+            " run." % (freqFilename) )
     cols = lastLine.split()
     tSteps = float(cols[0])
     simTime = float(cols[1])
