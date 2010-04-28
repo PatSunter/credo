@@ -48,6 +48,7 @@ class SysTestRunner:
         suiteResults = mSuite.runAll()
         suiteResults.writeAllXMLs(sysTest.outputPath)
 
+        print "System Test: checking "
         testResult = sysTest.getStatus(suiteResults)
         sysTest.writeXML(sysTest.outputPath)
        
