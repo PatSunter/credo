@@ -67,6 +67,11 @@ class SysTest:
         self.testComponents = {}
         self.nproc = nproc 
 
+    def setup():
+        '''For the setup phase of tests. Since not all tests need a setup
+        phase, the default behaviour is to do nothing.'''
+        pass
+
     def genSuite():
         print "Error, base class"
         assert 0
