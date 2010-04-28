@@ -292,7 +292,7 @@ def runModel(modelRun, extraCmdLineOpts=None):
     # Construct a modelResult
     # Get necessary stuff from FrequentOutput.dat
     # TODO: this should be in a sub-module - is currently quite hacky
-    freqFile = open(modelRun.outputPath + "/FrequentOutput.dat", 'r')
+    freqFile = open(modelRun.outputPath + os.sep + "FrequentOutput.dat", 'r')
 
     # Parse out the headings
     headerLine = freqFile.readline()
