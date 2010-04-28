@@ -46,6 +46,7 @@ class FieldResult:
             self.dofErrors.append(float(errorStr))
         
         self.cvgFileInfo = None
+        self.plottedCvgFile = None
     
     def checkErrorsWithinTol(self):
         for dofError in self.dofErrors:
@@ -58,6 +59,8 @@ class FieldResult:
         fr = etree.SubElement(fieldResultsNode, self.XML_INFO_TAG)
         fr.attrib['fieldName'] = self.fieldName
         fr.attrib['tol'] = str(self.tol)
+        if self.plottedCvgFile:
+            fr.attrib['plottedCvgFile'] = self.plottedCvgFile
         for dofIndex in range(len(self.dofErrors)):
             dr = etree.SubElement(fr, 'dofResult')
             dr.attrib['dof'] = str(dofIndex)
@@ -104,8 +107,9 @@ class FieldResult:
                 plt.title("DOF %d" % dofI)
 
         if save:
-            filename=path+os.sep+self.fieldName+"-cvg.png"
+            filename = path+os.sep+self.fieldName+"-cvg.png"
             plt.savefig(filename, format="png")
+            self.plottedCvgFile = filename
         if show: plt.show()
 
 
@@ -234,8 +238,14 @@ class FieldTestsInfo(AnalysisOperation):
 
         fieldResults = []
         for fieldTest in fieldTestsDict.values():
-            assert fieldTest.name in cvgFileIndex
-            cvgFileInfo = cvgFileIndex[fieldTest.name]
+            try:
+                cvgFileInfo = cvgFileIndex[fieldTest.name]
+            except KeyError:     
+                # TODO: create a new exception type here?
+                raise KeyError("Field '%s' not found in the known list of"\
+                    " convergence results (%s)" % (fieldTest.name,
+                    cvgFileIndex.keys()))
+
             fr = fieldTest.checkFieldConvergence(cvgFileInfo)
             fieldResults.append(fr)
 
