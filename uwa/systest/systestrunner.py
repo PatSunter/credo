@@ -59,6 +59,7 @@ class SysTestRunner:
                 " same length, but sysTests of len %d vs results of"\
                 " len %d" % (len(sysTests), len(results)))
         
+        print "-"*80
         print "UWA System Tests results summary:"
         print "Ran %d system tests," % (len(results)),
 
@@ -84,4 +85,5 @@ class SysTestRunner:
             for eI in errorIndices:
                 print " %s: %s" % (sysTests[eI].testName,
                     results[eI].detailMsg)
+        print "-"*80
 
