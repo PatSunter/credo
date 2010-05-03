@@ -277,16 +277,35 @@ def runModel(modelRun, extraCmdLineOpts=None):
 
     # BEGIN JOBRUNNER PART
     # Construct run line
+    logFilename = "logFile.txt"
     mpiPart = "%s -np %d " % (mpiCommand, modelRun.jobParams.nproc)
-    runCommand = mpiPart + stgPart + " > logFile.txt"
+    runCommand = mpiPart + stgPart + " > " + logFilename
 
     # Run the run command, sending stdout and stderr to defined log paths
-    print runCommand
+    print "Running model '%s' with command '%s' ..."\
+        % (modelRun.name, runCommand)
     # TODO: the mpirunner should check things like mpd are set up properly,
     # in case of mpich2
-    os.system(runCommand)
-    # END JOBRUNNER PART
+    import subprocess
+    p = subprocess.Popen(runCommand,shell=True,stderr=subprocess.PIPE)
+    retcode = p.wait()
     # Check status of run (eg error status)
+    if retcode != 0:
+        logFile = open(logFilename,"r")
+        # TODO: this is a bit inefficient and could be done with proper
+        # tail function using seek etc.
+        tailLen = 20
+        logFileLines = logFile.readlines()
+        total = len(logFileLines)
+        start = 0
+        if total > tailLen: start = total - tailLen
+        logFileTail = logFileLines[start:]
+        raise OSError("Failed to run model '%s', ret code was %s\nStd error"\
+            " msg was:\n%s\nLast %d lines of std out msg was:\n%s"
+            % (modelRun.name, retcode, p.stderr.read(), tailLen,
+                "".join(logFileTail)))
+    else: print "Model ran successfully."
+    # END JOBRUNNER PART
 
     # Construct a modelResult
     # Get necessary stuff from FrequentOutput.dat
