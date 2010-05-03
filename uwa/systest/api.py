@@ -45,6 +45,10 @@ class SysTest:
         if isinstance(inputFiles, str):
             inputFiles = [inputFiles]
         self.inputFiles = inputFiles
+        for iFile in self.inputFiles:
+            if not os.path.exists(iFile):
+                raise IOError("One of the given input files, '%s',"
+                    " doesn't exist." % (iFile))
         self.testName, ext = os.path.splitext(inputFiles[0])
         self.testName += "-%sTest" % (testType[0].lower()+testType[1:])
         self.outputPathBase = outputPathBase
