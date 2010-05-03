@@ -1,4 +1,5 @@
 import os
+from subprocess import *
 from lxml import etree
 import uwa
 
@@ -10,13 +11,25 @@ listTag = "list"
 paramTag = "param"
 stgMergeTypes = ['append','merge','replace']
 
-def createFlattenedXML(inputFilesList):
+def createFlattenedXML(inputFiles):
     '''Flatten a list of provided XML files, using the StGermain
      FlattenXML tool'''
-    flattenCommand=uwa.getVerifyStgExePath('FlattenXML')
-    for iFile in inputFilesList:
-        flattenCommand += ' '+iFile
-    os.system(flattenCommand)
+    flattenExe=uwa.getVerifyStgExePath('FlattenXML')
+
+    try:
+        p = Popen([flattenExe]+inputFiles, stdout=PIPE, stderr=PIPE)
+        (stdout, stderr) = p.communicate()
+        # The 2nd clause necessary because FlattenXML doesn't return 
+        # proper error codes (ie always returns 0) up to 1.4.2 release
+        if p.returncode != 0 or stderr != "":
+            raise OSError("Error: Command to create flattened file, '%s' on"
+                " input files %s, failed, with error msg:\n%s" \
+                % (flattenExe,inputFiles,stderr))
+    except OSError as e:
+        raise OSError("Unexpected failure to execute Flatten command '%s'"\
+            " on input files %s. Error msg was:\n%s"\
+            % (flattenExe, inputFiles,str(e)))
+
     ffile='output.xml'
     return ffile
 
