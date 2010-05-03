@@ -83,13 +83,39 @@ class SysTestRunner:
                 % (testI, sysTest.testName)
             results.append(self.runTest(sysTest))
         
-        self.printResultsSummary(results)
+        self.printResultsSummary(self.sysTests, results)
     
-    def printResultsSummary(self, results):
+    def printResultsSummary(self, sysTests, results):
+        if len(sysTests) != len(results):
+            raise ValueError("The sysTests and results args must be"\
+                " same length, but sysTests of len %d vs results of"\
+                " len %d" % (len(sysTests), len(results)))
+        
         print "UWA System Tests results summary:"
-        print "Ran %d system tests, " % (len(results)),
+        print "Ran %d system tests," % (len(results)),
 
-        #
+        sums = {"Pass":0, "Fail":0, "Error":0}
+        failIndices = []
+        errorIndices = []
+        for resI, result in enumerate(results):
+            sums[result.statusStr] += 1
+            if isinstance(result, UWA_FAIL): failIndices.append(resI)
+            if isinstance(result, UWA_ERROR): errorIndices.append(resI)
+        
+        print "with %d passes, %d fails, and %d errors" \
+            % (sums["Pass"], sums["Fail"], sums["Error"])
+
+        if len(failIndices) > 0:
+            print "Failures were:"
+            for fI in failIndices:
+                print " %s: %s" % (sysTests[fI].testName,
+                    results[fI].detailMsg)
+
+        if len(errorIndices) > 0:
+            print "Errors were:"
+            for eI in errorIndices:
+                print " %s: %s" % (sysTests[eI].testName,
+                    results[eI].detailMsg)
 
 
 class SysTest:
@@ -98,9 +124,13 @@ class SysTest:
 
     def __init__(self, inputFiles, outputPathBase, nproc, testType):
         self.testType = testType
+        # Be forgiving of user passing a single string rather than a list,
+        # and correct for this.
+        if isinstance(inputFiles, str):
+            inputFiles = [inputFiles]
+        self.inputFiles = inputFiles
         self.testName, ext = os.path.splitext(inputFiles[0])
         self.testName += "-%sTest" % (testType[0].lower()+testType[1:])
-        self.inputFiles = inputFiles
         self.outputPathBase = outputPathBase
         self.testStatus = None
         self.testComponents = {}
