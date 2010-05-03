@@ -30,8 +30,8 @@ class ModelSuite:
             if not isinstance(modelRun, mrun.ModelRun):
                 raise TypeError("Error, stored run %d not an instance of a"\
                     " ModelRun" % runI)
-            print "Doing run %d (index %d), of name '%s':"\
-                % (runI+1, runI, modelRun.name)
+            print "Doing run %d/%d (index %d), of name '%s':"\
+                % (runI+1, len(self.runs), runI, modelRun.name)
             print "ModelRun description: \"%s\"" % (self.runDescrips[runI])
             print "Generating analysis XML:"
             modelRun.analysisXMLGen()
