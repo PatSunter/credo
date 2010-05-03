@@ -1,5 +1,6 @@
 import os
 from lxml import etree
+import inspect
 
 class SysTestResult:
     detailMsg = None
@@ -36,22 +37,60 @@ class UWA_ERROR(SysTestResult):
 
 class SysTestRunner:
 
-    def __init__(self, sysTest):
-        # Nothing for the base class
-        pass
-        self.sysTest = sysTest
+    def __init__(self, sysTests=[], nproc=1):
+        self.sysTests = sysTests
+        # Should this be over-rideable per test?
+        self.nproc = nproc
     
-    def runTest(self):
+    def addStdTest(self, testClass, inputFiles, **testOpts):
+        if not inspect.isclass(testClass):
+            raise TypeError("The testClass argument must be a type that's"\
+                " a subclass of the UWA SysTest type. Arg passed in, '%s',"\
+                " of type '%s', is not a Python Class." \
+                % (testClass, type(testClass)))
+        if not issubclass(testClass, SysTest):
+            raise TypeError("The testClass argument must be a type that's"\
+                " a subclass of the UWA SysTest type. Type passed in, '%s',"\
+                " not a subclass of SysTest." \
+                % (testClass))
+                
+        classStr = str(testClass).split('.')[-1]
+        testName, ext = os.path.splitext(inputFiles[0])
+        testName += "-"+classStr[0].lower()+classStr[1:]
+        outputPath = 'output/' + testName
+        # TODO: make the test name an input arg?
+        newSysTest = testClass(inputFiles, outputPath, nproc=self.nproc)
+        self.sysTests.append(newSysTest)
+
+    def runTest(self, sysTest):
         # Generate a suite of models to run as part of the test
         mSuite = sysTest.genSuite()
 
+        mSuite.writeAllModelRunXMLs()
         suiteResults = mSuite.runAll()
-        suiteResults.writeAllXMLs(sysTest.outputPath)
-
-        print "System Test: checking "
+        print "Checking test result:"
         testResult = sysTest.getStatus(suiteResults)
-        sysTest.writeXML(sysTest.outputPath)
-       
+        mSuite.writeAllModelResultXMLs()
+
+        print "Test result was %s" % testResult
+        sysTest.writeInfoXML()
+        return testResult
+
+    def runAll(self):
+        results = []
+        for testI, sysTest in enumerate(self.sysTests):
+            print "Running System test %d, with name '%s':" \
+                % (testI, sysTest.testName)
+            results.append(self.runTest(sysTest))
+        
+        self.printResultsSummary(results)
+    
+    def printResultsSummary(self, results):
+        print "UWA System Tests results summary:"
+        print "Ran %d system tests, " % (len(results)),
+
+        #
+
 
 class SysTest:
     '''A class for managing SysTests in UWA. This is an abstract base
