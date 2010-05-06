@@ -1,9 +1,10 @@
-from lxml import etree
-
 import os
+import math
+from lxml import etree
 
 from uwa.analysis import AnalysisOperation
 from uwa.io import stgxml, stgcvg
+import uwa.analysis.stats as stats
 
 class FieldTest:
     '''Class for maintaining info about a single field test'''
@@ -16,9 +17,9 @@ class FieldTest:
             tol=str(self.tol))
 
     def checkFieldConvergence(self, cvgFileInfo):
-        '''Checks that for a given fieldTest, each of the Field's dofs is within the
-        required tolerance. Needs to be passed a cvgFileInfo to know which
-        convergence file to get information from'''
+        '''Checks that for a given fieldTest, each of the Field's dofs is
+        within the required tolerance. Needs to be passed a cvgFileInfo
+        to know which convergence file to get information from'''
 
         #TODO: should we do some comparison with tolerance here?
         dofErrors = stgcvg.getDofErrors_ByDof(cvgFileInfo, steps="last")
@@ -250,3 +251,44 @@ class FieldTestsInfo(AnalysisOperation):
             fieldResults.append(fr)
 
         return fieldResults
+
+#--------------------------------------
+# Functions below useful for doing convergence analysis with length scale
+
+def getFieldScaleCvgData_SingleCvgFile(cvgFilePath):
+    '''A utility function for generating necessary fieldErrorData for a
+    multi-res convergence analysis, assuming it's all stored in the same 
+    convergence file (the default approach of the legacy SYS tests)'''
+    cvgIndex = stgcvg.genConvergenceFileIndex(cvgFilePath)
+    fieldErrorData = {}
+    for fieldName, cvgFileInfo in cvgIndex.iteritems():
+        runRes = stgcvg.getRes(cvgFileInfo.filename)
+        dofErrors = stgcvg.getDofErrors_ByDof(cvgFileInfo)
+        fieldErrorData[fieldName] = (runRes, dofErrors)
+    return fieldErrorData    
+
+def calcFieldCvgWithScale(fieldName, lenScales, dofErrors):
+    '''Gets the convergence and correlation of a field with resolution
+    (taking the log10 of both).
+    
+    lenScales argument should simply be an array of length scales for the
+    different runs.
+    dofErrors must be a list, for each dof of the field, of the error
+    vs some expected solution at the corresponding length scale.
+
+    returns a list of tuples, one per dof, where each tuple contains:
+    (convergence rate, pearson correlation) over the set of scales.
+    ''' 
+
+    print "Testing convergence for field '%s'" % fieldName
+    #print "Length scales are %s" % lenScales
+    #print "Dof errors for %d dofs are %s" % (len(dofErrors), dofErrors)
+    scaleLogs = map(math.log10, lenScales)
+    convResults = []
+    for errorArray in dofErrors:
+        errLogs = map(math.log10, errorArray)
+        cvgRate, intercept, rSq = stats.linreg(scaleLogs, errLogs)
+        pearsonCorr = math.sqrt(rSq)
+        convResults.append((cvgRate, pearsonCorr))
+    return convResults        
+
