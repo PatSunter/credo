@@ -12,14 +12,16 @@ class ModelSuite:
         self.outputPathBase = outputPathBase
         self.runs = []
         self.runDescrips = []
+        self.runCustomOptSets = []
         self.resultsList = []
 
-    def addRun(self, modelRun, runDescrip=None):
+    def addRun(self, modelRun, runDescrip=None, runCustomOpts=None):
         if not isinstance( modelRun, mrun.ModelRun ):
             raise TypeError("Error, given run not an instance of a"\
                 " ModelRun" % runI)
         self.runs.append(modelRun)
         self.runDescrips.append(runDescrip)
+        self.runCustomOptSets.append(runCustomOpts)
 
     def runAll(self):
         '''Run each modelRun in the suite'''
@@ -36,7 +38,8 @@ class ModelSuite:
             print "Generating analysis XML:"
             modelRun.analysisXMLGen()
             print "Running the Model:"
-            result = mrun.runModel(modelRun)
+            customOpts = self.runCustomOptSets[runI]
+            result = mrun.runModel(modelRun, customOpts)
             assert isinstance( result, mres.ModelResult )
             # TODO: does this step need to be refactored/generalised?
             # I.E. into a "post-run cleanup" for all analysis ?
