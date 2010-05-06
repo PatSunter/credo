@@ -1,59 +1,61 @@
+import os
+from lxml import etree
 
-def AnalyticMultiResTest(SysTest):
+from uwa.modelsuite import ModelSuite
+from uwa.modelrun import ModelRun
+import uwa.modelrun as mrun
+import uwa.systest as sys
+from uwa.systest.api import SysTest
+from uwa.analysis import fields
+
+class AnalyticMultiResTest(SysTest):
     '''A Multiple Resolution system test.
-
         This test can be used to convert any existing system test that
         analyses fields, to check that the convergence improves as res.
         improves'''
 
     description = '''Runs an existing test with multiple resolutions.'''
 
-    def __init__( outputPath, innerTest, resSet, resConvChecker ):
-        assert isinstance(innerTest, SysTest)
-        self.innerTest = innerTest
-        self.modelName = innerTest+"-multiResCvg"
+    def __init__(self, inputFiles, outputPathBase, resSet, resConvChecker, nproc=1 ):
+        SysTest.__init__(self, inputFiles, outputPathBase, nproc, "AnalyticMultiResConvergence")
         self.resSet = resSet
-        self.resConvChecker = resConvChecker
-
-    def configureTests(self):
-        # Have this as a separate method, to allow multi-res guy to override.
-        # For analytic test, read fields to analyse from the XML
-        self.fieldTests.readFromStgXML(inputFiles)
-        # Would be good to allow these to be over-ridden per field.
-        self.fieldTests.setAllTols(defaultFieldTol)
+        self.testComponents['fieldConvChecker'] = resConvChecker
+        self.testComponents['fieldTests'] = fields.FieldTestsInfo()
 
     def genSuite(self):
-        mSuite = ModelSuite( outputPathParent=outputPath )
+        mSuite = ModelSuite(outputPathBase=self.outputPathBase)
+        self.mSuite = mSuite
         
-        mRun = mrun.ModelRun(self.modelName, inputFiles, outputPath,
-            nproc=nproc)
+        # For analytic conv test, read fields to analyse from the XML
+        fTests = self.testComponents['fieldTests']
+        fTests.readFromStgXML(self.inputFiles)
+        # TODO: update the res conv checker with these fields?
 
         for res in self.resSet:
-            # TODO: how do we attach the know-how for any additional XML to be 
-            # Generated for the ModelRun, related specifically to the test?
-            mRun.outputPath += os.sep+mrun.strRes(res)
+            resStr = mrun.strRes(res)
+            outputPath = self.outputPathBase+os.sep+resStr
+            mRun = mrun.ModelRun(self.testName, self.inputFiles,
+                outputPath, nproc=self.nproc)
             customOpts = mrun.generateResOpts(res)
-            mSuite.addRun("analysis", "Run the model at res"+mrun.strRes(res),
-                mRun, customOpts)
+            mSuite.addRun(mRun, "Run the model at res "+resStr, customOpts)
 
         return mSuite
 
-    def checkResultValid(suiteResults):
+    def checkResultValid(self, resultsSet):
         # TODO check it's a result instance
         # check number of results is correct
-        for mResult in suiteResults:
+        for mResult in resultsSet:
             # Check fieldresults exists, and is right length
             # Check each fieldResult contains correct fields
             pass
 
-    def getStatus(suiteResults):
-        self.checkResultValid(suiteResults)
-        mResult = suiteResults[0]
+    def getStatus(self, resultsSet):
+        self.checkResultValid(resultsSet)
 
-        testStatus = UWA_PASS
-
-        result = self.resConvChecker.check( self.resSet, self.suiteResults )
+        testStatus = sys.UWA_PASS("The solution compared to the analytic result"\
+		    " converged as expected with increasing resolution for all fields")
+        fConvChecker = self.testComponents['fieldConvChecker']
+        result = fConvChecker.check(self.resSet, self.suiteResults)
         if result == False:
-            testStatus = UWA_FAIL
-
-    return testStatus
+            testStatus = sys.UWA_FAIL("One of the fields failed to converge as expected")
+        return testStatus
