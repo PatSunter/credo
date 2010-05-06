@@ -83,24 +83,66 @@ print "R-squared", rSq
 print "xCoeff (cvgRate)", xCoeff
 print "yCoeff (intercept)", yCoeff
 
-
+# Convergence checker
+# StgFEM case
 print "\n** Results from real StgFEM data - from a Convergence file**"
 from uwa.io import stgcvg
-cvgIndex = stgcvg.genConvergenceFileIndex("./output/cvgTest")
 
-
-for fieldName, cvgFileInfo in cvgIndex.iteritems():
+def getFieldConvergence(fieldName, runRes, dofErrors):
     print "Testing convergence for field '%s'" % fieldName
-    runRes = stgcvg.getRes(cvgFileInfo.filename)
-    dofErrors = stgcvg.getDofErrors_ByDof(cvgFileInfo)
     #print "Run resolutions are %s" % runRes
     #print "Dof errors for %d dofs are %s" % (len(dofErrors), dofErrors)
     resLogs = map(log10, runRes)
-    for dofI, errorArray in enumerate(dofErrors):
+    convResults = []
+    for errorArray in dofErrors:
         errLogs = map(log10, errorArray)
         cvgRate, intercept, rSq = customlinreg(resLogs, errLogs)
         pearsonCorr = sqrt(rSq)
-        print "Field %s, dof %d - cvg rate %f, corr %f" \
-            % (fieldName, dofI, cvgRate, pearsonCorr)
-        #plt.plot(resLogs, errLogs)
-        #plt.show()
+        convResults.append((cvgRate, pearsonCorr))
+    return convResults    
+
+def testAllConvergence(fieldErrorData, fieldCvgCriterions):    
+    for fieldName, cvgTestData in fieldErrorData.iteritems():
+        runRes, dofErrors = cvgTestData
+        fieldConv = getFieldConvergence(fieldName, runRes, dofErrors)
+        reqCvgRate, reqCorr = fieldCvgCriterions[fieldName]
+        for dofI, dofConv in enumerate(fieldConv):
+            cvgRate, pearsonCorr = dofConv
+            print "Field %s, dof %d - cvg rate %f, corr %f" \
+                % (fieldName, dofI, cvgRate, pearsonCorr)
+            #plt.plot(resLogs, errLogs)
+            #plt.show()
+
+            testStatus = True
+            if cvgRate < reqCvgRate: 
+                testStatus = False
+                print "  -Bad! - cvg %f less than req'd %f for this field."\
+                    % (cvgRate, reqCvgRate)
+
+            if pearsonCorr < reqCorr:
+                testStatus = False
+                print "  -Bad! - corr %f less than req'd %f for this field."\
+                    % (pearsonCorr, reqCorr)
+
+            if testStatus: print "  -Good"
+
+
+# Stage 1: read the convergence file, to grab necessary data (assume all in
+# same file)
+cvgIndex = stgcvg.genConvergenceFileIndex("./output/cvgTest")
+
+fieldErrorData = {}
+for fieldName, cvgFileInfo in cvgIndex.iteritems():
+    runRes = stgcvg.getRes(cvgFileInfo.filename)
+    dofErrors = stgcvg.getDofErrors_ByDof(cvgFileInfo)
+    fieldErrorData[fieldName] = (runRes, dofErrors)    
+
+# The criteria of convergence: first is cvg rate, second is correlation
+defFieldCvgCriterions = {
+    'VelocityField':(1.6,0.99),
+    'PressureField':(0.9,0.99),
+    'StrainRateField':(0.85,0.99) }
+
+# Stage 2: perform the actual tests
+testAllConvergence(fieldErrorData, defFieldCvgCriterions)
+
