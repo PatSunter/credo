@@ -85,30 +85,51 @@ def getCheckStepsRange(cvgFile, steps):
 
     return stepRange        
 
-
-def getDofErrorsForStep(cvgFileInfo, stepNum):
+def getLineValues(cvgFilename, stepNum):
     # Given every 2nd line is a header, need to handle these
     lineNum = stepNum*2+1
     # The linecache.getline function indexes file lines from 1, hence
     # adjustment below
-    line = linecache.getline(cvgFileInfo.filename, lineNum+1) 
+    line = linecache.getline(cvgFilename, lineNum+1) 
     if line == "":
         raise IOError("Couldn't read step %d (line %d) from '%s'" %
-            (stepNum, lineNum, cvgFileInfo.filename))
+            (stepNum, lineNum, cvgFilename))
     elif line[0] == CVG_HEADER_LINESTART:
         # Should have avoided header lines
         raise IOError("Trying to read step %d (line %d) from '%s'"
             " unexpectedly indexed to a header line" %
-            (stepNum, lineNum, cvgFileInfo.filename))
+            (stepNum, lineNum, cvgFilename))
+    colValsStr = line.split()
+    colVals = map(float, colValsStr)
+    return colVals
 
-    colVals = line.split()
+def getDofErrorsForStep(cvgFileInfo, stepNum):
+    colVals = getLineValues(cvgFileInfo.filename, stepNum)
 
     dofErrorsForStep = []
     for dof, colIndex in cvgFileInfo.dofColMap.iteritems():
-        errorStr = colVals[colIndex]
-        dofErrorsForStep.append(float(errorStr))
+        dofErrorsForStep.append(colVals[colIndex])
     
     return dofErrorsForStep
+
+
+def getRes(cvgFilename, steps='all'):
+    '''For a given cvgFile, return the resolutions for each line'''
+
+    cvgFile = open(cvgFilename,"r")
+    stepRange = getCheckStepsRange(cvgFile, steps)
+
+    resResult = []
+
+    if len(stepRange) == 1:
+        resResult = getLineValues(cvgFilename, stepRange[0])[0]
+    else:
+        for stepNum in stepRange:
+            res = getLineValues(cvgFilename, stepNum)[0]
+            resResult.append(res)
+            
+    cvgFile.close()
+    return resResult
 
 
 # Question: should we use Numeric for this? - as performance for very large
