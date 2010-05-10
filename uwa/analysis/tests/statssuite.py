@@ -27,15 +27,15 @@ print "R-squared", rSq
 # StgFEM case
 print "\n** Results from real StgFEM data**"
 
-res = [1.000000e-01, 5.000000e-02, 3.333333e-02, 2.500000e-02]
+scales = [1.000000e-01, 5.000000e-02, 3.333333e-02, 2.500000e-02]
 velField1Err = [9.48975248e-06, 5.98833029e-07, 1.18487871e-07, 3.74909918e-08]
 
-resLogs = map(math.log10, res)
+scaleLogs = map(math.log10, scales)
 velErrLogs = map(math.log10, velField1Err)
-print "Len scales(log10): %s" % resLogs
+print "Len scales(log10): %s" % scaleLogs
 print "errors vs analytic(log10): %s" % velErrLogs
 
-xCoeff, yCoeff, rSq = uwalinreg(resLogs, velErrLogs)
+xCoeff, yCoeff, rSq = uwalinreg(scaleLogs, velErrLogs)
 cvgRate = xCoeff
 intercept = yCoeff
 print "R value (Pearson correlation)", math.sqrt(rSq)
