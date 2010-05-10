@@ -13,7 +13,7 @@ opts, args = getopt.getopt(sys.argv[1:], "h", ["help"])
 #For now just copy all args as input files
 inputFiles = args
 modelName, ext = os.path.splitext(args[0])
-modelName += "-analyticTestMultiRes"
+modelName += "-analyticMultiResTest"
 outputPath = 'output/'+modelName
 
 resSet = [(10,10),(20,20),(30,30)]
