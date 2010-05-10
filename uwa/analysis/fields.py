@@ -262,10 +262,10 @@ def getFieldScaleCvgData_SingleCvgFile(cvgFilePath):
     cvgIndex = stgcvg.genConvergenceFileIndex(cvgFilePath)
     fieldErrorData = {}
     for fieldName, cvgFileInfo in cvgIndex.iteritems():
-        runRes = stgcvg.getRes(cvgFileInfo.filename)
+        lenScales = stgcvg.getRes(cvgFileInfo.filename)
         dofErrors = stgcvg.getDofErrors_ByDof(cvgFileInfo)
-        fieldErrorData[fieldName] = (runRes, dofErrors)
-    return fieldErrorData    
+        fieldErrorData[fieldName] = dofErrors
+    return lenScales, fieldErrorData
 
 def calcFieldCvgWithScale(fieldName, lenScales, dofErrors):
     '''Gets the convergence and correlation of a field with resolution
