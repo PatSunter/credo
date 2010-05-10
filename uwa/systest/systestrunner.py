@@ -27,7 +27,9 @@ class SysTestRunner:
         testName += "-"+classStr[0].lower()+classStr[1:]
         outputPath = 'output/' + testName
         # TODO: make the test name an input arg?
-        newSysTest = testClass(inputFiles, outputPath, nproc=self.nproc)
+        if 'nproc' not in testOpts:
+            testOpts['nproc']=self.nproc
+        newSysTest = testClass(inputFiles, outputPath, **testOpts)
         self.sysTests.append(newSysTest)
 
     def runTest(self, sysTest):
