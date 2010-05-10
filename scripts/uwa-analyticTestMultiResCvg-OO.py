@@ -16,10 +16,10 @@ modelName, ext = os.path.splitext(args[0])
 modelName += "-analyticTestMultiRes"
 outputPath = 'output/'+modelName
 
-resSet = [(10,10),(20,20)]
+resSet = [(10,10),(20,20),(30,30)]
 resConvChecker = None
 
-anTest = AnalyticMultiResTest(inputFiles, outputPath, resSet, resConvChecker, nproc=1)
+anTest = AnalyticMultiResTest(inputFiles, outputPath, resSet, nproc=1)
 
 # Generate a suite of models to run as part of the test
 mSuite = anTest.genSuite()

@@ -7,6 +7,7 @@ import uwa.modelrun as mrun
 import uwa.systest as sys
 from uwa.systest.api import SysTest
 from uwa.analysis import fields
+from uwa.analysis.fieldCvgWithScaleTest import FieldCvgWithScaleTest
 
 class AnalyticMultiResTest(SysTest):
     '''A Multiple Resolution system test.
@@ -16,20 +17,18 @@ class AnalyticMultiResTest(SysTest):
 
     description = '''Runs an existing test with multiple resolutions.'''
 
-    def __init__(self, inputFiles, outputPathBase, resSet, resConvChecker, nproc=1 ):
+    def __init__(self, inputFiles, outputPathBase, resSet, nproc=1 ):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc, "AnalyticMultiResConvergence")
         self.resSet = resSet
-        self.testComponents['fieldConvChecker'] = resConvChecker
-        self.testComponents['fieldTests'] = fields.FieldTestsInfo()
+        cvgChecker = FieldCvgWithScaleTest()
+        self.testComponents['fieldConvChecker'] = cvgChecker
 
     def genSuite(self):
         mSuite = ModelSuite(outputPathBase=self.outputPathBase)
         self.mSuite = mSuite
         
         # For analytic conv test, read fields to analyse from the XML
-        fTests = self.testComponents['fieldTests']
-        fTests.readFromStgXML(self.inputFiles)
-        # TODO: update the res conv checker with these fields?
+        cvgChecker = self.testComponents['fieldConvChecker']
 
         for res in self.resSet:
             resStr = mrun.strRes(res)
@@ -37,6 +36,7 @@ class AnalyticMultiResTest(SysTest):
             mRun = mrun.ModelRun(self.testName, self.inputFiles,
                 outputPath, nproc=self.nproc)
             customOpts = mrun.generateResOpts(res)
+            cvgChecker.attachOps(mRun)
             mSuite.addRun(mRun, "Run the model at res "+resStr, customOpts)
 
         return mSuite
@@ -55,7 +55,10 @@ class AnalyticMultiResTest(SysTest):
         testStatus = sys.UWA_PASS("The solution compared to the analytic result"\
 		    " converged as expected with increasing resolution for all fields")
         fConvChecker = self.testComponents['fieldConvChecker']
-        result = fConvChecker.check(self.resSet, self.suiteResults)
+        result = fConvChecker.check(self.resSet, resultsSet)
         if result == False:
             testStatus = sys.UWA_FAIL("One of the fields failed to converge as expected")
         return testStatus
+
+    def writeXMLContents(self, baseNode):
+        pass
