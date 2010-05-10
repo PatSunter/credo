@@ -56,31 +56,30 @@ class FieldCvgWithScaleTest:
         self.testCvgFunc = testCvgFunc
         self.fieldScaleCvgCrits = fieldScaleCvgCrits
         self.fieldsToTest = fieldsToTest
-        self.fTests = None
+        self.fComps = None
 
     def attachOps(self, modelRun):
-        self.fTests = fields.FieldTestsInfo()
+        self.fComps = fields.FieldTestsInfo()
         if self.fieldsToTest == None:
-            self.fTests.readFromStgXML(modelRun.modelInputFiles)
+            self.fComps.readFromStgXML(modelRun.modelInputFiles)
         else:
             for fieldName in self.fieldsToTest:
-                self.fTests.add(fields.FieldTest(fieldName))
-        modelRun.analysis['fieldTests'] = self.fTests
+                self.fComps.add(fields.FieldTest(fieldName))
+        modelRun.analysis['fieldComparisons'] = self.fComps
 
-    def check(self, resSet, resultsSet):
-
+    def check(self, resultsSet):
         # NB: could store this another way in model info?
         lenScales = []
         for runI, mResult in enumerate(resultsSet):
             cvgIndex = stgcvg.genConvergenceFileIndex(mResult.outputPath)
             # a bit hacky, need to redesign cvg stuff?
-            cvgInfo = cvgIndex[self.fTests.fields.keys()[0]]
+            cvgInfo = cvgIndex[self.fComps.fields.keys()[0]]
             lenScales.append(stgcvg.getRes(cvgInfo.filename))
 
-        fTests = self.fTests
+        fComps = self.fComps
         fieldErrorData = {} 
-        for fieldName in self.fTests.fields.keys():
-            fTest = fTests.fields[fieldName]
+        for fieldName in self.fComps.fields.keys():
+            fComp = fComps.fields[fieldName]
             dofErrorsByRun = []
             # We need to index the dofErrors by run, then dofI, for cvg check
             for runI, mResult in enumerate(resultsSet):
@@ -104,8 +103,9 @@ class FieldCvgWithScaleTest:
         return result
 
     def writeInfoXML(self, parentNode):
-        ftNode = etree.SubElement(parentNode, 'fieldCvgWithScaleTest')
-        ftNode.attrib['fromXML']=str(self.fTests.fromXML)
+        ftNode = etree.SubElement(parentNode, 'testComponent',
+            name='fieldCvgWithScaleTest')
+        ftNode.attrib['fromXML']=str(self.fComps.fromXML)
         fListNode = etree.SubElement(ftNode, 'fields')
-        for fName in self.fTests.fields.keys():
-            fNode = etree.SubElement(ftNode, 'field', name=fName)
+        for fName in self.fComps.fields.keys():
+            fNode = etree.SubElement(fListNode, 'field', name=fName)
