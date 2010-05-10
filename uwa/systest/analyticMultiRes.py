@@ -5,7 +5,6 @@ from uwa.modelsuite import ModelSuite
 from uwa.modelrun import ModelRun
 import uwa.modelrun as mrun
 from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
-from uwa.analysis import fields
 from uwa.analysis.fieldCvgWithScaleTest import FieldCvgWithScaleTest
 
 class AnalyticMultiResTest(SysTest):
@@ -55,7 +54,7 @@ class AnalyticMultiResTest(SysTest):
         testStatus = UWA_PASS("The solution compared to the analytic result"\
 		    " converged as expected with increasing resolution for all fields")
         fConvChecker = self.testComponents['fieldConvChecker']
-        result = fConvChecker.check(self.resSet, resultsSet)
+        result = fConvChecker.check(resultsSet)
         if result == False:
             testStatus = UWA_FAIL("One of the fields failed to converge as expected")
         self.testStatus = testStatus

@@ -4,11 +4,8 @@ from lxml import etree
 
 from uwa.modelsuite import ModelSuite
 from uwa.modelrun import ModelRun, SimParams
-import uwa.systest
-from uwa.systest.api import SysTest
-from uwa.analysis import fields
-
-# TODO: have a factory for these to register with, in the API?
+from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
+from uwa.analysis.fieldWithinTolTest import FieldWithinTolTest
 
 class RestartTest(SysTest):
     '''A Restart System test.
@@ -23,11 +20,12 @@ class RestartTest(SysTest):
         same at the end for both the original and restart run.'''
 
     defaultFieldTol = 1e-5
+    fTestName = 'fieldWithinTol'
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
-            fieldsToTest = ['VelocityField','PressureField'], fullRunSteps=20 ):
+            fieldsToTest = ['VelocityField','PressureField'], fullRunSteps=20,
+            fieldTols=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc, "Restart")
-        self.testComponents['fieldTests'] = fields.FieldTestsInfo()
         self.initialOutputPath = self.outputPathBase+os.sep+"initial"
         self.restartOutputPath = self.outputPathBase+os.sep+"restart"
         self.fieldsToTest = fieldsToTest
@@ -35,6 +33,12 @@ class RestartTest(SysTest):
         if self.fullRunSteps % 2 != 0:
             raise ValueError("fullRunSteps parameter must be even so restart"\
                 " can occur half-way - but you provided %d." % (fullRunSteps))
+        self.testComponents[self.fTestName] = FieldWithinTolTest(
+            fieldsToTest=self.fieldsToTest, defFieldTol=self.defaultFieldTol,
+            fieldTols=fieldTols,
+            useReference=True,
+            referencePath=self.initialOutputPath,
+            testTimestep=self.fullRunSteps)
 
     def genSuite(self):
         mSuite = ModelSuite(outputPathBase=self.outputPathBase)
@@ -46,30 +50,18 @@ class RestartTest(SysTest):
         initRun.simParams = SimParams(nsteps=self.fullRunSteps,
             cpevery=self.fullRunSteps/2, dumpevery=0)
         initRun.cpFields = self.fieldsToTest
-        mSuite.addRun(initRun, "Do the initial full run and checkpoint solutions.")
-
+        mSuite.addRun(initRun, "Do the initial full run and checkpoint"\
+            " solutions.")
         # Restart run
         resRun = ModelRun(self.testName+"-restart", self.inputFiles,
             self.restartOutputPath, nproc=self.nproc)
         resRun.simParams = SimParams(nsteps=self.fullRunSteps/2,
             cpevery=0, dumpevery=0, restartstep=self.fullRunSteps/2)
         resRun.cpReadPath = self.initialOutputPath    
-
-        # Set up a field test to check between the two runs
-        # TODO: should this be in genSuite, or in constructor, or in a
-        # 'configure tests' phase (that could be easily over-ridden?)
-        fTests = self.testComponents['fieldTests']
-        fTests.testTimestep = self.fullRunSteps
-        fTests.useReference = True
-        fTests.referencePath = self.initialOutputPath
-        for fieldName in self.fieldsToTest:
-            fTests.add(fields.FieldTest(fieldName, tol=self.defaultFieldTol))
-
-        # TODO: this copying not ideal....
-        resRun.analysis['fieldTests'] = fTests
+        fTests = self.testComponents[self.fTestName]
+        fTests.attachOps(resRun)
         mSuite.addRun(resRun, "Do the restart run and check results at end"\
             " match initial.")
-
         return mSuite
 
     def checkResultValid(self, resultsSet):
@@ -82,23 +74,13 @@ class RestartTest(SysTest):
 
     def getStatus(self, resultsSet):
         self.checkResultValid(resultsSet)
-
-        testStatus = None
-
-        # This could be refactored quite a bit, should be done in modelRun
-        fTests = self.testComponents['fieldTests']
-        fieldResults = fTests.testConvergence(self.restartOutputPath)
-
-        for fRes in fieldResults:
-            result = fRes.checkErrorsWithinTol()
-            if result == False:
-                testStatus = uwa.systest.UWA_FAIL("Field '%s' not within"
-                    " tolerance %d" % (fRes.fieldName, fRes.tol))
-                break
-
-        if testStatus == None:
-            testStatus = uwa.systest.UWA_PASS("All fields were within required"\
-                " tolerance %d at end of run." % fRes.tol )
+        fTests = self.testComponents[self.fTestName]
+        if result:
+            testStatus = UWA_PASS("All fields on restart were within required"\
+                " tolerance of full run at end." )
+        else:        
+            testStatus = UWA_FAIL("At least one field wasn't within tolerance"\
+                " on restart run of original run")
         self.testStatus = testStatus
         return testStatus
         

@@ -1,14 +1,10 @@
-
 import os
 from lxml import etree
 
 from uwa.modelsuite import ModelSuite
 from uwa.modelrun import ModelRun
-import uwa.systest
-from uwa.systest.api import SysTest
-from uwa.analysis import fields
-
-# TODO: have a factory for these to register with, in the API?
+from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
+from uwa.analysis.fieldWithinTolTest import FieldWithinTolTest
 
 class AnalyticTest(SysTest):
     '''An Analytic System test.
@@ -22,10 +18,13 @@ class AnalyticTest(SysTest):
         of that analytic solution.'''
 
     defaultFieldTol = 3e-2    
+    fTestName = 'fieldWithinTol'
 
-    def __init__(self, inputFiles, outputPathBase, nproc=1):
+    def __init__(self, inputFiles, outputPathBase, nproc=1, fieldTols=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc, "Analytic")
-        self.testComponents['fieldTests'] = fields.FieldTestsInfo()
+        # TODO: allow input of field tolerances?
+        self.testComponents[self.fTestName] = FieldWithinTolTest(
+            defFieldTol=self.defaultFieldTol, fieldTols=fieldTols)
 
     def genSuite(self):
         mSuite = ModelSuite(outputPathBase=self.outputPathBase)
@@ -34,12 +33,8 @@ class AnalyticTest(SysTest):
         mRun = ModelRun(self.testName, self.inputFiles,
             self.outputPathBase, nproc=self.nproc)
         # For analytic test, read fields to analyse from the XML
-        fTests = self.testComponents['fieldTests']
-        fTests.readFromStgXML(self.inputFiles)
-        # Would be good to allow these to be over-ridden per field.
-        fTests.setAllTols(self.defaultFieldTol)
-        # TODO: currently need to over-ride here...
-        mRun.analysis['fieldTests'] = fTests
+        fTests = self.testComponents[self.fTestName]
+        fTests.attachOps(mRun)
         mSuite.addRun(mRun, "Run the model and generate analytic soln.")
 
         return mSuite
@@ -54,34 +49,19 @@ class AnalyticTest(SysTest):
 
     def getStatus(self, resultsSet):
         self.checkResultValid(resultsSet)
-
-        #TODO: fact it has to reference a saved set of suite results 
-        # suggests a not-so-good coupling. 
-        # Perhaps more a structure of TestComponents, that generate
-        #  Analytic updates to be added to the model runs?
         mResult = resultsSet[0]
-
-        testStatus = None
-
-        # This could be refactored quite a bit, should be done in modelRun
-        fTests = self.testComponents['fieldTests']
-        mResult.fieldResults = fTests.testConvergence(mResult.outputPath)
-
-        # TODO: perhaps this should be moved into a separate function, eg for
-        # plotting
-        for fRes in mResult.fieldResults:
-            fRes.plotCvgOverTime(show=False, path=mResult.outputPath)
-
-        for fRes in mResult.fieldResults:
-            result = fRes.checkErrorsWithinTol()
-            if result == False:
-                testStatus = uwa.systest.UWA_FAIL("Field '%s' not within"
-                    " tolerance %d" % (fRes.fieldName, fRes.tol))
-                break
-
-        if testStatus == None:
-            testStatus = uwa.systest.UWA_PASS("All fields were within required"\
-                " tolerance %d of analytic solution at end of run." % fRes.tol )
+        fTests = self.testComponents[self.fTestName]
+        result = fTests.check(resultsSet)
+        if result:    
+            testStatus = UWA_PASS("All fields were within required"\
+                " tolerance of analytic solution at end of run." )
+        else:        
+            testStatus = UWA_FAIL("At least one Field not within"
+                " tolerance of analytic soln.")
+        # TODO: should the ftest component now be able to do this?
+        #mResult.fieldResults = fTests.testConvergence(mResult.outputPath)
+        #for fRes in mResult.fieldResults:
+        #    fRes.plotCvgOverTime(show=False, path=mResult.outputPath)
         self.testStatus = testStatus
         return testStatus
         

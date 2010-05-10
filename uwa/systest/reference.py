@@ -4,11 +4,8 @@ from lxml import etree
 
 from uwa.modelsuite import ModelSuite
 from uwa.modelrun import ModelRun, SimParams
-import uwa.systest
-from uwa.systest.api import SysTest
-from uwa.analysis import fields
-
-# TODO: have a factory for these to register with, in the API?
+from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
+from uwa.analysis.fieldWithinTolTest import FieldWithinTolTest
 
 class ReferenceTest(SysTest):
     '''A Reference System test.
@@ -21,15 +18,21 @@ class ReferenceTest(SysTest):
         reference solution.'''
 
     defaultFieldTol = 1e-2
+    fTestName = 'fieldWithinTol'
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             fieldsToTest = ['VelocityField','PressureField'], runSteps=20,
-            createRefSolnMode=False ):
+            fieldTols=None, createRefSolnMode=False ):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc, "Reference")
-        self.testComponents['fieldTests'] = fields.FieldTestsInfo()
         self.expectedSolnPath = "expected" + os.sep + self.testName
         self.fieldsToTest = fieldsToTest
         self.runSteps = runSteps
+        self.testComponents[self.fTestName] = FieldWithinTolTest(
+            fieldsToTest=self.fieldsToTest, defFieldTol=self.defaultFieldTol,
+            fieldTols=fieldTols,
+            useReference=True,
+            referencePath=self.expectedSolnPath,
+            testTimestep=self.runSteps)
 
     def setup(self):
         '''Do a run to create the reference solution to use.'''
@@ -56,27 +59,15 @@ class ReferenceTest(SysTest):
     def genSuite(self):
         mSuite = ModelSuite(outputPathBase=self.outputPathBase)
         self.mSuite = mSuite
-
-        # Set up a field test to check between the two runs
-        # TODO: should this be in genSuite, or in constructor, or in a
-        # 'configure tests' phase (that could be easily over-ridden?)
-        fTests = self.testComponents['fieldTests']
-        fTests.testTimestep = self.runSteps
-        fTests.useReference = True
-        fTests.referencePath = self.expectedSolnPath
-        for fieldName in self.fieldsToTest:
-            fTests.add(fields.FieldTest(fieldName, tol=self.defaultFieldTol))
-
         # Normal mode
         mRun = ModelRun(self.testName, self.inputFiles,
             self.outputPathBase, nproc=self.nproc)
         mRun.simParams = SimParams(nsteps=self.runSteps,
             cpevery=0, dumpevery=0)
-        # TODO: this copying not ideal....
-        mRun.analysis['fieldTests'] = fTests
+        fTests = self.testComponents[self.fTestName]
+        fTests.attachOps(mRun)
         mSuite.addRun(mRun, "Run the model, and check results against "\
             "previously generated reference solution.")
-
         return mSuite
 
     def checkResultValid(self, resultsSet):
@@ -89,22 +80,14 @@ class ReferenceTest(SysTest):
 
     def getStatus(self, resultsSet):
         self.checkResultValid(resultsSet)
-
-        testStatus = None
-
-        fTests = self.testComponents['fieldTests']
-        fieldResults = fTests.testConvergence(self.outputPathBase)
-
-        for fRes in fieldResults:
-            result = fRes.checkErrorsWithinTol()
-            if result == False:
-                testStatus = uwa.systest.UWA_FAIL("Field '%s' not within"
-                    " tolerance %d" % (fRes.fieldName, fRes.tol))
-                break
-
-        if testStatus == None:
-            testStatus = uwa.systest.UWA_PASS("All fields were within required"\
-                " tolerance %d at end of run." % fRes.tol )
+        fTests = self.testComponents[self.fTestName]
+        result = fTests.check(resultsSet)
+        if result:
+            testStatus = UWA_PASS("All fields were within required"\
+                " tolerance of reference soln at end of run." )
+        else:
+            testStatus = UWA_FAIL("A Field was not within"\
+                " tolerance of reference soln.")
         self.testStatus = testStatus
         return testStatus
         
