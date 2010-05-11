@@ -75,6 +75,8 @@ class RestartTest(SysTest):
     def getStatus(self, resultsSet):
         self.checkResultValid(resultsSet)
         fTests = self.testComponents[self.fTestName]
+        # We are only interested in checking the restart run
+        result = fTests.check([resultsSet[1]])
         if result:
             testStatus = UWA_PASS("All fields on restart were within required"\
                 " tolerance of full run at end." )
