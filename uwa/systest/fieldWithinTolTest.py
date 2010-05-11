@@ -1,9 +1,10 @@
 from lxml import etree
 
+from uwa.systest.api import TestComponent
 from uwa.io import stgcvg
 import uwa.analysis.fields as fields
 
-class FieldWithinTolTest:
+class FieldWithinTolTest(TestComponent):
     def __init__(self, fieldsToTest=None,
             defFieldTol=0.01,
             fieldTols=None,
@@ -66,8 +67,7 @@ class FieldWithinTolTest:
         return result
 
     def writeInfoXML(self, parentNode):
-        ftNode = etree.SubElement(parentNode, 'testComponent',
-            name='fieldWithinTol')
+        ftNode = self.createBaseXMLNode(parentNode, 'fieldWithinTol')
         ftNode.attrib['fromXML']=str(self.fComps.fromXML)
         fListNode = etree.SubElement(ftNode, 'fields')
         for fName in self.fComps.fields.keys():

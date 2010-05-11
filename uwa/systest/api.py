@@ -131,3 +131,32 @@ class SysTest:
         # Print the status message
         # Print Model Results as a sub-set
         pass
+
+
+class TestComponent:
+    '''A class for TestComponents that make up an UWA System test/benchmark.
+
+    This is an abstract base class, individual test components must subclass
+    from this interface.'''
+
+    def attachOps(self, modelRun):
+        '''Takes in a model run, and attaches any necessary analysis operations
+        to that run in order to produce the results needed for the test.'''
+        return NotImplementedError("Abstract base class.")
+
+    def check(self, resultsSet):
+        '''A function to check a set of results - returns True if the Test
+        passes, False if not.'''
+        return NotImplementedError("Abstract base class.")
+
+    def writeInfoXML(self, parentNode):
+        '''Function to write out info about the system test to an XML file,
+        as a sub-tree of parentNode.'''
+        return NotImplementedError("Abstract base class.")
+    
+    def createBaseXMLNode(self, parentNode, name):
+        '''Utility function when writing out info, should be called by 
+        sub-classes at start of writeInfoXML definitions to follow
+        convention of naming of XML node.'''
+        tcNode = etree.SubElement(parentNode, 'testComponent', name=name)
+        return tcNode

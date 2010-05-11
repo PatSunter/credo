@@ -1,5 +1,6 @@
 from lxml import etree
 
+from uwa.systest.api import TestComponent
 from uwa.io import stgcvg
 import uwa.analysis.fields as fields
 
@@ -39,7 +40,7 @@ def testAllCvgWithScale(lenScales, fieldErrorData, fieldCvgCriterions):
     
     return overallResult
 
-class FieldCvgWithScaleTest:
+class FieldCvgWithScaleTest(TestComponent):
     def __init__(self, fieldsToTest=None,
             testCvgFunc=testAllCvgWithScale,
             fieldScaleCvgCrits=defFieldScaleCvgCriterions):
@@ -93,8 +94,7 @@ class FieldCvgWithScaleTest:
         return result
 
     def writeInfoXML(self, parentNode):
-        ftNode = etree.SubElement(parentNode, 'testComponent',
-            name='fieldCvgWithScaleTest')
+        ftNode = self.createBaseXMLNode(parentNode, 'fieldCvgWithScaleTest')
         ftNode.attrib['fromXML']=str(self.fComps.fromXML)
         fListNode = etree.SubElement(ftNode, 'fields')
         for fName in self.fComps.fields.keys():
