@@ -22,13 +22,13 @@ class SysTestRunner:
                 " not a subclass of SysTest." \
                 % (testClass))
                 
-        classStr = str(testClass).split('.')[-1]
-        testName, ext = os.path.splitext(inputFiles[0])
-        testName += "-"+classStr[0].lower()+classStr[1:]
-        outputPath = 'output/' + testName
         # TODO: make the test name an input arg?
         if 'nproc' not in testOpts:
             testOpts['nproc']=self.nproc
+        classStr = str(testClass).split('.')[-1]
+        testName, ext = os.path.splitext(inputFiles[0])
+        testName += "-"+classStr[0].lower()+classStr[1:]
+        outputPath = 'output/' + testName + "-" + str(testOpts['nproc'])
         newSysTest = testClass(inputFiles, outputPath, **testOpts)
         self.sysTests.append(newSysTest)
 
