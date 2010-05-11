@@ -5,7 +5,7 @@ from uwa.modelsuite import ModelSuite
 from uwa.modelrun import ModelRun
 import uwa.modelrun as mrun
 from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
-from uwa.analysis.fieldCvgWithScaleTest import FieldCvgWithScaleTest
+from uwa.systest.fieldCvgWithScaleTest import FieldCvgWithScaleTest
 
 class AnalyticMultiResTest(SysTest):
     '''A Multiple Resolution system test.

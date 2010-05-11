@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import uwa.analysis.fields as fields
-from uwa.analysis.fieldCvgWithScaleTest import *
+from uwa.systest.fieldCvgWithScaleTest import *
 
 # Convergence checker
 # StgFEM case

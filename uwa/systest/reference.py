@@ -5,7 +5,7 @@ from lxml import etree
 from uwa.modelsuite import ModelSuite
 from uwa.modelrun import ModelRun, SimParams
 from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
-from uwa.analysis.fieldWithinTolTest import FieldWithinTolTest
+from uwa.systest.fieldWithinTolTest import FieldWithinTolTest
 
 class ReferenceTest(SysTest):
     '''A Reference System test.
