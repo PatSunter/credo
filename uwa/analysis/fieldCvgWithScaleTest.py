@@ -9,16 +9,6 @@ defFieldScaleCvgCriterions = {
     'PressureField':(0.9,0.99),
     'StrainRateField':(0.85,0.99) }
 
-# For each field
-# Check all the necessary convergence files available
-# Get the final error vs analytic soln value for each res
-
-# Then apply the convergence check algorithm to each of these.
-
-#def convergenceCheck( resSets, compareResults ):
-#    f
-
-
 def testAllCvgWithScale(lenScales, fieldErrorData, fieldCvgCriterions):    
     overallResult = True
 
