@@ -33,7 +33,10 @@ class JobMetaInfo:
     XML_INFO_TAG = "jobMetaInfo"
 
     def __init__(self, simtime):
-        self.simtime = float(simtime)
+        if simtime is None:
+            self.simtime = "unknown"
+        else:     
+            self.simtime = float(simtime)
 
     def writeInfoXML(self, xmlNode):
         '''Writes information about this class into an existing, open

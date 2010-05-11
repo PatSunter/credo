@@ -308,7 +308,12 @@ def runModel(modelRun, extraCmdLineOpts=None):
     # END JOBRUNNER PART
 
     # Construct a modelResult
-    tSteps, simTime = getSimInfoFromFreqOutput(modelRun.outputPath)
+    try:
+        tSteps, simTime = getSimInfoFromFreqOutput(modelRun.outputPath)
+    except IOError:
+        # For now, allow runs that didn't create a freq output
+        tSteps, simTime = None, None
+
     result = uwa.modelresult.ModelResult(modelRun.name, modelRun.outputPath, simTime)
     
     return result
@@ -317,7 +322,13 @@ def getSimInfoFromFreqOutput(outputPath):
     """Get necessary stuff from FrequentOutput.dat
     # TODO: this should be in a sub-module - is currently quite hacky"""
     freqFilename = outputPath + os.sep + "FrequentOutput.dat"
-    freqFile = open(freqFilename, 'r')
+    
+    try:
+        freqFile = open(freqFilename, 'r')
+    except IOError:
+        # TODO: create a new exception class for this?
+        raise IOError("Freq output file unable to be opened. Possibly this"
+            " ModelRun didn't have one enabled.")
 
     # Parse out the headings
     headerLine = freqFile.readline()
