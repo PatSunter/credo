@@ -308,9 +308,15 @@ def runModel(modelRun, extraCmdLineOpts=None):
     # END JOBRUNNER PART
 
     # Construct a modelResult
-    # Get necessary stuff from FrequentOutput.dat
-    # TODO: this should be in a sub-module - is currently quite hacky
-    freqFilename = modelRun.outputPath + os.sep + "FrequentOutput.dat"
+    tSteps, simTime = getSimInfoFromFreqOutput(modelRun.outputPath)
+    result = uwa.modelresult.ModelResult(modelRun.name, modelRun.outputPath, simTime)
+    
+    return result
+
+def getSimInfoFromFreqOutput(outputPath):
+    """Get necessary stuff from FrequentOutput.dat
+    # TODO: this should be in a sub-module - is currently quite hacky"""
+    freqFilename = outputPath + os.sep + "FrequentOutput.dat"
     freqFile = open(freqFilename, 'r')
 
     # Parse out the headings
@@ -329,7 +335,4 @@ def runModel(modelRun, extraCmdLineOpts=None):
     cols = lastLine.split()
     tSteps = float(cols[0])
     simTime = float(cols[1])
-
-    result = uwa.modelresult.ModelResult(modelRun.name, modelRun.outputPath, simTime)
-    
-    return result
+    return tSteps, simTime
