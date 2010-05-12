@@ -9,6 +9,10 @@ class ModelRun:
     def __init__(self, name, modelInputFiles, outputPath, logPath="./log",
      cpReadPath=None, nproc=1):
         self.name = name
+        # Be forgiving if the user passes a single string input file, rather
+        # than list
+        if isinstance(modelInputFiles, str):
+            modelInputFiles = [modelInputFiles]
         self.modelInputFiles = modelInputFiles
         self.outputPath = outputPath
         self.cpReadPath = cpReadPath
