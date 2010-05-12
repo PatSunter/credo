@@ -1,7 +1,6 @@
 from lxml import etree
 
 from uwa.systest.api import TestComponent
-from uwa.io import stgcvg
 import uwa.analysis.fields as fields
 
 class FieldWithinTolTest(TestComponent):
@@ -15,7 +14,7 @@ class FieldWithinTolTest(TestComponent):
         self.fieldsToTest = fieldsToTest
         self.defFieldTol = defFieldTol
         self.fieldTols = fieldTols
-        self.fComps = fields.FieldTestsInfo()
+        self.fComps = fields.FieldComparisonList()
         self.fComps.useReference = useReference
         self.fComps.referencePath = referencePath
         self.fComps.testTimestep = testTimestep
@@ -25,7 +24,7 @@ class FieldWithinTolTest(TestComponent):
             self.fComps.readFromStgXML(modelRun.modelInputFiles)
         else:
             for fieldName in self.fieldsToTest:
-                self.fComps.add(fields.FieldTest(fieldName))
+                self.fComps.add(fields.FieldComparisonOp(fieldName))
         modelRun.analysis['fieldComparisons'] = self.fComps
 
     def getTolForField(self, fieldName):
@@ -37,33 +36,25 @@ class FieldWithinTolTest(TestComponent):
 
     def check(self, resultsSet):
         fieldResults = {}
-
-        fComps = self.fComps
-        for fieldName in self.fComps.fields.keys():
-            fieldResults[fieldName] = True
-            fComp = fComps.fields[fieldName]
-            fieldTol = self.getTolForField(fieldName)
+        for fComp in self.fComps.fields.itervalues():
+            fieldTol = self.getTolForField(fComp.name)
             for runI, mResult in enumerate(resultsSet):
-                cvgIndex = stgcvg.genConvergenceFileIndex(mResult.outputPath)
-                cvgInfo = cvgIndex[fieldName]
-                dofErrors = stgcvg.getDofErrors_ByDof(cvgInfo, steps="last")
-                for dofError in dofErrors:
-                    if dofError > fieldTol:
-                        fieldResults[fieldName] = False
-                        if len(resultsSet) > 0:
-                            print "For run %d out of %d" % runI, len(resultsSet)
-                        print "Field '%s' error of %f not within tol %f"\
-                            % (fieldName, dofError, fieldTol)
-                        break
-                if fieldResults[fieldName] == False:
+                fCompRes = fComp.getResult(mResult)
+                fieldResults[fComp.name] = fCompRes.checkWithinTol(fieldTol)    
+        
+                if not fieldResults[fComp.name]:
+                    if len(resultsSet) > 0:
+                        print "For run %d out of %d" % runI, len(resultsSet)
+                    print "Field comp '%s' error(s) of %s not within tol %f"\
+                        % (fComp.name, fCompRes.dofErrors, fieldTol)
                     break
 
-            if fieldResults[fieldName]:
-                print "Field '%s' error within tol %f." % (fieldName, fieldTol)
+            if fieldResults[fComp.name]:
+                print "Field comp '%s' error within tol %f for all runs."\
+                    % (fComp.name, fieldTol)
 
         if False in fieldResults: result = False
         else: result = True
-
         return result
 
     def writeInfoXML(self, parentNode):

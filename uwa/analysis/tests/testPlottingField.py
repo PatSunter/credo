@@ -1,9 +1,9 @@
 from uwa.analysis.fields import FieldTest, FieldTestsInfo
 from uwa.io import stgcvg
 
-fieldTests = FieldTestsInfo()
-fTest = FieldTest('VelocityField', tol=3e-2)
-fieldTests.add(fTest)
+fComps = FieldComparisonList()
+fComp = FieldComparisonOp('VelocityField')
+fComps.add(fTest)
 results = fieldTests.testConvergence("./output/realistic")
 
 fr = results[0]

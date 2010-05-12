@@ -4,9 +4,9 @@ import shutil
 import tempfile
 import unittest
 
-from uwa.io.stgcvg import CvgFileInfo
-import uwa.analysis
-from uwa.analysis.fields import FieldTest, FieldTestsInfo, FieldResult
+from uwa.analysis.fields import FieldComparisonOp, FieldComparisonList
+from uwa.analysis.fields import FieldComparisonResult
+from uwa.modelresult import ModelResult
 
 class AnalysisFieldsTestCase(unittest.TestCase):
 
@@ -18,53 +18,39 @@ class AnalysisFieldsTestCase(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.basedir)
 
-    def test_checkFieldConvergence(self):
-        fTest = FieldTest('TemperatureField', tol=3e-2)
-        cvgFileInfo = CvgFileInfo("./output/CosineHillRotate-analysis.cvg")
-        cvgFileInfo.dofColMap[0]=1
-        fRes = fTest.checkFieldConvergence(cvgFileInfo)
-        self.assertEqual(fRes.fieldName, fTest.name)
-        self.assertEqual(fRes.tol, fTest.tol)
+    def test_getResult(self):
+        mRes = ModelResult("test", './output/', 0)
+        fComp = FieldComparisonOp('TemperatureField')
+        fRes = fComp.getResult(mRes)
+        self.assertEqual(fRes.fieldName, fComp.name)
         self.assertEqual(fRes.dofErrors[0], 0.00612235812)
 
-    def testConvergence(self):
-        fieldTests = FieldTestsInfo()
-        fTest = FieldTest('TemperatureField', tol=3e-2)
-        fieldTests.add(fTest)
-        fResults = fieldTests.testConvergence('./output')
+    def test_getAllResults(self):
+        mRes = ModelResult("test", './output', 0)
+        fieldComps = FieldComparisonList()
+        fComp = FieldComparisonOp('TemperatureField')
+        fieldComps.add(fComp)
+        fResults = fieldComps.getAllResults(mRes)
         self.assertEqual(len(fResults), 1)
-        self.assertEqual(fResults[0].fieldName, fTest.name)
-        self.assertEqual(fResults[0].tol, fTest.tol)
+        self.assertEqual(fResults[0].fieldName, fComp.name)
         self.assertEqual(fResults[0].dofErrors[0], 0.00612235812)
 
-    def test_checkErrorsWithinTol(self):
-        fRes = FieldResult('TemperatureField', 0.3, [0.1,0.2])
-        self.assertTrue(fRes.checkErrorsWithinTol())
-        fRes = FieldResult('TemperatureField', 0.3, [0.4,0.2])
-        self.assertFalse(fRes.checkErrorsWithinTol())
+    def test_checkWithinTol(self):
+        fRes = FieldComparisonResult('TemperatureField', [0.1,0.2])
+        self.assertTrue(fRes.checkWithinTol(0.3))
+        fRes = FieldComparisonResult('TemperatureField', [0.4,0.2])
+        self.assertFalse(fRes.checkWithinTol(0.3))
 
-    def test_addFieldTest(self):
-        fieldTests = FieldTestsInfo()
-        self.assertEqual(fieldTests.fields, {})
-        fieldTests.setAllTols(0.02)
-        self.assertEqual(fieldTests.fields, {})
-        tempFT = FieldTest('TemperatureField')
-        fieldTests.add(tempFT)
-        velFT = FieldTest('VelocityField')
-        fieldTests.add(velFT)
-        self.assertEqual(fieldTests.fields, {'TemperatureField':tempFT,\
+    def test_addFieldComparisonOp(self):
+        fieldCompares = FieldComparisonList()
+        self.assertEqual(fieldCompares.fields, {})
+        self.assertEqual(fieldCompares.fields, {})
+        tempFT = FieldComparisonOp('TemperatureField')
+        fieldCompares.add(tempFT)
+        velFT = FieldComparisonOp('VelocityField')
+        fieldCompares.add(velFT)
+        self.assertEqual(fieldCompares.fields, {'TemperatureField':tempFT,\
             'VelocityField':velFT})
-
-    def test_setAllFieldTolerances(self):
-        fieldTests = FieldTestsInfo()
-        fieldTests.setAllTols(0.02)
-        tempFT = FieldTest('TemperatureField')
-        velFT = FieldTest('VelocityField', 0.07)
-        fieldTests.fields = {'TemperatureField':tempFT, 'VelocityField':velFT} 
-        fieldTol = 3e-2
-        fieldTests.setAllTols(fieldTol)
-        for fieldTest in fieldTests.fields.values():
-            self.assertEqual(fieldTest.tol, fieldTol)
 
 def suite():
     suite = unittest.TestSuite()
@@ -73,3 +59,4 @@ def suite():
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')
+

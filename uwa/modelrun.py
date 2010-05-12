@@ -21,7 +21,9 @@ class ModelRun:
         # TODO: should the below actually be compulsory?
         self.simParams = None
         self.analysis = {}
-        self.analysis['fieldTests'] = fields.FieldTestsInfo()
+        # TODO: is this really necessary to create by default?
+        # TODO: is this really necessary to create by default?
+        self.analysis['fieldTests'] = fields.FieldComparisonList()
         self.cpFields = []
         self.analysisXML = None
 

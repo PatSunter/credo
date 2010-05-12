@@ -12,86 +12,93 @@ defFieldScaleCvgCriterions = {
 
 def testAllCvgWithScale(lenScales, fieldErrorData, fieldCvgCriterions):    
     overallResult = True
+    for fieldName, dofErrors in fieldErrorData.iteritems():
+        result = testCvgWithScale(fieldName, lenScales, dofErrors,
+            fieldCvgCriterions[fieldName])
+        if result == False:
+            overallResult = False
+    return overallResult    
 
-    for fieldName, cvgTestData in fieldErrorData.iteritems():
-        dofErrors = cvgTestData
-        fieldConv = fields.calcFieldCvgWithScale(fieldName, lenScales, dofErrors)
-        reqCvgRate, reqCorr = fieldCvgCriterions[fieldName]
-        for dofI, dofConv in enumerate(fieldConv):
-            cvgRate, pearsonCorr = dofConv
-            print "Field %s, dof %d - cvg rate %f, corr %f" \
-                % (fieldName, dofI, cvgRate, pearsonCorr)
-            #plt.plot(resLogs, errLogs)
-            #plt.show()
+def testCvgWithScale(fieldName, lenScales, dofErrors, fieldCvgCriterion):
+    fieldConv = fields.calcFieldCvgWithScale(fieldName, lenScales, dofErrors)
+    reqCvgRate, reqCorr = fieldCvgCriterion
+    dofStatuses = []
+    for dofI, dofConv in enumerate(fieldConv):
+        cvgRate, corr = dofConv
+        print "Field %s, dof %d - cvg rate %f, corr %f" \
+            % (fieldName, dofI, cvgRate, corr)
+        #plt.plot(resLogs, errLogs)
+        #plt.show()
 
-            testStatus = True
-            if cvgRate < reqCvgRate: 
-                testStatus = False
-                print "  -Bad! - cvg %f less than req'd %f for this field."\
-                    % (cvgRate, reqCvgRate)
-
-            if pearsonCorr < reqCorr:
-                testStatus = False
-                print "  -Bad! - corr %f less than req'd %f for this field."\
-                    % (pearsonCorr, reqCorr)
-
-            if testStatus: print "  -Good"
-            else: overallResult = False
+        dofTestStatus = True
+        if cvgRate < reqCvgRate: 
+            dofTestStatus = False
+            print "  -Bad! - cvg %f less than req'd %f for this field."\
+                % (cvgRate, reqCvgRate)
+        if corr < reqCorr:
+            dofTestStatus = False
+            print "  -Bad! - corr %f less than req'd %f for this field."\
+                % (corr, reqCorr)
+        if dofTestStatus: print "  -Good"
+        dofStatuses.append(dofTestStatus)
     
-    return overallResult
+    if False in dofStatuses: return False
+    else: return True
+
+def getNumDofs(fComp, mResult):
+    '''Hacky utility function to get the number of dofs of an fComp, by
+    checking the result. Need to do this smarter/neater.'''
+    fCompRes = fComp.getResult(mResult)
+    return len(fCompRes.dofErrors)
+
+def getDofErrorsByRun(fComp, resultsSet):
+    '''For a given field comparison op, get all the dof errors from a set of
+    runs, indexed primarily by run index'''
+
+    # A bit of a hack: need to store # of dofs per field better somewhere
+    numDofs = getNumDofs(fComp, resultsSet[0])
+    dofErrorsByRun = [[] for ii in range(numDofs)]
+
+    # We need to index the dofErrors by run, then dofI, for cvg check
+    for runI, mResult in enumerate(resultsSet):
+        fCompRes = fComp.getResult(mResult)
+
+        for dofI, dofError in enumerate(fCompRes.dofErrors):
+            dofErrorsByRun[dofI].append(dofError)
+
+    return dofErrorsByRun
+
 
 class FieldCvgWithScaleTest(TestComponent):
-    def __init__(self, fieldsToTest=None,
-            testCvgFunc=testAllCvgWithScale,
-            fieldScaleCvgCrits=defFieldScaleCvgCriterions):
+    def __init__(self, fieldsToTest = None,
+            testCvgFunc = testCvgWithScale,
+            fieldCvgCrits = defFieldScaleCvgCriterions):
         self.testCvgFunc = testCvgFunc
-        self.fieldScaleCvgCrits = fieldScaleCvgCrits
+        self.fieldCvgCrits = fieldCvgCrits
         self.fieldsToTest = fieldsToTest
         self.fComps = None
 
     def attachOps(self, modelRun):
-        self.fComps = fields.FieldTestsInfo()
+        self.fComps = fields.FieldComparisonList()
         if self.fieldsToTest == None:
             self.fComps.readFromStgXML(modelRun.modelInputFiles)
         else:
             for fieldName in self.fieldsToTest:
-                self.fComps.add(fields.FieldTest(fieldName))
+                self.fComps.add(fields.FieldComparisonOp(fieldName))
         modelRun.analysis['fieldComparisons'] = self.fComps
 
     def check(self, resultsSet):
         # NB: could store this another way in model info?
-        lenScales = []
-        for runI, mResult in enumerate(resultsSet):
-            cvgIndex = stgcvg.genConvergenceFileIndex(mResult.outputPath)
-            # a bit hacky, need to redesign cvg stuff?
-            cvgInfo = cvgIndex[self.fComps.fields.keys()[0]]
-            lenScales.append(stgcvg.getRes(cvgInfo.filename))
+        lenScales = self.getLenScales(resultsSet)    
+        results = []
+        for fCompOp in self.fComps.fields.itervalues():
+            dofErrors = getDofErrorsByRun(fCompOp, resultsSet)
+            fResult = self.testCvgFunc(fCompOp.name, lenScales, dofErrors,
+                self.fieldCvgCrits[fCompOp.name])
+            results.append(fResult)
 
-        fComps = self.fComps
-        fieldErrorData = {} 
-        for fieldName in self.fComps.fields.keys():
-            fComp = fComps.fields[fieldName]
-            dofErrorsByRun = []
-            # We need to index the dofErrors by run, then dofI, for cvg check
-            for runI, mResult in enumerate(resultsSet):
-                cvgIndex = stgcvg.genConvergenceFileIndex(mResult.outputPath)
-                cvgInfo = cvgIndex[fieldName]
-                # TODO: below really should be inside FieldComparison op.
-                dofErrors = stgcvg.getDofErrors_ByDof(cvgInfo, steps="last")
-                # A bit of a hack: need to store # of dofs per field better
-                # (eg on FieldComparison op?)
-                if runI == 0:
-                    for dofI in range(len(dofErrors)):
-                        dofErrorsByRun.append([])
-
-                for dofI, dofError in enumerate(dofErrors):
-                    dofErrorsByRun[dofI].append(dofError)
-
-            fieldErrorData[fieldName] = dofErrorsByRun
-
-        result = self.testCvgFunc(lenScales, fieldErrorData,
-            self.fieldScaleCvgCrits)
-        return result
+        if False in results: return False
+        else: return True
 
     def writeInfoXML(self, parentNode):
         ftNode = self.createBaseXMLNode(parentNode, 'fieldCvgWithScaleTest')
@@ -99,3 +106,12 @@ class FieldCvgWithScaleTest(TestComponent):
         fListNode = etree.SubElement(ftNode, 'fields')
         for fName in self.fComps.fields.keys():
             fNode = etree.SubElement(fListNode, 'field', name=fName)
+
+    def getLenScales(self, resultsSet):
+        lenScales = []
+        for runI, mResult in enumerate(resultsSet):
+            cvgIndex = stgcvg.genConvergenceFileIndex(mResult.outputPath)
+            # a bit hacky, need to redesign cvg stuff, esp len scales??
+            cvgInfo = cvgIndex[self.fComps.fields.keys()[0]]
+            lenScales.append(stgcvg.getRes(cvgInfo.filename))        
+        return lenScales    

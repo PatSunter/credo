@@ -12,6 +12,8 @@ class ModelResult:
     def __init__(self, modelName, outputPath, simtime):
         self.modelName = modelName
         self.outputPath = outputPath
+        # TODO: ideally should the jobrunner pass this in?
+        # TODO: Sim time not really a job meta info
         self.jobMetaInfo = JobMetaInfo(simtime)
         self.fieldResults = []
 
@@ -20,7 +22,7 @@ class ModelResult:
         '''Records the info required for a FieldResult in the array of
          stored FieldResults kept by the ModelResult. Returns a reference
          to the just-added FieldResult.'''
-        fieldResult = fields.FieldResult(fieldName, tol, errors)
+        fieldResult = fields.FieldComparisonResult(fieldName, errors)
         self.fieldResults.append(fieldResult)
         return fieldResult
 
@@ -51,10 +53,11 @@ def writeModelResultsXML(modelResult, path="", filename="", prettyPrint=True):
     assert isinstance(mres, ModelResult)
     if filename == "":
         filename = defaultModelResultFilename(mres.modelName)
-    if path != "":
-        path+=os.sep
-        if not os.path.exists(path):
-            os.makedirs(path)
+    if path == "":
+        path = modelResult.outputPath
+    else:
+        path += os.sep
+        if not os.path.exists(path): os.makedirs(path)
 
     # Write extra model results, e.g.
     # create model file

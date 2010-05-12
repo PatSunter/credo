@@ -6,37 +6,37 @@ from uwa.analysis import AnalysisOperation
 from uwa.io import stgxml, stgcvg
 import uwa.analysis.stats as stats
 
-class FieldTest:
+class FieldComparisonOp:
     '''Class for maintaining info about a single field test'''
-    def __init__(self, fieldName, tol=None):
+    def __init__(self, fieldName):
         self.name = fieldName
-        self.tol = tol
 
     def writeInfoXML(self, parentNode):
-        return etree.SubElement(parentNode, 'field', name=self.name, \
-            tol=str(self.tol))
+        return etree.SubElement(parentNode, 'field', name=self.name)
 
-    def checkFieldConvergence(self, cvgFileInfo):
-        '''Checks that for a given fieldTest, each of the Field's dofs is
-        within the required tolerance. Needs to be passed a cvgFileInfo
-        to know which convergence file to get information from'''
-
-        #TODO: should we do some comparison with tolerance here?
+    def getResult(self, modelResult):
+        '''Gets the result of the operator on the given fields.'''
+        cvgIndex = stgcvg.genConvergenceFileIndex(modelResult.outputPath)
+        try:
+            cvgFileInfo = cvgIndex[self.name]
+        except KeyError:     
+            # TODO: create a new exception type here?
+            raise KeyError("Field '%s' not found in the known list of"\
+                " convergence results (%s) for model run '%s'"\
+                % (self.name, cvgIndex.keys(),modelResult.modelName))
         dofErrors = stgcvg.getDofErrors_ByDof(cvgFileInfo, steps="last")
-
-        fieldResult = FieldResult(self.name, self.tol, dofErrors)
+        fieldResult = FieldComparisonResult(self.name, dofErrors)
         fieldResult.cvgFileInfo = cvgFileInfo
         return fieldResult
 
 
-class FieldResult:
-    '''Simple class for storing UWA FieldResults'''
+class FieldComparisonResult:
+    '''Simple class for storing UWA FieldComparisonOp Results'''
     XML_INFO_TAG = "fieldResult"
     XML_INFO_LIST_TAG = "fieldResults"
 
-    def __init__(self, fieldName, tol, dofErrors):
+    def __init__(self, fieldName, dofErrors):
         self.fieldName = fieldName
-        self.tol = float(tol)
         self.dofErrors = []
         # Allow the user to pass in just a single error value result for
         # simple fields
@@ -49,17 +49,11 @@ class FieldResult:
         self.cvgFileInfo = None
         self.plottedCvgFile = None
     
-    def checkErrorsWithinTol(self):
-        for dofError in self.dofErrors:
-            if dofError > self.tol: return False
-        return True    
-
     def writeInfoXML(self, fieldResultsNode):
-        '''Writes information about a FieldResult into an existing,
+        '''Writes information about a FieldComparisonResult into an existing,
          open XML doc node'''
         fr = etree.SubElement(fieldResultsNode, self.XML_INFO_TAG)
         fr.attrib['fieldName'] = self.fieldName
-        fr.attrib['tol'] = str(self.tol)
         if self.plottedCvgFile:
             fr.attrib['plottedCvgFile'] = self.plottedCvgFile
         for dofIndex in range(len(self.dofErrors)):
@@ -93,9 +87,11 @@ class FieldResult:
         for dofI in dofRange:
             plt.subplot(1,len(dofRange),dofI+1)
             plot = plt.plot(dofErrorsArray[dofIndices[dofI]])
-            plt.axhline(y=self.tol, label='tolerance', linewidth=3, color='r')
+            # TODO: only the within tolerance test should add this.
+            #plt.axhline(y=self.tol, label='tolerance', linewidth=3, color='r')
 
             plt.xlabel("Timestep")
+            # TODO: title should change depending on analytic or reference
             plt.ylabel("Dof %d: Error vs analytic soln" % dofIndices[dofI])
             # Only display the title once on left
             if len(dofRange) == 1:
@@ -113,16 +109,22 @@ class FieldResult:
             self.plottedCvgFile = filename
         if show: plt.show()
 
+    def checkWithinTol(self, tol):
+        for dofError in self.dofErrors:
+            if dofError > tol: return False
+        return True    
 
-class FieldTestsInfo(AnalysisOperation):
+class FieldComparisonList(AnalysisOperation):
     '''Class for maintaining and managing a list of field tests, including
      IO from StGermain XML files'''
 
-    stgFTComp_Type = 'FieldTest'
-    stgFTComp_Name = 'uwaFieldTester'
-    stgFTSpecName = 'pluginData'
-    stgFTSpec_FList = 'NumericFields'
-    stgFTSpec_RList = 'ReferenceFields'
+    stgXMLCompType = 'FieldTest'
+    stgXMLCompName = 'uwaFieldTester'
+    # This component is unusual in that it needs a "pluginData" struct
+    # separate to the actual component definition.
+    stgXMLSpecName = 'pluginData'
+    stgXMLSpecFList = 'NumericFields'
+    stgXMLSpecRList = 'ReferenceFields'
 
     def __init__(self, fieldsList=None):
         self.fields = fieldsList
@@ -134,10 +136,6 @@ class FieldTestsInfo(AnalysisOperation):
 
     def add(self, fieldTest):
         self.fields[fieldTest.name] = fieldTest    
-
-    def setAllTols(self, fieldTol):
-        for fieldTest in self.fields.values():
-            fieldTest.tol = fieldTol
 
     def writeInfoXML(self, parentNode):
         '''Writes information about this class into an existing, open XML
@@ -163,12 +161,11 @@ class FieldTestsInfo(AnalysisOperation):
         if len(self.fields) == 0: return
 
         # Append the component to component list
-        compElt = stgxml.mergeComponent(rootNode, self.stgFTComp_Name, \
-            self.stgFTComp_Type)
-
+        compElt = stgxml.mergeComponent(rootNode, self.stgXMLCompName, \
+            self.stgXMLCompType)
         # Create the plugin data
         pluginDataElt = etree.SubElement(rootNode, stgxml.structTag, \
-            name=self.stgFTSpecName, mergeType="replace")
+            name=self.stgXMLSpecName, mergeType="replace")
         xmlFieldTestsList = self.fields.keys()
         # This is necessary due to format of this list in the FieldTest plugin:
         # <FieldName> <# of analytic func> - both as straight params
@@ -177,13 +174,13 @@ class FieldTestsInfo(AnalysisOperation):
             xmlFieldTestsList.insert(index, str(ii))
             ii+=1
 
-        stgxml.writeParamList(pluginDataElt, self.stgFTSpec_FList, \
+        stgxml.writeParamList(pluginDataElt, self.stgXMLSpecFList, \
             xmlFieldTestsList)
         if self.useReference:
             stgxml.writeParamSet(pluginDataElt, {\
                 'referenceSolutionFilePath':self.referencePath,\
                 'useReferenceSolutionFromFile':self.useReference })
-            stgxml.writeParamList(pluginDataElt, self.stgFTSpec_RList, \
+            stgxml.writeParamList(pluginDataElt, self.stgXMLSpecRList, \
                 self.fields.keys())
 
         stgxml.writeParamSet(pluginDataElt, {\
@@ -203,16 +200,13 @@ class FieldTestsInfo(AnalysisOperation):
 
         # create a flattened file
         ffile=stgxml.createFlattenedXML(inputFilesList)
-
         # Necessary, because the parser will prefix this this to tag names
         stgNSText = stgxml.stgNSText
-
         xmlDoc = etree.parse(ffile)
         stgRoot = xmlDoc.getroot()
-
         # Go and grab necessary info from XML file
-        fieldTestDataEl = stgxml.getStruct(stgRoot, self.stgFTSpecName)
-        fieldTestListEl = stgxml.getList(fieldTestDataEl, self.stgFTSpec_FList)
+        fieldTestDataEl = stgxml.getStruct(stgRoot, self.stgXMLSpecName)
+        fieldTestListEl = stgxml.getList(fieldTestDataEl, self.stgXMLSpecFList)
 
         fieldTestEls = fieldTestListEl.getchildren()
         # As per the current spec, the field names are followed by an index 
@@ -220,37 +214,18 @@ class FieldTestsInfo(AnalysisOperation):
         ii = 0
         while ii < len(fieldTestEls):
             fieldName = fieldTestEls[ii].text
-            self.fields[fieldName] = FieldTest(fieldName)
+            self.fields[fieldName] = FieldComparisonOp(fieldName)
             # Skip the index
             ii+=1
             ii+=1
+        # NB: not reading in all the other specifying stuff currently. Possibly
+        # would be useful to do this in future.
 
         os.remove(ffile)
 
-    def testConvergence(self, cvgFilePath):
-        fieldTestsDict = self.fields
-
-        # Note: ideally, we'd have some better way of knowing what these
-        # analytic soln output files would be called - perhaps the
-        # analytic plugins should create a meta report file that can
-        # be parsed and read
-        # TODO: should this be done in some sort of preparatory step
-        cvgFileIndex = stgcvg.genConvergenceFileIndex(cvgFilePath)
-
-        fieldResults = []
-        for fieldTest in fieldTestsDict.values():
-            try:
-                cvgFileInfo = cvgFileIndex[fieldTest.name]
-            except KeyError:     
-                # TODO: create a new exception type here?
-                raise KeyError("Field '%s' not found in the known list of"\
-                    " convergence results (%s)" % (fieldTest.name,
-                    cvgFileIndex.keys()))
-
-            fr = fieldTest.checkFieldConvergence(cvgFileInfo)
-            fieldResults.append(fr)
-
-        return fieldResults
+    def getAllResults(self, modelResult):
+        fComps = self.fields.values()
+        return [fCompOp.getResult(modelResult) for fCompOp in fComps]
 
 #--------------------------------------
 # Functions below useful for doing convergence analysis with length scale
@@ -262,6 +237,7 @@ def getFieldScaleCvgData_SingleCvgFile(cvgFilePath):
     cvgIndex = stgcvg.genConvergenceFileIndex(cvgFilePath)
     fieldErrorData = {}
     for fieldName, cvgFileInfo in cvgIndex.iteritems():
+        #NB: assumes all cvg files and all fields have same len scales.
         lenScales = stgcvg.getRes(cvgFileInfo.filename)
         dofErrors = stgcvg.getDofErrors_ByDof(cvgFileInfo)
         fieldErrorData[fieldName] = dofErrors
