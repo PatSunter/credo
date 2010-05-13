@@ -8,7 +8,7 @@ results = fieldTests.testConvergence("./output/realistic")
 
 fr = results[0]
 
-fr.plotCvgOverTime(show=True, dofIndex=0, path="./output/realistic")
+fr.plotOverTime(show=True, dofIndex=0, path="./output/realistic")
 
 #Plotting
 #dofErrors = stgcvg.getDofErrors_ByDof( fr.cvgFileInfo )

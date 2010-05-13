@@ -40,7 +40,7 @@ class FieldWithinTolTest(TestComponent):
             fieldTol = self.getTolForField(fComp.name)
             for runI, mResult in enumerate(resultsSet):
                 fCompRes = fComp.getResult(mResult)
-                fieldResults[fComp.name] = fCompRes.checkWithinTol(fieldTol)    
+                fieldResults[fComp.name] = fCompRes.withinTol(fieldTol)    
         
                 if not fieldResults[fComp.name]:
                     if len(resultsSet) > 0:

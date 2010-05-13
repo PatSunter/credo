@@ -35,11 +35,11 @@ class AnalysisFieldsTestCase(unittest.TestCase):
         self.assertEqual(fResults[0].fieldName, fComp.name)
         self.assertEqual(fResults[0].dofErrors[0], 0.00612235812)
 
-    def test_checkWithinTol(self):
+    def test_WithinTol(self):
         fRes = FieldComparisonResult('TemperatureField', [0.1,0.2])
-        self.assertTrue(fRes.checkWithinTol(0.3))
+        self.assertTrue(fRes.withinTol(0.3))
         fRes = FieldComparisonResult('TemperatureField', [0.4,0.2])
-        self.assertFalse(fRes.checkWithinTol(0.3))
+        self.assertFalse(fRes.withinTol(0.3))
 
     def test_addFieldComparisonOp(self):
         fieldCompares = FieldComparisonList()

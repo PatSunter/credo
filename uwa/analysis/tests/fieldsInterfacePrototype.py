@@ -32,10 +32,10 @@ fCompRes = fCompOp.getResult()
 
 # Operate on result?
 status = fCompRes.checkWithinTol( 0.1, "last" )
-fCompRes.plotCvgOverTime() 
+fCompRes.plotOverTime() 
 fComp.writeInfoXML()
 fCompRes.writeInfoXML()
 
 # Or general funcs?
-fields.plotCvgOverTime(fComp, fCompRes)
+fields.plotOverTime(fComp, fCompRes)
 fields.writeInfoXML(fComp, fCompRes)

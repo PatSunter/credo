@@ -61,7 +61,7 @@ class FieldComparisonResult:
             dr.attrib['dof'] = str(dofIndex)
             dr.attrib['error'] = str(self.dofErrors[dofIndex])
     
-    def plotCvgOverTime(self, save=True, show=False, dofIndex=None, path="."):
+    def plotOverTime(self, save=True, show=False, dofIndex=None, path="."):
         try:
             import matplotlib.pyplot as plt
         except ImportError:
@@ -109,7 +109,7 @@ class FieldComparisonResult:
             self.plottedCvgFile = filename
         if show: plt.show()
 
-    def checkWithinTol(self, tol):
+    def withinTol(self, tol):
         for dofError in self.dofErrors:
             if dofError > tol: return False
         return True    

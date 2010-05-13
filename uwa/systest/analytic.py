@@ -61,7 +61,7 @@ class AnalyticTest(SysTest):
         # TODO: should the ftest component now be able to do this?
         #mResult.fieldResults = fTests.testConvergence(mResult.outputPath)
         #for fRes in mResult.fieldResults:
-        #    fRes.plotCvgOverTime(show=False, path=mResult.outputPath)
+        #    fRes.plotOverTime(show=False, path=mResult.outputPath)
         self.testStatus = testStatus
         return testStatus
         
