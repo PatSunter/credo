@@ -2,6 +2,7 @@ import os
 import math
 from lxml import etree
 
+import uwa.utils
 from uwa.analysis import AnalysisOperation
 from uwa.io import stgxml, stgcvg
 import uwa.analysis.stats as stats
@@ -114,9 +115,10 @@ class FieldComparisonResult:
             if dofError > tol: return False
         return True    
 
+
 class FieldComparisonList(AnalysisOperation):
-    '''Class for maintaining and managing a list of field tests, including
-     IO from StGermain XML files'''
+    '''Class for maintaining and managing a list of field comparisons,
+    including IO from StGermain XML files'''
 
     stgXMLCompType = 'FieldTest'
     stgXMLCompName = 'uwaFieldTester'
@@ -137,6 +139,10 @@ class FieldComparisonList(AnalysisOperation):
     def add(self, fieldTest):
         self.fields[fieldTest.name] = fieldTest    
 
+    def postRun(self, modelRun, runPath):
+        uwa.utils.moveAllToOutputPath(runPath, modelRun.outputPath,
+            stgcvg.CVG_EXT)
+    
     def writeInfoXML(self, parentNode):
         '''Writes information about this class into an existing, open XML
          doc node, in a child element'''
@@ -224,6 +230,8 @@ class FieldComparisonList(AnalysisOperation):
         os.remove(ffile)
 
     def getAllResults(self, modelResult):
+        'Return a list of all the individual fieldComparisonOps done during'\
+        'a run.'
         fComps = self.fields.values()
         return [fCompOp.getResult(modelResult) for fCompOp in fComps]
 
@@ -242,6 +250,7 @@ def getFieldScaleCvgData_SingleCvgFile(cvgFilePath):
         dofErrors = stgcvg.getDofErrors_ByDof(cvgFileInfo)
         fieldErrorData[fieldName] = dofErrors
     return lenScales, fieldErrorData
+
 
 def calcFieldCvgWithScale(fieldName, lenScales, dofErrors):
     '''Gets the convergence and correlation of a field with resolution

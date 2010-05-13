@@ -44,7 +44,7 @@ class ModelSuite:
             # TODO: does this step need to be refactored/generalised?
             # I.E. into a "post-run cleanup" for all analysis ?
             print "Doing post-run tidyup:"
-            uwa.moveConvergenceResults(os.getcwd(), modelRun.outputPath)
+            modelRun.postRunCleanup(os.getcwd())
             self.resultsList.append(result)
 
         return self.resultsList    

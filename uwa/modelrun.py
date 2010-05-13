@@ -1,3 +1,5 @@
+import os, shutil
+
 from lxml import etree
 import uwa.modelresult
 from uwa.io import stgxml
@@ -26,6 +28,16 @@ class ModelRun:
         self.analysis['fieldTests'] = fields.FieldComparisonList()
         self.cpFields = []
         self.analysisXML = None
+
+    def postRunCleanup(self, runPath):
+        if not os.path.exists(self.outputPath):
+            os.makedirs(self.outputPath)
+
+        shutil.move(self.analysisXML, 
+            self.outputPath + os.sep + self.analysisXML)
+
+        for opName, analysisOp in self.analysis.iteritems(): 
+            analysisOp.postRun(self, runPath)
 
     def defaultModelRunFilename(self):    
         return 'ModelRun-'+self.name+'.xml'
@@ -72,7 +84,7 @@ class ModelRun:
         outFile.close()
         return outputPath+filename
 
-    def analysisXMLGen(self, filename="analysis.xml"):
+    def analysisXMLGen(self, filename="uwa-analysis.xml"):
         # create XML document
         nsMap = {None: "http://www.vpac.org/StGermain/XML_IO_Handler/Jun2003"}
         root = etree.Element(stgxml.stgRootTag, nsmap=nsMap)
@@ -323,6 +335,7 @@ def runModel(modelRun, extraCmdLineOpts=None):
     result = uwa.modelresult.ModelResult(modelRun.name, modelRun.outputPath, simTime)
     
     return result
+
 
 def getSimInfoFromFreqOutput(outputPath):
     """Get necessary stuff from FrequentOutput.dat

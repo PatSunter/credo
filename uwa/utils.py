@@ -44,7 +44,7 @@ def getStgBinPath():
 def moveAllToOutputPath(runPath, outputPath, fileExt):
     if not os.path.exists(outputPath):
         os.makedirs(outputPath)
-    for fname in glob.glob(path + os.sep+"*." + fileExt):
+    for fname in glob.glob(runPath + os.sep+"*." + fileExt):
         # These are convergence files, don't keep records of previous runs
         target = outputPath + os.sep + os.path.basename(fname)
         if (os.path.exists(target)): os.remove(target)
