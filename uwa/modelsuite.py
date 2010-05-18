@@ -1,5 +1,5 @@
 
-import os
+import os, glob
 import uwa
 from uwa import modelrun as mrun
 from uwa import modelresult as mres
@@ -22,6 +22,15 @@ class ModelSuite:
         self.runs.append(modelRun)
         self.runDescrips.append(runDescrip)
         self.runCustomOptSets.append(runCustomOpts)
+
+    def cleanAllOutputPaths(self):
+        '''Remove all files in each model's output path. Useful to get rid of
+        results still there from previous jobs. Doesn't delete sub-directories,
+        in case they are other model runs results that should be ignored.'''
+        for modelRun in self.runs:
+            for filePath in glob.glob(os.path.join(modelRun.outputPath,"*")):
+                if os.path.isfile(filePath):
+                    os.unlink(filePath)
 
     def runAll(self):
         '''Run each modelRun in the suite'''
