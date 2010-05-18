@@ -1,6 +1,7 @@
 from lxml import etree
 import os
 
+from uwa.io import stgfreq
 from uwa.analysis import fields
 
 class ModelResult:
@@ -16,6 +17,10 @@ class ModelResult:
         # TODO: Sim time not really a job meta info
         self.jobMetaInfo = JobMetaInfo(simtime)
         self.fieldResults = []
+        self.freqOutput = None
+
+    def readFrequentOutput(self):
+        self.freqOutput = stgfreq.FreqOutput(self.outputPath)    
 
     # TODO: is this function still appropriate?
     def recordFieldResult(self, fieldName, tol, errors):

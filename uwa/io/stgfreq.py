@@ -1,4 +1,5 @@
 import os
+import operator
 
 '''A Module for convenient access to StGermain FrequentOutput files'''
 
@@ -70,6 +71,7 @@ class FreqOutput:
         if not self.populated:
             self.file.seek(0)
             self.headers = self.getHeaders()
+            tStepCol = self.headerColMap['Timestep']
             self.records = []
             for line in self.file:
                 if line[0] == FREQ_HEADER_LINESTART:
@@ -80,12 +82,12 @@ class FreqOutput:
                 # We are assuming all freq output values are floats.
                 # Might be better
                 # to actually record the data type in the headers somehow?
-                recordValueFloats = [float(val) for val in recordValues]
-                self.records.append(recordValueFloats)
-        # TODO: should we record the max timesteps here, and final of other
-        # things?
-        self._finalTimeStep = (self.records[-1])[self.headerColMap['Timestep']]
-        return self.records    
+                recordValueNums = [float(val) for val in recordValues]
+                # For now, manually convert tstep specially to int.
+                recordValueNums[0] = int(recordValueNums[tStepCol])
+                self.records.append(recordValueNums)
+        self._finalTimeStep = (self.records[-1])[tStepCol]
+        return self.records
 
     def getRecordDictAtStep(self, tstep):
         if not self.populated: self.populateFromFile()
@@ -148,7 +150,51 @@ class FreqOutput:
             valArray.append(record[colNum])
         return valArray    
 
-    def plotOverTime(self, headerName, show=False, save=True):
+    def getTimeStepsArray(self, range="all"):    
+        if not self.populated: self.populateFromFile()
+        # TODO: Check range input is ok. I need to find out the right way to
+        # handling unusual values for these 
+        colNum = self.getColNum('Timestep')
+        tSteps = [record[colNum] for record in self.records]
+        return tSteps
+
+    def getMin(self, headerName):
+        '''get the Minimum of the records for a given header, including
+        the timestep at which that minimum occured.'''
+        return self.getReductionOp(headerName, min)
+        
+    def getMax(self, headerName):
+        '''get the Maximum of the records for a given header, including
+        the timestep at which that minimum occured.'''
+        return self.getReductionOp(headerName, max)
+    
+    def getReductionOp(self, headerName, reduceFunc):
+        '''Utility function for doing comparison operations on the records
+        list, e.g. the max or minimum - where reduceFunc can operate on the
+        whole records list at once, and support the "key" syntax to pick
+        correct field out of tuples for comparison.'''
+        if not self.populated: self.populateFromFile()
+        if len(self.records) == 0: return None, None
+        colNum = self.getColNum(headerName)
+        tStepColNum = self.getColNum('Timestep')
+        retRecord = reduceFunc(self.records, key=operator.itemgetter(colNum))
+        return retRecord[colNum], retRecord[tStepColNum]
+
+    def getComparisonOp(self, headerName, cmpFunc):
+        '''Utility function for doing comparison operations on the records
+        list, e.g. the max or minimum - where cmpFunc is a single operator'''
+        if not self.populated: self.populateFromFile()
+        if len(self.records) == 0: return None, None
+        colNum = self.getColNum(headerName)
+        tStepColNum = self.getColNum('Timestep')
+        firstRec = self.records[0]
+        retVal, retStep = firstRec[colNum], firstRec[tStepColNum]
+        for record in self.records:
+            if cmpFunc(record[colNum], retVal):
+                retVal, retStep = record[colNum], record[tStepColNum]
+        return retVal, retStep
+
+    def plotOverTime(self, headerName, show=False, save=True, path="."):
         try:
             import matplotlib.pyplot as plt
         except ImportError:
@@ -158,8 +204,10 @@ class FreqOutput:
         
         if not self.populated: self.populateFromFile()
         valuesArray = self.getValuesArray(headerName)
+        tSteps = self.getTimeStepsArray()
 
-        plot = plt.plot(dofErrorsArray[dofIndices[dofI]])
+        plot = plt.clf()   # Start by clearing any pre-existing figure
+        plt.plot(tSteps, valuesArray)
         plt.xlabel("Timestep")
         plt.ylabel(headerName)
         plt.title("Output parameter '%s' over time"\
