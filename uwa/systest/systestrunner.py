@@ -36,6 +36,7 @@ class SysTestRunner:
         # Generate a suite of models to run as part of the test
         mSuite = sysTest.genSuite()
 
+        mSuite.cleanAllOutputPaths()
         mSuite.writeAllModelRunXMLs()
         suiteResults = mSuite.runAll()
         print "Checking test result:"
