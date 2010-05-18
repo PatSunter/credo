@@ -10,6 +10,7 @@ class StgFreqTestCase(unittest.TestCase):
     def setUp(self):
         self.basedir = os.path.realpath(tempfile.mkdtemp())
         self.stgFreq = FreqOutput("./output")
+        self.expTimeVals = [0.0125, 0.0375, 0.0625, 0.0875, 0.1125]
 
     def tearDown(self):
         shutil.rmtree(self.basedir)
@@ -21,11 +22,11 @@ class StgFreqTestCase(unittest.TestCase):
 
     def test_getAllRecords(self):
         records = self.stgFreq.getAllRecords()
-        self.assertEqual(records[0], [2,0.0125])
-        self.assertEqual(records[1], [4,0.0375])
-        self.assertEqual(records[2], [6,0.0625])
-        self.assertEqual(records[3], [8,0.0875])
-        self.assertEqual(records[4], [10,0.1125])
+        self.assertEqual(records[0], [2, self.expTimeVals[0]])
+        self.assertEqual(records[1], [4, self.expTimeVals[1]])
+        self.assertEqual(records[2], [6, self.expTimeVals[2]])
+        self.assertEqual(records[3], [8, self.expTimeVals[3]])
+        self.assertEqual(records[4], [10, self.expTimeVals[4]])
     
     def test_getValueAtStep(self):
         self.stgFreq.populateFromFile()
@@ -39,6 +40,11 @@ class StgFreqTestCase(unittest.TestCase):
 
     def test_finalStep(self):
         self.assertEqual(10, self.stgFreq.finalStep())
+    
+    def test_getValuesArray(self):
+        valArray = self.stgFreq.getValuesArray('Time')
+        for ii, val in enumerate(valArray):
+            self.assertAlmostEqual(val, self.expTimeVals[ii])
 
 def suite():
     suite = unittest.TestSuite()

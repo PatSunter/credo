@@ -54,9 +54,16 @@ class FreqOutput:
             # First line should be headers, skip
             firstLine = self.file.readline()
             assert(firstLine[0]) == FREQ_HEADER_LINESTART
+            # need to do this rather than just enumerate because
+            # of possible duplicate header lines
+            recordNum = 0
             for lineNum, line in enumerate(self.file):
+                # See comment above in getAllRecords
+                if line[0] == FREQ_HEADER_LINESTART:
+                    continue
                 tstep = int(line.split()[0])
-                self.tStepMap[tstep] = lineNum
+                self.tStepMap[tstep] = recordNum
+                recordNum+=1
         return self.tStepMap    
 
     def getAllRecords(self):
@@ -65,6 +72,10 @@ class FreqOutput:
             self.headers = self.getHeaders()
             self.records = []
             for line in self.file:
+                if line[0] == FREQ_HEADER_LINESTART:
+                    # Currently, on restart runs it will re-add a header to
+                    # Freq out, so ignore this
+                    continue
                 recordValues = line.split()
                 # We are assuming all freq output values are floats.
                 # Might be better
@@ -126,3 +137,36 @@ class FreqOutput:
                 " %s" % (headerName, self.headerColMap.keys()))
         return colNum        
 
+    def getValuesArray(self, headerName, range="all"):
+        if not self.populated: self.populateFromFile()
+        # TODO: Check range input is ok. I need to find out the right way to
+        # handling unusual values for these 
+        recordsSet = self.records
+        colNum = self.getColNum(headerName)
+        valArray = []
+        for record in recordsSet:
+            valArray.append(record[colNum])
+        return valArray    
+
+    def plotOverTime(self, headerName, show=False, save=True):
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError:
+            print "Error, to use UWA built-in plot functions, please "\
+                " install the matplotlib python library."
+            return    
+        
+        if not self.populated: self.populateFromFile()
+        valuesArray = self.getValuesArray(headerName)
+
+        plot = plt.plot(dofErrorsArray[dofIndices[dofI]])
+        plt.xlabel("Timestep")
+        plt.ylabel(headerName)
+        plt.title("Output parameter '%s' over time"\
+            % (headerName))
+
+        if save:
+            filename = path+os.sep+headerName+"-timeSeries.png"
+            plt.savefig(filename, format="png")
+        if show: plt.show()
+        return plt

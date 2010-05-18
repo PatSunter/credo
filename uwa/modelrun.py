@@ -2,7 +2,7 @@ import os, shutil
 
 from lxml import etree
 import uwa.modelresult
-from uwa.io import stgxml
+from uwa.io import stgxml, stgfreq
 from uwa.analysis import fields
 
 class ModelRun:
@@ -326,9 +326,13 @@ def runModel(modelRun, extraCmdLineOpts=None):
     # END JOBRUNNER PART
 
     # Construct a modelResult
+    # TODO: the idiom where modelRun has to read stuff from freq out temporarily
+    # and pass into model result not really a good one. Maybe should construct
+    # just a basic ModelResult, and provide a function on it to populate data
+    # structures from file.
     try:
         tSteps, simTime = getSimInfoFromFreqOutput(modelRun.outputPath)
-    except IOError:
+    except ValueError:
         # For now, allow runs that didn't create a freq output
         tSteps, simTime = None, None
 
@@ -338,31 +342,14 @@ def runModel(modelRun, extraCmdLineOpts=None):
 
 
 def getSimInfoFromFreqOutput(outputPath):
-    """Get necessary stuff from FrequentOutput.dat
-    # TODO: this should be in a sub-module - is currently quite hacky"""
-    freqFilename = outputPath + os.sep + "FrequentOutput.dat"
-    
+    """Get necessary stuff from FrequentOutput.dat"""
+    freqOut = stgfreq.FreqOutput(path=outputPath)
+    freqOut.populateFromFile()
+    recordDict = freqOut.getRecordDictAtStep(freqOut.finalStep())
+    tSteps = freqOut.finalStep()
     try:
-        freqFile = open(freqFilename, 'r')
-    except IOError:
-        # TODO: create a new exception class for this?
-        raise IOError("Freq output file unable to be opened. Possibly this"
-            " ModelRun didn't have one enabled.")
-
-    # Parse out the headings
-    headerLine = freqFile.readline()
-    cols = headerLine.split()
-
-    # Obtain time and memory at time-stamp specified by problem.steps
-    lines = freqFile.readlines()
-    try:
-        lastLine = lines[-1]
-    except IndexError:
-        # TODO: ModelFailError exception
-        raise IndexError("Error, a frequent output file exists at '%s'"
-            " but it contains no timestep info, suggesting model failed to"
-            " run." % (freqFilename) )
-    cols = lastLine.split()
-    tSteps = float(cols[0])
-    simTime = float(cols[1])
+        simTime = recordDict['Time']
+    except KeyError:
+        # For now, allow none as simTime
+        simTime = None
     return tSteps, simTime
