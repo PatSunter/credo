@@ -73,7 +73,7 @@ def writeModelResultsXML(modelResult, path="", filename="", prettyPrint=True):
     mres.jobMetaInfo.writeInfoXML(mrNode)
     if (mres.fieldResults):
         fieldResultsNode = etree.SubElement(mrNode,
-            fields.FieldResult.XML_INFO_LIST_TAG)
+            fields.FieldComparisonResult.XML_INFO_LIST_TAG)
         for fieldResult in mres.fieldResults:
             fieldResult.writeInfoXML(fieldResultsNode)
 
@@ -92,11 +92,11 @@ def updateModelResultsXMLFieldInfo(filename, newFieldResult, prettyPrint=True):
     
     # Because we just grabbed a reference to the root, the find will
     # look relative to the root
-    fieldResultsNode = xmlDoc.find(fields.FieldResult.XML_INFO_LIST_TAG)
+    fieldResultsNode = xmlDoc.find(fields.FieldComparisonResult.XML_INFO_LIST_TAG)
     # It may not exist, if there were no field results already,
     # in which case grab existing
     if fieldResultsNode is None:
-        fieldResultsNode = etree.SubElement(root, fields.FieldResult.XML_INFO_LIST_TAG)
+        fieldResultsNode = etree.SubElement(root, fields.FieldComparisonResult.XML_INFO_LIST_TAG)
     else:
         # TODO: Check the field to add is not in the list already
         pass
