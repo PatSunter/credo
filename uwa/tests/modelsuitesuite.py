@@ -17,7 +17,7 @@ class ModelSuiteTestCase(unittest.TestCase):
 
     def setUp(self):
         self.basedir = os.path.realpath(tempfile.mkdtemp())
-        self.mSuite = ModelSuite()
+        self.mSuite = ModelSuite(os.path.join("output","suiteTest"))
 
     def tearDown(self):
         # TODO: tear down lxml document?
