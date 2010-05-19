@@ -21,7 +21,7 @@ def genConvergenceFileIndex(path):
     classes, for all .cvg files in the given path'''
     
     # get list of all convergence files
-    cvgFiles=glob.glob(path+os.sep+"*."+CVG_EXT)
+    cvgFiles=glob.glob(os.path.join(path, "*."+CVG_EXT))
 
     cvgFileDict = {}
 

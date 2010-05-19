@@ -20,7 +20,7 @@ class ModelResultTestCase(unittest.TestCase):
          # Useful for testing doc writing   
         self.xmlRoot = etree.Element(ModelResult.XML_INFO_TAG)
         self.xmlDoc = etree.ElementTree(self.xmlRoot)
-        self.xmlFilename = self.basedir+os.sep+"testOutput.xml"
+        self.xmlFilename = os.path.join(self.basedir, "testOutput.xml")
 
     def tearDown(self):
         # TODO: tear down lxml document?

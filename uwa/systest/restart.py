@@ -26,8 +26,8 @@ class RestartTest(SysTest):
             fieldsToTest = ['VelocityField','PressureField'], fullRunSteps=20,
             fieldTols=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc, "Restart")
-        self.initialOutputPath = self.outputPathBase+os.sep+"initial"
-        self.restartOutputPath = self.outputPathBase+os.sep+"restart"
+        self.initialOutputPath = os.path.join(self.outputPathBase, "initial")
+        self.restartOutputPath = os.path.join(self.outputPathBase, "restart")
         self.fieldsToTest = fieldsToTest
         self.fullRunSteps = fullRunSteps
         if self.fullRunSteps % 2 != 0:

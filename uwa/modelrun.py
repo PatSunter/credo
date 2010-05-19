@@ -34,7 +34,7 @@ class ModelRun:
             os.makedirs(self.outputPath)
 
         shutil.move(self.analysisXML, 
-            self.outputPath + os.sep + self.analysisXML)
+            os.path.join(self.outputPath, self.analysisXML))
 
         for opName, analysisOp in self.analysis.iteritems(): 
             analysisOp.postRun(self, runPath)

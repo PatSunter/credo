@@ -10,7 +10,7 @@ STG_BINDIRKEY = 'STG_BINDIR'
 
 def getVerifyStgExePath(exeName):
     stgPath = getStgBinPath()
-    fullExePath = stgPath+os.sep+exeName
+    fullExePath = os.path.join(stgPath, exeName)
     if not os.path.exists(fullExePath):
         raise IOError("Error, in %s(): executable requested %s doesn't" \
             " exist/not valid in StGermain binary path (%s)." % \
@@ -33,7 +33,7 @@ def getStgBinPath():
             " set, but path it's" \
             " set to (%s) doesn't exist/not valid.\n" \
             % (inspect.stack()[0][3], STG_BINDIRKEY, stgBinPath))
-    elif not os.path.exists(stgBinPath+os.sep+'StGermain'):
+    elif not os.path.exists(os.path.join(stgBinPath, 'StGermain')):
         raise EnvironmentError("Error, in %s(): needed env variable %s is"\
             " set, path it's set" \
             " to (%s) is valid, but doesn't contain a StGermain executable.\n"\
@@ -44,9 +44,9 @@ def getStgBinPath():
 def moveAllToOutputPath(runPath, outputPath, fileExt):
     if not os.path.exists(outputPath):
         os.makedirs(outputPath)
-    for fname in glob.glob(runPath + os.sep+"*." + fileExt):
+    for fname in glob.glob(os.path.join(runPath, "*."+fileExt)):
         # These are convergence files, don't keep records of previous runs
-        target = outputPath + os.sep + os.path.basename(fname)
+        target = os.path.join(outputPath, os.path.basename(fname))
         if (os.path.exists(target)): os.remove(target)
         shutil.move(fname, outputPath)
 

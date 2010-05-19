@@ -12,7 +12,7 @@ class FreqOutput:
     def __init__(self, path, filename=STG_DEF_FREQ_FILENAME):
         self.path = path
         self.filename = filename
-        fullFilename = path + os.sep + filename
+        fullFilename = os.path.join(path, filename)
         if not os.path.exists(fullFilename):
             raise ValueError("Error, the path and filename passed in, '%s' "
                 " and '%s', does not point to a valid freq output file."
@@ -214,7 +214,7 @@ class FreqOutput:
             % (headerName))
 
         if save:
-            filename = path+os.sep+headerName+"-timeSeries.png"
+            filename = os.path.join(path, headerName+"-timeSeries.png")
             plt.savefig(filename, format="png")
         if show: plt.show()
         return plt

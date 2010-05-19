@@ -31,7 +31,7 @@ class AnalyticMultiResTest(SysTest):
 
         for res in self.resSet:
             resStr = mrun.strRes(res)
-            outputPath = self.outputPathBase+os.sep+resStr
+            outputPath = os.path.join(self.outputPathBase, resStr)
             mRun = mrun.ModelRun(self.testName, self.inputFiles,
                 outputPath, nproc=self.nproc)
             customOpts = mrun.generateResOpts(res)

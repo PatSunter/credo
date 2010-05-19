@@ -105,7 +105,7 @@ class FieldComparisonResult:
                 plt.title("DOF %d" % dofI)
 
         if save:
-            filename = path+os.sep+self.fieldName+"-cvg.png"
+            filename = os.path.join(path, self.fieldName+"-cvg.png")
             plt.savefig(filename, format="png")
             self.plottedCvgFile = filename
         if show: plt.show()

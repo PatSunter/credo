@@ -24,7 +24,7 @@ class ReferenceTest(SysTest):
             fieldsToTest = ['VelocityField','PressureField'], runSteps=20,
             fieldTols=None, createRefSolnMode=False ):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc, "Reference")
-        self.expectedSolnPath = "expected" + os.sep + self.testName
+        self.expectedSolnPath = os.path.join("expected", self.testName)
         self.fieldsToTest = fieldsToTest
         self.runSteps = runSteps
         self.testComponents[self.fTestName] = FieldWithinTolTest(
