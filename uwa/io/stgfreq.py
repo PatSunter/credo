@@ -167,6 +167,28 @@ class FreqOutput:
         '''get the Maximum of the records for a given header, including
         the timestep at which that minimum occured.'''
         return self.getReductionOp(headerName, max)
+
+    def getMean(self, headerName):
+        '''gets the Mean of the records for a given header.
+        
+        Note: this is provided for convenience. If user wants to do more complex
+        statistical operations, use the getValuesArray, then process this
+        directly using stats functions/libraries.'''
+        if not self.populated: self.populateFromFile()
+        valArray = self.getValuesArray(headerName)
+        return sum(valArray, 0.0) / len(valArray)
+
+    def printAllMinMax(self):
+        '''Print the maximum and minimum values of all fields in the frequent
+        output.'''
+        if not self.populated: self.populateFromFile()
+        print "Maximum and minimum values for quantities in Frequent Output:"
+        for header in self.headers:
+            if header == 'Timestep': continue
+            min, minStep = self.getMin(header)
+            max, maxStep = self.getMax(header)
+            print "\t%s: min %f (at step %d), max %f (at step %d)"\
+                % (header, min, minStep, max, maxStep)
     
     def getReductionOp(self, headerName, reduceFunc):
         '''Utility function for doing comparison operations on the records

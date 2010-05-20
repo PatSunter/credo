@@ -6,7 +6,6 @@ import unittest
 from uwa.io.stgfreq import FreqOutput
 
 class StgFreqTestCase(unittest.TestCase):
-
     def setUp(self):
         self.basedir = os.path.realpath(tempfile.mkdtemp())
         self.stgFreq = FreqOutput("./output")
@@ -75,9 +74,17 @@ class StgFreqTestCase(unittest.TestCase):
             self.assertAlmostEqual(maxVal, calcMax)
             self.assertEqual(maxStep, self.tSteps[calcIndex])
 
+    def test_getMean(self):
+        meanVal = self.stgFreq.getMean('VRMS')
+        calcMean = sum(self.VRMSVals, 0.0) / len(self.VRMSVals)
+        self.assertAlmostEqual(meanVal, calcMean)
+
     def test_plotOverTime(self):
         self.stgFreq.plotOverTime("Time", show=False, path="output/temp")
         self.stgFreq.plotOverTime("VRMS", show=False, path="output/temp")
+    
+    def test_printAllMinMax(self):
+        self.stgFreq.printAllMinMax()
 
 def suite():
     suite = unittest.TestSuite()
