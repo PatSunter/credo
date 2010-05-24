@@ -57,9 +57,11 @@ class AnalyticMultiResTest(SysTest):
         fConvChecker = self.testComponents['fieldConvChecker']
         result = fConvChecker.check(resultsSet)
         if result == False:
-            testStatus = UWA_FAIL("One of the fields failed to converge as expected")
+            testStatus = UWA_FAIL("One of the fields failed to converge as"\
+                " expected")
         self.testStatus = testStatus
         return testStatus
 
-    def writeXMLContents(self, baseNode):
+    def writeXMLCustomSpec(self, baseNode):
+        #TODO
         pass

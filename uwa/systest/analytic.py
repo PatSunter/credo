@@ -65,5 +65,5 @@ class AnalyticTest(SysTest):
         self.testStatus = testStatus
         return testStatus
         
-    def writeXMLContents(self, baseNode):
+    def writeXMLCustomSpec(self, baseNode):
         pass

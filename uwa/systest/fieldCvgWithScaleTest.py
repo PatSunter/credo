@@ -1,6 +1,6 @@
 from lxml import etree
 
-from uwa.systest.api import TestComponent
+from uwa.systest.api import TestComponent, UWA_PASS, UWA_FAIL
 from uwa.io import stgcvg
 import uwa.analysis.fields as fields
 
@@ -73,6 +73,7 @@ class FieldCvgWithScaleTest(TestComponent):
     def __init__(self, fieldsToTest = None,
             testCvgFunc = testCvgWithScale,
             fieldCvgCrits = defFieldScaleCvgCriterions):
+        TestComponent.__init__(self, "fieldCvgWithScaleTest")
         self.testCvgFunc = testCvgFunc
         self.fieldCvgCrits = fieldCvgCrits
         self.fieldsToTest = fieldsToTest
@@ -95,21 +96,33 @@ class FieldCvgWithScaleTest(TestComponent):
         # NB: could store this another way in model info?
         lenScales = self.getLenScales(resultsSet)    
         results = []
+        statusMsg = "TODO"
         for fCompOp in self.fComps.fields.itervalues():
             dofErrors = getDofErrorsByRun(fCompOp, resultsSet)
             fResult = self.testCvgFunc(fCompOp.name, lenScales, dofErrors,
                 self.fieldCvgCrits[fCompOp.name])
             results.append(fResult)
 
-        if False in results: return False
-        else: return True
+        if False in results:
+            self.tcStatus = UWA_FAIL(statusMsg)
+            return False
+        else:
+            self.tcStatus = UWA_PASS(statusMsg)
+            return True
 
-    def writeInfoXML(self, parentNode):
-        ftNode = self.createBaseXMLNode(parentNode, 'fieldCvgWithScaleTest')
-        ftNode.attrib['fromXML']=str(self.fComps.fromXML)
-        fListNode = etree.SubElement(ftNode, 'fields')
+    def writeXMLCustomSpec(self, specNode):
+        etree.SubElement(specNode, 'fromXML', value=str(self.fComps.fromXML))
+        fListNode = etree.SubElement(specNode, 'fields')
         for fName in self.fComps.fields.keys():
-            fNode = etree.SubElement(fListNode, 'field', name=fName)
+            fieldCvgCrit = self.fieldCvgCrits[fName]
+            fNode = etree.SubElement(fListNode, 'field')
+            fNode.attrib['name'] = fName
+            fNode.attrib['cvgRate'] = cvgRate=str(fieldCvgCrit[0])
+            fNode.attrib['corr'] = str(fieldCvgCrit[1])
+
+    def writeXMLCustomResult(self, resNode):
+        #TODO
+        pass
 
     def getLenScales(self, resultsSet):
         lenScales = []

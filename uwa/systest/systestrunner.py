@@ -33,18 +33,18 @@ class SysTestRunner:
         self.sysTests.append(newSysTest)
 
     def runTest(self, sysTest):
-        # Generate a suite of models to run as part of the test
         mSuite = sysTest.genSuite()
-
         mSuite.cleanAllOutputPaths()
+        print "Writing pre-test info to XML"
+        sysTest.writePreRunXML()
         mSuite.writeAllModelRunXMLs()
         suiteResults = mSuite.runAll()
         print "Checking test result:"
         testResult = sysTest.getStatus(suiteResults)
         mSuite.writeAllModelResultXMLs()
-
         print "Test result was %s" % testResult
-        sysTest.writeInfoXML()
+        outFilePath = sysTest.updateXMLWithResult()
+        print "Saved test result to %s" % (outFilePath)
         return testResult
 
     def runAll(self):
@@ -53,7 +53,6 @@ class SysTestRunner:
             print "Running System test %d, with name '%s':" \
                 % (testI, sysTest.testName)
             results.append(self.runTest(sysTest))
-        
         self.printResultsSummary(self.sysTests, results)
     
     def printResultsSummary(self, sysTests, results):

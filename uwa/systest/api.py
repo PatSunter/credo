@@ -57,80 +57,120 @@ class SysTest:
         self.nproc = nproc 
 
     def setup():
-        '''For the setup phase of tests. Since not all tests need a setup
-        phase, the default behaviour is to do nothing.'''
+        '''For the setup phase of tests.
+        Since not all tests need a setup phase, the default behaviour is to
+        do nothing.'''
         pass
 
     def genSuite():
-        print "Error, base class"
-        assert 0
+        raise NotImplementedError("Error, base class")
 
     def getStatus(suiteResults):
-        print "Error, base class"
+        raise NotImplementedError("Error, base class")
         
     def defaultSysTestFilename(self):
         return 'SysTest-'+self.testName+'.xml'
 
-    def writeInfoXML(self, outputPath="", filename="", prettyPrint=True):
+    def writePreRunXML(self, outputPath="", filename="", prettyPrint=True):
         # Create the XML file, and standard tags
         # Write standard stuff like descriptions, etc
+        baseNode = self.createXMLBaseNode()
+        self.writeXMLDescription(baseNode)
+        self.writeXMLSpecification(baseNode)
+        self.writeXMLTestComponentPreRuns(baseNode)
+        xmlDoc = etree.ElementTree(baseNode)
+        outFileName = self.writeXMLDocToFile(xmlDoc, outputPath, filename)
+        return outFileName
+        
+    def updateXMLWithResult(self, outputPath="", filename="", prettyPrint=True):
+        baseNode, xmlDoc = self.getXMLBaseNodeFromFile(outputPath, filename)
+        baseNode.attrib['status'] = str(self.testStatus)
+        self.writeXMLResult(baseNode)
+        self.updateXMLTestComponentResults(baseNode)
+        outFileName = self.writeXMLDocToFile(xmlDoc, outputPath, filename)
+        return outFileName
 
+    def createXMLBaseNode(self):
+        baseNode = etree.Element('StgSysTest')
+        baseNode.attrib['type'] = self.testType
+        baseNode.attrib['name'] = self.testName
+        return baseNode
+
+    def resolveXMLOutputPathFilename(self, outputPath="", filename=""):   
         if filename == "":
             filename = self.defaultSysTestFilename()
         if outputPath == "":
             outputPath=self.outputPathBase
         outputPath+=os.sep
+        return outputPath, filename
 
-        # create XML document
-        root = etree.Element('StgSysTest')
-        xmlDoc = etree.ElementTree(root)
-
-        # write standard parts
-        self.writeXMLStandardParts(root)
-        # Call the sub-class to write the actual systest contents
-        try:
-            self.writeXMLContents(root)
-        except AttributeError as ae:
-            raise NotImplementedError("Please implement a writeXMLContents()"\
-                " method for your SysTest subclass: %s" % ae )
-            raise ae
-
-        # Write the file
+    def writeXMLDocToFile(self, xmlDoc, outputPath, filename, prettyPrint=True):
+        outputPath, filename = self.resolveXMLOutputPathFilename(
+            outputPath, filename)
         if not os.path.exists(outputPath):
             os.makedirs(outputPath)
-        outFile = open(outputPath+filename, 'w')
+        outFilePath = os.path.join(outputPath, filename)
+        outFile = open(outFilePath, 'w')
         xmlDoc.write(outFile, pretty_print=prettyPrint)
         outFile.close()
-        return outputPath+filename
+        return outFilePath
 
-    def writeXMLStandardParts(self, baseNode):
-        baseNode.attrib['type'] = self.testType
-        baseNode.attrib['name'] = self.testName
-        baseNode.attrib['status'] = str(self.testStatus)
+    def getXMLBaseNodeFromFile(self, outputPath="", filename=""):
+        outputPath, filename = self.resolveXMLOutputPathFilename(
+            outputPath, filename)
+
+        outFile = open(os.path.join(outputPath, filename), 'r+')
+        xmlDoc = etree.parse(outFile)
+        baseNode = xmlDoc.getroot()
+        return baseNode, xmlDoc
+
+    def writeXMLDescription(self, baseNode):
+        '''Writes the description of a test into an XML sub-node.'''
         descNode = etree.SubElement(baseNode, 'description')
         descNode.text = self.description
 
-        ipListNode = etree.SubElement(baseNode, 'inputFiles')
+    def writeXMLSpecification(self, baseNode):
+        '''Function to write the test specification.'''
+        specNode = etree.SubElement(baseNode, 'testSpecification')
+        
+        ipListNode = etree.SubElement(specNode, 'inputFiles')
         for xmlFilename in self.inputFiles:
             fileNode = etree.SubElement(ipListNode, 'inputFile')
             fileNode.text = xmlFilename
-        etree.SubElement(baseNode, 'outputPathBase').text = self.outputPathBase
+        etree.SubElement(specNode, 'outputPathBase').text = self.outputPathBase
 
-        nProcNode = etree.SubElement(baseNode, "nproc")
+        nProcNode = etree.SubElement(specNode, "nproc")
         nProcNode.text = str(self.nproc)
+        try:
+            self.writeXMLCustomSpec(specNode)   
+        except AttributeError as ae:
+            raise NotImplementedError("Please implement a writeXMLCustomSpec()"\
+                " method for your SysTest subclass: %s" % ae )
+            raise ae
+    
+    def writeXMLCustomSpec(self, specNode):
+        '''Function to write the custom specification for a particular test
+        type.'''
+        raise NotImplementedError("Abstract base class.")
 
-        cpListNode = etree.SubElement(baseNode, 'testComponents')
+    def writeXMLTestComponentPreRuns(self, baseNode):
+        tcListNode = etree.SubElement(baseNode, 'testComponents')
         for tcName, testComponent in self.testComponents.iteritems():
-            testComponent.writeInfoXML(cpListNode)
+            testComponent.writePreRunXML(tcListNode)
 
-    def writeResultXML(self):
-        # TODO
-        # StgSysTestResult
-        # Basic info about the test
-        # Update with the status
-        # Print the status message
-        # Print Model Results as a sub-set
-        pass
+    def updateXMLTestComponentResults(self, baseNode):
+        tcListNode = baseNode.find('testComponents')
+        tcCompsAndXMLs = zip(self.testComponents.itervalues(),
+            tcListNode.iterchildren())
+        for testComponent, testCompXMLNode in tcCompsAndXMLs:
+            assert testComponent.tcName == testCompXMLNode.attrib['name']
+            testComponent.updateXMLWithResult(testCompXMLNode)
+
+    def writeXMLResult(self, baseNode):
+        resNode = etree.SubElement(baseNode, 'testResult')
+        resNode.attrib['status'] = str(self.testStatus)
+        statusMsgNode = etree.SubElement(resNode, 'statusMsg')
+        statusMsgNode.text = self.testStatus.detailMsg
 
 
 class TestComponent:
@@ -139,24 +179,52 @@ class TestComponent:
     This is an abstract base class, individual test components must subclass
     from this interface.'''
 
+    def __init__(self, name):
+        self.tcStatus = None
+        self.tcName = name
+
     def attachOps(self, modelRun):
         '''Takes in a model run, and attaches any necessary analysis operations
         to that run in order to produce the results needed for the test.'''
-        return NotImplementedError("Abstract base class.")
+        raise NotImplementedError("Abstract base class.")
 
     def check(self, resultsSet):
         '''A function to check a set of results - returns True if the Test
         passes, False if not.'''
-        return NotImplementedError("Abstract base class.")
+        raise NotImplementedError("Abstract base class.")
 
-    def writeInfoXML(self, parentNode):
+    def writePreRunXML(self, parentNode):
         '''Function to write out info about the system test to an XML file,
         as a sub-tree of parentNode.'''
-        return NotImplementedError("Abstract base class.")
+        tcNode = self.createBaseXMLNode(parentNode)
+        self.writeXMLSpecification(tcNode)
     
-    def createBaseXMLNode(self, parentNode, name):
+    def createBaseXMLNode(self, parentNode):
         '''Utility function when writing out info, should be called by 
         sub-classes at start of writeInfoXML definitions to follow
         convention of naming of XML node.'''
-        tcNode = etree.SubElement(parentNode, 'testComponent', name=name)
+        tcNode = etree.SubElement(parentNode, 'testComponent', name=self.tcName)
         return tcNode
+    
+    def writeXMLSpecification(self, tcNode):
+        specNode = etree.SubElement(tcNode, 'specification')
+        #Not currently any specification for all testComponents ... though may
+        # be a fromXML param in future for example.
+        self.writeXMLCustomSpec(specNode)
+    
+    def writeXMLCustomSpec(self, specNode):
+        raise NotImplementedError("Abstract base class.")
+
+    def updateXMLWithResult(self, tcNode):
+        tcNode.attrib['status'] = str(self.tcStatus)
+        self.writeXMLResult(tcNode)
+    
+    def writeXMLResult(self, tcNode):
+        resNode = etree.SubElement(tcNode, 'result')
+        resNode.attrib['status'] = str(self.tcStatus)
+        statusMsgNode = etree.SubElement(resNode, 'statusMsg')
+        statusMsgNode.text = self.tcStatus.detailMsg
+        self.writeXMLCustomResult(resNode)
+    
+    def writeXMLCustomResult(self, resNode):
+        raise NotImplementedError("Abstract base class.")
