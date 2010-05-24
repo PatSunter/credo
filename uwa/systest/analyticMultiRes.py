@@ -32,8 +32,9 @@ class AnalyticMultiResTest(SysTest):
         for res in self.resSet:
             resStr = mrun.strRes(res)
             outputPath = os.path.join(self.outputPathBase, resStr)
-            mRun = mrun.ModelRun(self.testName, self.inputFiles,
-                outputPath, nproc=self.nproc)
+            modelName = self.testName+'-'+resStr
+            mRun = mrun.ModelRun(modelName, self.inputFiles, outputPath,
+                nproc=self.nproc)
             customOpts = mrun.generateResOpts(res)
             cvgChecker.attachOps(mRun)
             mSuite.addRun(mRun, "Run the model at res "+resStr, customOpts)
