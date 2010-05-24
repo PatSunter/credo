@@ -76,6 +76,10 @@ class FieldCvgWithScaleTest(TestComponent):
         self.testCvgFunc = testCvgFunc
         self.fieldCvgCrits = fieldCvgCrits
         self.fieldsToTest = fieldsToTest
+        # TODO: would be good to check here that the fieldsToTest have
+        # cvg info provided in the  fieldCvgCrits dict. However becuase we
+        # allow fieldsToTest=None to mean "read from XML", can't always
+        # do this just yet.
         self.fComps = None
 
     def attachOps(self, modelRun):
