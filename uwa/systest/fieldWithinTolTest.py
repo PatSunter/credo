@@ -43,19 +43,17 @@ class FieldWithinTolTest(TestComponent):
             fieldTol = self.getTolForField(fComp.name)
             for runI, mResult in enumerate(resultsSet):
                 fCompRes = fComp.getResult(mResult)
-                import pdb
-                pdb.set_trace()
                 fieldResults[fComp.name] = fCompRes.withinTol(fieldTol)    
         
                 if not fieldResults[fComp.name]:
                     if numRuns > 1:
                         statusMsg += "For run %d out of %d: " % runI, numRuns
                     statusMsg += "Field comp '%s' error(s) of %s not within"\
-                        " tol %f" % (fComp.name, fCompRes.dofErrors, fieldTol)
+                        " tol %g" % (fComp.name, fCompRes.dofErrors, fieldTol)
                     break
 
             if fieldResults[fComp.name]:
-                statusMsg += "Field comp '%s' error within tol %f for all"\
+                statusMsg += "Field comp '%s' error within tol %g for all"\
                     " runs.\n" % (fComp.name, fieldTol)
 
         print statusMsg

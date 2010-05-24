@@ -25,7 +25,7 @@ def testCvgWithScale(fieldName, lenScales, dofErrors, fieldCvgCriterion):
     dofStatuses = []
     for dofI, dofConv in enumerate(fieldConv):
         cvgRate, corr = dofConv
-        print "Field %s, dof %d - cvg rate %f, corr %f" \
+        print "Field %s, dof %d - cvg rate %6g, corr %6f" \
             % (fieldName, dofI, cvgRate, corr)
         #plt.plot(resLogs, errLogs)
         #plt.show()
@@ -33,11 +33,11 @@ def testCvgWithScale(fieldName, lenScales, dofErrors, fieldCvgCriterion):
         dofTestStatus = True
         if cvgRate < reqCvgRate: 
             dofTestStatus = False
-            print "  -Bad! - cvg %f less than req'd %f for this field."\
+            print "  -Bad! - cvg %6g less than req'd %6g for this field."\
                 % (cvgRate, reqCvgRate)
         if corr < reqCorr:
             dofTestStatus = False
-            print "  -Bad! - corr %f less than req'd %f for this field."\
+            print "  -Bad! - corr %6g less than req'd %6g for this field."\
                 % (corr, reqCorr)
         if dofTestStatus: print "  -Good"
         dofStatuses.append(dofTestStatus)
