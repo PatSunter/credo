@@ -54,14 +54,17 @@ class FieldWithinTolTest(TestComponent):
                 self.fieldErrors[fComp.name].append(fCompRes.dofErrors)
                 if not fieldResult:
                     if numRuns > 1:
-                        statusMsg += "For run %d out of %d: " % runI, numRuns
+                        statusMsg += "For run %d out of %d: " % (runI, numRuns)
                     statusMsg += "Field comp '%s' error(s) of %s not within"\
-                        " tol %g" % (fComp.name, fCompRes.dofErrors, fieldTol)
+                        " tol %g of %s solution"\
+                        % (fComp.name, fCompRes.dofErrors, fieldTol,
+                        self.fComps.getCmpSrcString())
                     overallResult = False    
 
             if False not in self.fieldResults[fComp.name]:
-                statusMsg += "Field comp '%s' error within tol %g for all"\
-                    " runs.\n" % (fComp.name, fieldTol)
+                statusMsg += "Field comp '%s' error within tol %g of %s"\
+                    " solution for all runs.\n"\
+                    % (fComp.name, fieldTol, self.fComps.getCmpSrcString())
 
         print statusMsg
         if overallResult == False:
@@ -88,7 +91,7 @@ class FieldWithinTolTest(TestComponent):
         frNode = etree.SubElement(resNode, 'fieldResultDetails')
         for fName, fComp in self.fComps.fields.iteritems():
             fieldTol = self.getTolForField(fName)
-            fieldNode = etree.SubElement(frNode, fName)
+            fieldNode = etree.SubElement(frNode, "field", name=fName)
             for runI, fieldRes in enumerate(self.fieldResults[fName]):
                 runNode = etree.SubElement(fieldNode, "run")
                 runNode.attrib['number'] = str(runI+1)
