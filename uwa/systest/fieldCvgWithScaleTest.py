@@ -120,7 +120,7 @@ class FieldCvgWithScaleTest(TestComponent):
             fNode.attrib['cvgRate'] = cvgRate=str(fieldCvgCrit[0])
             fNode.attrib['corr'] = str(fieldCvgCrit[1])
 
-    def writeXMLCustomResult(self, resNode):
+    def writeXMLCustomResult(self, resNode, resultsSet):
         #TODO
         pass
 

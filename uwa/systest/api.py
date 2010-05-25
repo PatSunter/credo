@@ -82,11 +82,11 @@ class SysTest:
         outFileName = self.writeXMLDocToFile(xmlDoc, outputPath, filename)
         return outFileName
         
-    def updateXMLWithResult(self, outputPath="", filename="", prettyPrint=True):
+    def updateXMLWithResult(self, resultsSet, outputPath="", filename="", prettyPrint=True):
         baseNode, xmlDoc = self.getXMLBaseNodeFromFile(outputPath, filename)
         baseNode.attrib['status'] = str(self.testStatus)
         self.writeXMLResult(baseNode)
-        self.updateXMLTestComponentResults(baseNode)
+        self.updateXMLTestComponentResults(baseNode, resultsSet)
         outFileName = self.writeXMLDocToFile(xmlDoc, outputPath, filename)
         return outFileName
 
@@ -120,7 +120,12 @@ class SysTest:
             outputPath, filename)
 
         outFile = open(os.path.join(outputPath, filename), 'r+')
-        xmlDoc = etree.parse(outFile)
+        # use a custom parser to remove blank text, so the doc can be correctly
+        # re-prettyPrinted when done (see 
+        # http://codespeak.net/lxml/FAQ.html
+        #  #why-doesn-t-the-pretty-print-option-reformat-my-xml-output
+        parser = etree.XMLParser(remove_blank_text=True)
+        xmlDoc = etree.parse(outFile, parser)
         baseNode = xmlDoc.getroot()
         return baseNode, xmlDoc
 
@@ -158,13 +163,13 @@ class SysTest:
         for tcName, testComponent in self.testComponents.iteritems():
             testComponent.writePreRunXML(tcListNode)
 
-    def updateXMLTestComponentResults(self, baseNode):
+    def updateXMLTestComponentResults(self, baseNode, resultsSet):
         tcListNode = baseNode.find('testComponents')
         tcCompsAndXMLs = zip(self.testComponents.itervalues(),
             tcListNode.iterchildren())
         for testComponent, testCompXMLNode in tcCompsAndXMLs:
             assert testComponent.tcName == testCompXMLNode.attrib['name']
-            testComponent.updateXMLWithResult(testCompXMLNode)
+            testComponent.updateXMLWithResult(testCompXMLNode, resultsSet)
 
     def writeXMLResult(self, baseNode):
         resNode = etree.SubElement(baseNode, 'testResult')
@@ -215,16 +220,16 @@ class TestComponent:
     def writeXMLCustomSpec(self, specNode):
         raise NotImplementedError("Abstract base class.")
 
-    def updateXMLWithResult(self, tcNode):
+    def updateXMLWithResult(self, tcNode, resultsSet):
         tcNode.attrib['status'] = str(self.tcStatus)
-        self.writeXMLResult(tcNode)
+        self.writeXMLResult(tcNode, resultsSet)
     
-    def writeXMLResult(self, tcNode):
+    def writeXMLResult(self, tcNode, resultsSet):
         resNode = etree.SubElement(tcNode, 'result')
         resNode.attrib['status'] = str(self.tcStatus)
         statusMsgNode = etree.SubElement(resNode, 'statusMsg')
         statusMsgNode.text = self.tcStatus.detailMsg
-        self.writeXMLCustomResult(resNode)
+        self.writeXMLCustomResult(resNode, resultsSet)
     
-    def writeXMLCustomResult(self, resNode):
+    def writeXMLCustomResult(self, resNode, resultsSet):
         raise NotImplementedError("Abstract base class.")

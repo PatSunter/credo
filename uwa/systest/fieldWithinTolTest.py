@@ -19,6 +19,8 @@ class FieldWithinTolTest(TestComponent):
         self.fComps.useReference = useReference
         self.fComps.referencePath = referencePath
         self.fComps.testTimestep = testTimestep
+        self.fieldResults = {}
+        self.fieldErrors = {}
 
     def attachOps(self, modelRun):
         if self.fieldsToTest == None:
@@ -36,34 +38,37 @@ class FieldWithinTolTest(TestComponent):
         return fieldTol
 
     def check(self, resultsSet):
-        fieldResults = {}
+        self.fieldResults = {}
+        self.fieldErrors = {}
         statusMsg = ""
         numRuns = len(resultsSet)
+        overallResult = True
         for fComp in self.fComps.fields.itervalues():
             fieldTol = self.getTolForField(fComp.name)
+            self.fieldResults[fComp.name] = []
+            self.fieldErrors[fComp.name] = []
             for runI, mResult in enumerate(resultsSet):
                 fCompRes = fComp.getResult(mResult)
-                fieldResults[fComp.name] = fCompRes.withinTol(fieldTol)    
-        
-                if not fieldResults[fComp.name]:
+                fieldResult = fCompRes.withinTol(fieldTol)
+                self.fieldResults[fComp.name].append(fieldResult)
+                self.fieldErrors[fComp.name].append(fCompRes.dofErrors)
+                if not fieldResult:
                     if numRuns > 1:
                         statusMsg += "For run %d out of %d: " % runI, numRuns
                     statusMsg += "Field comp '%s' error(s) of %s not within"\
                         " tol %g" % (fComp.name, fCompRes.dofErrors, fieldTol)
-                    break
+                    overallResult = False    
 
-            if fieldResults[fComp.name]:
+            if False not in self.fieldResults[fComp.name]:
                 statusMsg += "Field comp '%s' error within tol %g for all"\
                     " runs.\n" % (fComp.name, fieldTol)
 
         print statusMsg
-        if False in fieldResults.values():
-            result = False
+        if overallResult == False:
             self.tcStatus = UWA_FAIL(statusMsg)
         else:
-            result = True
             self.tcStatus = UWA_PASS(statusMsg)
-        return result
+        return overallResult
 
     def writeXMLCustomSpec(self, specNode):
         etree.SubElement(specNode, 'fromXML', value=str(self.fComps.fromXML))
@@ -79,6 +84,19 @@ class FieldWithinTolTest(TestComponent):
             fNode = etree.SubElement(fListNode, 'field', name=fName,
                 tol=str(self.getTolForField(fName)))
 
-    def writeXMLCustomResult(self, resNode):
-        #TODO
-        pass
+    def writeXMLCustomResult(self, resNode, resultsSet):
+        frNode = etree.SubElement(resNode, 'fieldResultDetails')
+        for fName, fComp in self.fComps.fields.iteritems():
+            fieldTol = self.getTolForField(fName)
+            fieldNode = etree.SubElement(frNode, fName)
+            for runI, fieldRes in enumerate(self.fieldResults[fName]):
+                runNode = etree.SubElement(fieldNode, "run")
+                runNode.attrib['number'] = str(runI+1)
+                runNode.attrib['allDofsWithinTol'] = str(fieldRes)
+                #TODO run name? and overall result?
+                desNode = etree.SubElement(runNode, "dofErrors")
+                for dofI, dofError in enumerate(self.fieldErrors[fName][runI]):
+                    deNode = etree.SubElement(desNode, "dofError")
+                    deNode.attrib["num"] = str(dofI)
+                    deNode.attrib["error"] = "%6e" % dofError
+                    deNode.attrib["withinTol"] = str(dofError <= fieldTol) 

@@ -43,7 +43,7 @@ class SysTestRunner:
         testResult = sysTest.getStatus(suiteResults)
         mSuite.writeAllModelResultXMLs()
         print "Test result was %s" % testResult
-        outFilePath = sysTest.updateXMLWithResult()
+        outFilePath = sysTest.updateXMLWithResult(suiteResults)
         print "Saved test result to %s" % (outFilePath)
         return testResult
 
