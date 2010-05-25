@@ -91,5 +91,12 @@ class ReferenceTest(SysTest):
         self.testStatus = testStatus
         return testStatus
         
-    def writeXMLCustomSpec(self, baseNode):
-        pass
+    def writeXMLCustomSpec(self, specNode):
+        etree.SubElement(specNode, 'runSteps').text = str(self.runSteps)
+        etree.SubElement(specNode, 'defaultFieldTol').text = \
+            str(self.defaultFieldTol)   
+        # fieldTols
+        fieldsToTestNode = etree.SubElement(specNode, 'fieldsToTest')
+        for fieldName in self.fieldsToTest:
+            fieldsNode = etree.SubElement(fieldsToTestNode, 'field',
+                name=fieldName)    

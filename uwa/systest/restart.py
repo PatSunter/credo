@@ -87,7 +87,7 @@ class RestartTest(SysTest):
         return testStatus
         
     def writeXMLCustomSpec(self, specNode):
-        etree.SubElement(specNode, 'runRunSteps').text = str(self.fullRunSteps)
+        etree.SubElement(specNode, 'fullRunSteps').text = str(self.fullRunSteps)
         etree.SubElement(specNode, 'defaultFieldTol').text = \
             str(self.defaultFieldTol)
         # fieldTols

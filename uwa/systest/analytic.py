@@ -22,7 +22,6 @@ class AnalyticTest(SysTest):
 
     def __init__(self, inputFiles, outputPathBase, nproc=1, fieldTols=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc, "Analytic")
-        # TODO: allow input of field tolerances?
         self.testComponents[self.fTestName] = FieldWithinTolTest(
             defFieldTol=self.defaultFieldTol, fieldTols=fieldTols)
 
@@ -58,12 +57,13 @@ class AnalyticTest(SysTest):
         else:        
             testStatus = UWA_FAIL("At least one Field not within"
                 " tolerance of analytic soln.")
-        # TODO: should the ftest component now be able to do this?
-        #mResult.fieldResults = fTests.testConvergence(mResult.outputPath)
+        # NB: should the ftest component now be able to do this?
+        # Or is it appropriate to control from here?
         #for fRes in mResult.fieldResults:
         #    fRes.plotOverTime(show=False, path=mResult.outputPath)
         self.testStatus = testStatus
         return testStatus
         
-    def writeXMLCustomSpec(self, baseNode):
-        pass
+    def writeXMLCustomSpec(self, specNode):
+        etree.SubElement(specNode, 'defaultFieldTol').text = \
+            str(self.defaultFieldTol)   
