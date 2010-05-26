@@ -1,4 +1,4 @@
-<?xml-stylesheet type="text/xsl" href="UWA-SysTest.xsl"?>
+<?xml-stylesheet type="text/xsl" href="UWA-SysTest-Detailed.xsl"?>
 
 <StgSysTest type="Analytic" name="CosineHillRotateBC-analyticTest" status="Fail">
   <description>Runs a Model that has a defined analytic solution,
@@ -25,7 +25,7 @@
       <result status="Fail">
         <statusMsg>Field comp 'TemperatureField' error(s) of [0.00612235812] not within tol 1e-08 of analytic solution</statusMsg>
         <fieldResultDetails>
-          <field name="TemperatureField">
+          <field name="TemperatureField" val="hhh">
             <run number="1" allDofsWithinTol="False">
               <dofErrors>
                 <dofError num="0" error="6.122358e-03" withinTol="False"/>

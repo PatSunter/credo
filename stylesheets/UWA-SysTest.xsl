@@ -3,21 +3,28 @@
 <xsl:stylesheet version="1.0" 
 xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-<xsl:template match="StgSysTest">
+<xsl:template match="UWA-Result">
   <html>
   <body>
   <h2>Underworld System Test Result</h2>
   <table border="1">
     <tr bgcolor="#9acd32">
-      <th>Description</th>
+      <th>Test Type</th>
       <th>Input files used</th>
       <th>Output path base</th>
       <th>Number of procs used</th>
       <th>Result</th>
       <th>status msg</th>
     </tr>
+    <xsl:apply-templates/>
+  </table>
+  </body>
+  </html>
+</xsl:template>
+
+<xsl:template match="StgSysTest">
     <tr> 
-      <td><xsl:value-of select="description"/></td>
+      <td><xsl:value-of select="@type"/></td>
       <td>
       <xsl:for-each select="testSpecification/inputFiles/inputFile">
       <xsl:value-of select="."/>, 
@@ -35,9 +42,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
     </xsl:choose>
       <td><xsl:value-of select="testResult/statusMsg"/></td>
     </tr>
-  </table>
-  </body>
-  </html>
 </xsl:template>
+
 
 </xsl:stylesheet>

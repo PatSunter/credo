@@ -1,5 +1,46 @@
-<?xml-stylesheet type="text/xsl" href="UWA-SysTest-Detailed.xsl"?>
+<?xml-stylesheet type="text/xsl" href="UWA-SysTest.xsl"?>
 
+<UWA-Result>
+<StgSysTest type="Analytic" name="CosineHillRotateBC-analyticTest" status="Fail">
+  <description>Runs a Model that has a defined analytic solution,
+        and checks the outputted fields are within a given error tolerance
+        of that analytic solution.</description>
+  <testSpecification>
+    <inputFiles>
+      <inputFile>CosineHillRotateBC.xml</inputFile>
+    </inputFiles>
+    <outputPathBase>output/CosineHillRotateBC-analyticTest-1</outputPathBase>
+    <nproc>1</nproc>
+    <defaultFieldTol>0.03</defaultFieldTol>
+  </testSpecification>
+  <testComponents>
+    <testComponent name="fieldWithinTol" status="Fail">
+      <specification>
+        <fromXML value="True"/>
+        <testTimestep value="0"/>
+        <useReference value="False"/>
+        <fields>
+          <field name="TemperatureField" tol="1e-08"/>
+        </fields>
+      </specification>
+      <result status="Fail">
+        <statusMsg>Field comp 'TemperatureField' error(s) of [0.00612235812] not within tol 1e-08 of analytic solution</statusMsg>
+        <fieldResultDetails>
+          <field name="TemperatureField">
+            <run number="1" allDofsWithinTol="False">
+              <dofErrors>
+                <dofError num="0" error="6.122358e-03" withinTol="False"/>
+              </dofErrors>
+            </run>
+          </field>
+        </fieldResultDetails>
+      </result>
+    </testComponent>
+  </testComponents>
+  <testResult status="Fail">
+    <statusMsg>At least one Field not within tolerance of analytic soln.</statusMsg>
+  </testResult>
+</StgSysTest>
 <StgSysTest type="Reference" name="Multigrid-referenceTest" status="Pass">
   <description>Runs a Model for a set number of timesteps,
         then checks the specified fields match a previously-generated
@@ -57,3 +98,4 @@ Field comp 'PressureField' error within tol 0.01 of reference solution for all r
     <statusMsg>All fields were within required tolerance of reference soln at end of run.</statusMsg>
   </testResult>
 </StgSysTest>
+</UWA-Result>
