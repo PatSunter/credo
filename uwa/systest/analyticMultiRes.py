@@ -62,6 +62,18 @@ class AnalyticMultiResTest(SysTest):
         self.testStatus = testStatus
         return testStatus
 
-    def writeXMLCustomSpec(self, baseNode):
-        #TODO
-        pass
+    def writeXMLCustomSpec(self, specNode):
+        resSetNode = etree.SubElement(specNode, "resSet")
+        for res in self.resSet:
+            resNode = etree.SubElement(resSetNode, "res")
+            resNode.attrib['x'] = str(res[0])
+            resNode.attrib['y'] = str(res[1])
+            if len(res) == 3:
+                resNode.attrib['z'] = str(res[2])
+        #TODO: if we allow user to choose/override convergence checking
+        # algorithm
+        #cvgFuncNode = etree.SubElement(specNode, "cvgFunc")
+        #cvgFuncNode.attrib['name']
+        #cvgFuncNode.attrib['module'] = inspect.getmodule(cvgFunc)
+
+        
