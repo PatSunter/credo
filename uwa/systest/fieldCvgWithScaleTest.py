@@ -15,14 +15,23 @@ def testAllCvgWithScale(lenScales, fieldErrorData, fieldCvgCriterions):
     for fieldName, dofErrors in fieldErrorData.iteritems():
         result = testCvgWithScale(fieldName, lenScales, dofErrors,
             fieldCvgCriterions[fieldName])
-        if result == False:
+        meetsReq = result[0]
+        if meetsReq == False:
             overallResult = False
     return overallResult    
 
 def testCvgWithScale(fieldName, lenScales, dofErrors, fieldCvgCriterion):
+    '''Tests that for a given field, set of length scales of different runs,
+    and list of dofErrors (indexed by Dof, then run) - that they converge
+    according to the given fieldCvgCriterion.
+    
+    Returns: result of test (Bool), then a list indexed by dof, giving a tuple
+    of (cvgRate, correlation) of that dof.'''
+
     fieldConv = fields.calcFieldCvgWithScale(fieldName, lenScales, dofErrors)
     reqCvgRate, reqCorr = fieldCvgCriterion
     dofStatuses = []
+
     for dofI, dofConv in enumerate(fieldConv):
         cvgRate, corr = dofConv
         print "Field %s, dof %d - cvg rate %6g, corr %6f" \
@@ -42,8 +51,10 @@ def testCvgWithScale(fieldName, lenScales, dofErrors, fieldCvgCriterion):
         if dofTestStatus: print "  -Good"
         dofStatuses.append(dofTestStatus)
     
-    if False in dofStatuses: return False
-    else: return True
+    if False in dofStatuses:
+        return False, fieldConv
+    else: 
+        return True, fieldConv
 
 def getNumDofs(fComp, mResult):
     '''Hacky utility function to get the number of dofs of an fComp, by
@@ -82,6 +93,9 @@ class FieldCvgWithScaleTest(TestComponent):
         # allow fieldsToTest=None to mean "read from XML", can't always
         # do this just yet.
         self.fComps = None
+        self.fErrorsByRun = {}
+        self.fCvgMeetsReq = {}
+        self.fCvgResults = {}
 
     def attachOps(self, modelRun):
         self.fComps = fields.FieldComparisonList()
@@ -95,18 +109,25 @@ class FieldCvgWithScaleTest(TestComponent):
     def check(self, resultsSet):
         # NB: could store this another way in model info?
         lenScales = self.getLenScales(resultsSet)    
-        results = []
-        statusMsg = "TODO"
-        for fCompOp in self.fComps.fields.itervalues():
-            dofErrors = getDofErrorsByRun(fCompOp, resultsSet)
-            fResult = self.testCvgFunc(fCompOp.name, lenScales, dofErrors,
-                self.fieldCvgCrits[fCompOp.name])
-            results.append(fResult)
+        self.fErrorsByRun = {}
+        self.fCvgMeetsReq = {}
+        self.fCvgResults = {}
 
-        if False in results:
+        for fName, fCompOp in self.fComps.fields.iteritems():
+            self.fErrorsByRun[fName] = getDofErrorsByRun(fCompOp, resultsSet)
+            fResult = self.testCvgFunc(fName, lenScales,
+                self.fErrorsByRun[fName], self.fieldCvgCrits[fName])
+            self.fCvgMeetsReq[fName] = fResult[0]
+            self.fCvgResults[fName] = fResult[1]
+
+        if False in self.fCvgResults.itervalues():
+            statusMsg = "TODO"
             self.tcStatus = UWA_FAIL(statusMsg)
             return False
         else:
+            statusMsg = "The solution compared to the %s result converged"\
+                " as expected with increasing resolution for all fields."\
+                % (self.fComps.getCmpSrcString())
             self.tcStatus = UWA_PASS(statusMsg)
             return True
 
@@ -121,8 +142,25 @@ class FieldCvgWithScaleTest(TestComponent):
             fNode.attrib['corr'] = str(fieldCvgCrit[1])
 
     def writeXMLCustomResult(self, resNode, resultsSet):
-        #TODO
-        pass
+        frNode = etree.SubElement(resNode, 'fieldResultDetails')
+        lenScales = self.getLenScales(resultsSet)    
+        for fName, fComp in self.fComps.fields.iteritems():
+            fieldNode = etree.SubElement(frNode, "field", name=fName)
+            fieldNode.attrib['cvgMeetsReq'] = str(self.fCvgMeetsReq[fName])
+            for dofI, dofErrorsByRun in enumerate(self.fErrorsByRun[fName]):
+                dofNode = etree.SubElement(fieldNode, "dof")
+                dofNode.attrib["num"] = str(dofI)
+                dofCvgResult = self.fCvgResults[fName][dofI]
+                dofNode.attrib['cvgrate'] = "%8.6f" % dofCvgResult[0]
+                dofNode.attrib['correlation'] = "%8.6f" % dofCvgResult[1]
+                #TODO run name? and overall result?
+                runEsNode = etree.SubElement(dofNode, "runErrors")
+                for runI, dofError in enumerate(dofErrorsByRun):
+                    dofErrorNode = etree.SubElement(runEsNode, "dofError")
+                    dofErrorNode.attrib['run_number'] = str(runI+1)
+                    dofErrorNode.attrib['lenScale'] = "%8.6e" % (lenScales[runI])
+                    dofErrorNode.attrib["error"] = "%6e" % dofError
+
 
     def getLenScales(self, resultsSet):
         lenScales = []

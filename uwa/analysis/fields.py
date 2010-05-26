@@ -136,6 +136,12 @@ class FieldComparisonList(AnalysisOperation):
         self.referencePath = None
         self.testTimestep = 0
 
+    def getCmpSrcString(self):
+        if self.useReference == True:
+            return "reference"
+        else:
+            return "analytic"
+
     def add(self, fieldTest):
         self.fields[fieldTest.name] = fieldTest    
 
