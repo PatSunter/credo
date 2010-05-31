@@ -161,14 +161,16 @@ class SysTest:
     def writeXMLTestComponentPreRuns(self, baseNode):
         tcListNode = etree.SubElement(baseNode, 'testComponents')
         for tcName, testComponent in self.testComponents.iteritems():
-            testComponent.writePreRunXML(tcListNode)
+            testComponent.writePreRunXML(tcListNode, tcName)
 
     def updateXMLTestComponentResults(self, baseNode, resultsSet):
         tcListNode = baseNode.find('testComponents')
-        tcCompsAndXMLs = zip(self.testComponents.itervalues(),
+        tcCompsAndXMLs = zip(self.testComponents.iterkeys(),
+            self.testComponents.itervalues(),
             tcListNode.iterchildren())
-        for testComponent, testCompXMLNode in tcCompsAndXMLs:
-            assert testComponent.tcName == testCompXMLNode.attrib['name']
+        for tcName, testComponent, testCompXMLNode in tcCompsAndXMLs:
+            assert tcName == testCompXMLNode.attrib['name']
+            assert testComponent.tcType == testCompXMLNode.attrib['type']
             testComponent.updateXMLWithResult(testCompXMLNode, resultsSet)
 
     def writeXMLResult(self, baseNode):
@@ -184,9 +186,9 @@ class TestComponent:
     This is an abstract base class, individual test components must subclass
     from this interface.'''
 
-    def __init__(self, name):
+    def __init__(self, tcType):
         self.tcStatus = None
-        self.tcName = name
+        self.tcType = tcType
 
     def attachOps(self, modelRun):
         '''Takes in a model run, and attaches any necessary analysis operations
@@ -198,17 +200,19 @@ class TestComponent:
         passes, False if not.'''
         raise NotImplementedError("Abstract base class.")
 
-    def writePreRunXML(self, parentNode):
+    def writePreRunXML(self, parentNode, name):
         '''Function to write out info about the system test to an XML file,
         as a sub-tree of parentNode.'''
-        tcNode = self.createBaseXMLNode(parentNode)
+        tcNode = self.createBaseXMLNode(parentNode, name)
         self.writeXMLSpecification(tcNode)
     
-    def createBaseXMLNode(self, parentNode):
+    def createBaseXMLNode(self, parentNode, name):
         '''Utility function when writing out info, should be called by 
         sub-classes at start of writeInfoXML definitions to follow
         convention of naming of XML node.'''
-        tcNode = etree.SubElement(parentNode, 'testComponent', name=self.tcName)
+        tcNode = etree.SubElement(parentNode, 'testComponent')
+        tcNode.attrib['name'] = name
+        tcNode.attrib['type'] = self.tcType
         return tcNode
     
     def writeXMLSpecification(self, tcNode):

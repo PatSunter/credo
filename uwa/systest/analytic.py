@@ -18,7 +18,7 @@ class AnalyticTest(SysTest):
         of that analytic solution.'''
 
     defaultFieldTol = 3e-2    
-    fTestName = 'fieldWithinTol'
+    fTestName = 'Analytic Solution compare'
 
     def __init__(self, inputFiles, outputPathBase, nproc=1, fieldTols=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc, "Analytic")

@@ -20,7 +20,7 @@ class RestartTest(SysTest):
         same at the end for both the original and restart run.'''
 
     defaultFieldTol = 1e-5
-    fTestName = 'fieldWithinTol'
+    fTestName = 'Restart compared with original'
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             fieldsToTest = ['VelocityField','PressureField'], fullRunSteps=20,

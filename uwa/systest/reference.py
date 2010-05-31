@@ -18,7 +18,7 @@ class ReferenceTest(SysTest):
         reference solution.'''
 
     defaultFieldTol = 1e-2
-    fTestName = 'fieldWithinTol'
+    fTestName = 'Reference Solution compare'
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             fieldsToTest = ['VelocityField','PressureField'], runSteps=20,
