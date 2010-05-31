@@ -4,6 +4,8 @@ from uwa.systest.api import TestComponent, UWA_PASS, UWA_FAIL
 import uwa.analysis.fields as fields
 
 class OutputWithinRangeTest(TestComponent):
+    '''Test component to check that a given output parameter 
+    (found in the frequent output) is within a given range'''
     def __init__(self, outputName, reductionOp, allowedRange,  
             tRange=None):
         TestComponent.__init__(self, "outputWithinRange")
