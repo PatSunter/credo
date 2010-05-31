@@ -31,9 +31,9 @@ class StgFreqTestCase(unittest.TestCase):
     
     def test_getValueAtStep(self):
         self.stgFreq.populateFromFile()
-        time4 = self.stgFreq.getValueAtStep(4, "Time")
+        time4 = self.stgFreq.getValueAtStep("Time", 4)
         self.assertAlmostEqual(time4, 0.0375)
-        VRMS2 = self.stgFreq.getValueAtStep(2, "VRMS")
+        VRMS2 = self.stgFreq.getValueAtStep("VRMS", 2)
         self.assertAlmostEqual(VRMS2, 3)
     
     def test_getRecordDictAtStep(self):

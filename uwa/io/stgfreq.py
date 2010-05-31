@@ -101,7 +101,7 @@ class FreqOutput:
         if not self.populated: self.populateFromFile()
         return self._finalTimeStep
 
-    def getValueAtStep(self, tstep, headerName):
+    def getValueAtStep(self, headerName, tstep):
         if not self.populated:
             # We will take the approach that you should always populate the 
             # info for fast access. If memory were really a concern, could use
@@ -216,7 +216,7 @@ class FreqOutput:
                 retVal, retStep = record[colNum], record[tStepColNum]
         return retVal, retStep
 
-    def plotOverTime(self, headerName, show=False, save=True, path="."):
+    def plotOverTime(self, headerName, depName='Timestep', show=False, save=True, path="."):
         try:
             import matplotlib.pyplot as plt
         except ImportError:
@@ -226,11 +226,11 @@ class FreqOutput:
         
         if not self.populated: self.populateFromFile()
         valuesArray = self.getValuesArray(headerName)
-        tSteps = self.getTimeStepsArray()
+        depArray = self.getValuesArray(depName)
 
         plot = plt.clf()   # Start by clearing any pre-existing figure
-        plt.plot(tSteps, valuesArray)
-        plt.xlabel("Timestep")
+        plt.plot(depArray, valuesArray)
+        plt.xlabel(depName)
         plt.ylabel(headerName)
         plt.title("Output parameter '%s' over time"\
             % (headerName))
