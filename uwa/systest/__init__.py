@@ -7,3 +7,5 @@ from uwa.systest.restart import RestartTest
 from uwa.systest.analytic import AnalyticTest
 from uwa.systest.analyticMultiRes import AnalyticMultiResTest
 from uwa.systest.reference import ReferenceTest
+# Import the benchmark
+from uwa.systest.scibenchmark import SciBenchmarkTest
