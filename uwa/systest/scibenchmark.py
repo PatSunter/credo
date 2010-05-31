@@ -18,7 +18,10 @@ class SciBenchmarkTest(SysTest):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc, "SciBenchmark")
 
     def addTestComponent(self, testComp, testCompName):
-        # TODO: check class inheritance of testComp
+        if not issubclass(testComp, TestComponent):
+            raise TypeError("Test component passed in to be added to"\
+                " benchmark, '%s', not a subclass of TestComponent."\
+                % (testComp))
         self.testComponents[testCompName] = testComp
 
     def writeXMLCustomSpec(self, specNode):
