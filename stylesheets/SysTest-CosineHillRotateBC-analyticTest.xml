@@ -13,7 +13,7 @@
     <defaultFieldTol>0.03</defaultFieldTol>
   </testSpecification>
   <testComponents>
-    <testComponent name="fieldWithinTol" status="Fail">
+    <testComponent name="Analytic field compare" type="fieldWithinTol" status="Fail">
       <specification>
         <fromXML value="True"/>
         <testTimestep value="0"/>
@@ -25,7 +25,7 @@
       <result status="Fail">
         <statusMsg>Field comp 'TemperatureField' error(s) of [0.00612235812] not within tol 1e-08 of analytic solution</statusMsg>
         <fieldResultDetails>
-          <field name="TemperatureField" val="hhh">
+          <field name="TemperatureField">
             <run number="1" allDofsWithinTol="False">
               <dofErrors>
                 <dofError num="0" error="6.122358e-03" withinTol="False"/>

@@ -18,7 +18,7 @@
     </fieldsToTest>
   </testSpecification>
   <testComponents>
-    <testComponent name="fieldWithinTol" status="Pass">
+    <testComponent name="fieldWithinTol" type="fieldWithinTol" status="Pass">
       <specification>
         <fromXML value="False"/>
         <testTimestep value="20"/>

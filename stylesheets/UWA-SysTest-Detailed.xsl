@@ -93,11 +93,11 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
     </tr>  
 </xsl:template>
 
-<xsl:template match="testComponent[@name='fieldWithinTol']">
+<xsl:template match="testComponent[@type='fieldWithinTol']">
   <table border="1">
     <tr>
-      <td>Test Component</td>
-      <td>Field Within Tolerance</td>
+      <!--<td>Test Component</td>-->
+      <td colspan="2"><b><xsl:value-of select="@name"/> (Field Within Tolerance)</b></td>
     </tr>
     <tr>
       <td>Result</td>

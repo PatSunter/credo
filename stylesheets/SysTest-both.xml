@@ -14,7 +14,7 @@
     <defaultFieldTol>0.03</defaultFieldTol>
   </testSpecification>
   <testComponents>
-    <testComponent name="fieldWithinTol" status="Fail">
+    <testComponent name="fieldWithinTol" type="fieldWithinTol" status="Fail">
       <specification>
         <fromXML value="True"/>
         <testTimestep value="0"/>
@@ -59,7 +59,7 @@
     </fieldsToTest>
   </testSpecification>
   <testComponents>
-    <testComponent name="fieldWithinTol" status="Pass">
+    <testComponent name="fieldWithinTol" type="fieldWithinTol" status="Pass">
       <specification>
         <fromXML value="False"/>
         <testTimestep value="20"/>
