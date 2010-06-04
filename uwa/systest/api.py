@@ -148,7 +148,7 @@ class SysTest:
         nProcNode.text = str(self.nproc)
         try:
             self.writeXMLCustomSpec(specNode)   
-        except AttributeError as ae:
+        except AttributeError, ae:
             raise NotImplementedError("Please implement a writeXMLCustomSpec()"\
                 " method for your SysTest subclass: %s" % ae )
             raise ae

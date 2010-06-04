@@ -21,7 +21,7 @@ def getVerifyStgExePath(exeName):
 def getStgBinPath():
     try:
         stgBinPath=os.environ[STG_BINDIRKEY]
-    except KeyError as keyE:
+    except KeyError, keyE:
         raise EnvironmentError("Error in %s(): since this script needs to"\
             " use StGermain" \
             " executables, please set the %s environment variable for use" \

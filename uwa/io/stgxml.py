@@ -25,7 +25,7 @@ def createFlattenedXML(inputFiles):
             raise OSError("Error: Command to create flattened file, '%s' on"
                 " input files %s, failed, with error msg:\n%s" \
                 % (flattenExe,inputFiles,stderr))
-    except OSError as e:
+    except OSError, e:
         raise OSError("Unexpected failure to execute Flatten command '%s'"\
             " on input files %s. Error msg was:\n%s"\
             % (flattenExe, inputFiles,str(e)))
