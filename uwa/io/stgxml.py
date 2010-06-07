@@ -14,8 +14,11 @@ STG_PARAM_TAG = "param"
 STG_MERGE_ATTRIB = "mergeType"
 STG_MERGE_TYPES = ['append','merge','replace']
 
+#########
+# For interfacing with StGermain command-line programs for XML manipulation
+
 def createFlattenedXML(inputFiles):
-    '''Flatten a list of provided XML files, using the StGermain
+    '''Flatten a list of provided XML files (as a string), using the StGermain
      FlattenXML tool'''
     flattenExe=uwa.getVerifyStgExePath('FlattenXML')
 
@@ -103,7 +106,21 @@ def _getElementNode(elNode, elType, elName):
     return None        
 
 ##########
-# For writing a new XML doc, using the eTree lib
+# For writing a new XML doc, using the eTree package
+
+def createNewStgDataDoc():
+    """Create a new empty StGermain model XML file (can be merged with other
+    model files)."""
+    nsMap = {None: STG_NS}
+    root = etree.Element(STG_ROOT_TAG, nsmap=nsMap)
+    xmlDoc = etree.ElementTree(root)
+    return xmlDoc, root
+
+def writeStgDataDocToFile(xmlDoc, filename):
+    """Write a given StGermain xmlDoc to the file given by filename"""
+    outFile = open(filename, 'w')
+    xmlDoc.write(outFile, pretty_print=True)
+    outFile.close()
 
 def setMergeType(xmlNode, mergeType):
     if mergeType is not None:

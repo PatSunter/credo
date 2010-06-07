@@ -85,11 +85,7 @@ class ModelRun:
         return outputPath+filename
 
     def analysisXMLGen(self, filename="uwa-analysis.xml"):
-        # create XML document
-        # TODO: provide as a function in stgxml
-        nsMap = {None: stgxml.STG_NS}
-        root = etree.Element(stgxml.STG_ROOT_TAG, nsmap=nsMap)
-        xmlDoc = etree.ElementTree(root)
+        xmlDoc, root = stgxml.createNewStgDataDoc()
         # Write key entries:
         stgxml.writeParam(root, 'outputPath', self.outputPath, mt='replace')
         if self.cpReadPath:
@@ -103,15 +99,11 @@ class ModelRun:
 
         # This is so we can checkpoint fields list: defined in FieldVariable.c
         if len(self.cpFields):
-            stgxml.writeParamList(root, 'FieldVariablesToCheckpoint', \
+            stgxml.writeParamList(root, 'FieldVariablesToCheckpoint',
                 self.cpFields, mt='replace')
 
-        # Write the file
-        outFile = open(filename, 'w')
-        xmlDoc.write(outFile, pretty_print=True)
-        outFile.close()
+        stgxml.writeStgDataDocToFile(xmlDoc, filename)
         self.analysisXML = filename
-
         return filename
 
 
