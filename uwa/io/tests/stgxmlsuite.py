@@ -77,8 +77,151 @@ class StgXMLTestCase(unittest.TestCase):
         self.assertEqual(dimVal, 2)
         dimVal = stgxml.getParamValue(self.flatXMLRoot, "dim", str)
         self.assertEqual(dimVal, "2")
+    
+    def test_getElementType(self):
+        # Regular params syntax
+        testNode = etree.Element(stgxml.STG_PARAM_TAG, name="dim")
+        self.assertEqual(stgxml.getElementType(testNode), stgxml.STG_PARAM_TAG)
+        testNode = etree.Element(stgxml.STG_LIST_TAG, name="test")
+        self.assertEqual(stgxml.getElementType(testNode), stgxml.STG_LIST_TAG)
+        testNode = etree.Element(stgxml.STG_STRUCT_TAG, name="test")
+        self.assertEqual(stgxml.getElementType(testNode), stgxml.STG_STRUCT_TAG)
+        # bad case
+        testNode = etree.Element("sillyTag", name="test")
+        self.assertRaises(ValueError, stgxml.getElementType, testNode)
 
-    # Writing parameter tests
+        # Element params syntax
+        testNode = etree.Element(stgxml.STG_ELEMENT_TAG,
+            type=stgxml.STG_PARAM_TAG, name="dim")
+        self.assertEqual(stgxml.getElementType(testNode), stgxml.STG_PARAM_TAG)
+        testNode = etree.Element(stgxml.STG_ELEMENT_TAG,
+            type=stgxml.STG_LIST_TAG, name="test")
+        self.assertEqual(stgxml.getElementType(testNode), stgxml.STG_LIST_TAG)
+        testNode = etree.Element(stgxml.STG_ELEMENT_TAG,
+            type=stgxml.STG_STRUCT_TAG, name="test")
+        self.assertEqual(stgxml.getElementType(testNode), stgxml.STG_STRUCT_TAG)
+        # bad cases
+        testNode = etree.Element(stgxml.STG_ELEMENT_TAG, name="test")
+        self.assertRaises(ValueError, stgxml.getElementType, testNode)
+        testNode = etree.Element(stgxml.STG_ELEMENT_TAG,
+            type="sillyType", name="test")
+        self.assertRaises(ValueError, stgxml.getElementType, testNode)
+
+        # Special params - should be recognised
+        testNode = etree.Element(stgxml.STG_IMPORT_TAG)
+        self.assertEqual(stgxml.getElementType(testNode), stgxml.STG_LIST_TAG)
+        testNode = etree.Element(stgxml.STG_PLUGINS_TAG)
+        self.assertEqual(stgxml.getElementType(testNode), stgxml.STG_LIST_TAG)
+        testNode = etree.Element(stgxml.STG_COMPONENTS_TAG)
+        self.assertEqual(stgxml.getElementType(testNode), stgxml.STG_STRUCT_TAG)
+
+    def test_getNodeFromStrSpec(self):
+        # Try all kinds of combinations of good and bad input
+        # Basic elements - good cases
+        node = stgxml.getNodeFromStrSpec(self.flatXMLRoot, "dim")
+        self.assertEqual(node.attrib['name'], "dim")
+        self.assertEqual(node.attrib['type'], stgxml.STG_PARAM_TAG)
+        self.assertEqual(node.text, "2")
+        node = stgxml.getNodeFromStrSpec(self.flatXMLRoot, "velocityICs")
+        self.assertEqual(node.attrib['name'], "velocityICs")
+        self.assertEqual(node.attrib['type'], stgxml.STG_STRUCT_TAG)
+        # Basic elements - bad cases
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, "voodoo")
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, ".velocityICs")
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, "..")
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, ".[")
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, ".[]")
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, "[]55")
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, "[].")
+        # TODO: figure out how to handle these below - allowable on recursion,
+        # but not from the root.
+        #self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+        #    self.flatXMLRoot, "[]")
+        #self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+        #    self.flatXMLRoot, "[0]")
+        
+        # Struct recursion - good cases
+        node = stgxml.getNodeFromStrSpec(self.flatXMLRoot, "velocityICs.type")
+        self.assertEqual(node.attrib['name'], "type")
+        self.assertEqual(node.attrib['type'], stgxml.STG_PARAM_TAG)
+        self.assertEqual(node.text, "CompositeVC")
+        node = stgxml.getNodeFromStrSpec(self.flatXMLRoot,
+            "velocityICs.vcList")
+        self.assertEqual(node.attrib['name'], "vcList")
+        self.assertEqual(node.attrib['type'], stgxml.STG_LIST_TAG)
+        # Struct recursion - bad cases
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, "velocityICs.")
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, "velocityICs.voodoo")
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, "velocityICs.[")
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, "velocityICs.]")
+
+        # Struct - list recursion - good cases
+        node = stgxml.getNodeFromStrSpec(
+            self.flatXMLRoot, "velocityICs.vcList[0]")
+        self.assertEqual(node.attrib['type'], stgxml.STG_STRUCT_TAG)
+        self.assertTrue('name' not in node.attrib)
+        self.assertEqual(node[0].text, "AllNodesVC")
+        # Struct - list recursion - bad cases
+        # In this case, list is only of length 1.
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, "velocityICs.vcList[1]")
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, "velocityICs.vcList[455]")
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, "velocityICs.vcList[")
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, "velocityICs.vcList[455")
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, "velocityICs.vcList[455]voodoo")
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, "velocityICs.vcList[455]voodoo.jabbar")
+        self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+            self.flatXMLRoot, "velocityICs.vcList[.]")
+        # TODO: Special case - probably need a "listAppendMode" flag to decide
+        #  if this is ok or not
+        #self.assertRaises(ValueError, stgxml.getNodeFromStrSpec,
+        #    self.flatXMLRoot, "velocityICs.vcList[]")
+
+        # Deep recursion - good cases
+        node = stgxml.getNodeFromStrSpec(
+            self.flatXMLRoot, "temperatureBCs.vcList[0].Shape")
+        self.assertEqual(node.attrib['type'], stgxml.STG_PARAM_TAG)
+        self.assertEqual(node.attrib['name'], "Shape")
+        self.assertEqual(node.text, "initialConditionShape")
+        node = stgxml.getNodeFromStrSpec(
+            self.flatXMLRoot, "temperatureBCs.vcList[0].variables")
+        self.assertEqual(node.attrib['name'], "variables")
+        self.assertEqual(node.attrib['type'], stgxml.STG_LIST_TAG)
+        node = stgxml.getNodeFromStrSpec(
+            self.flatXMLRoot, "temperatureBCs.vcList[0].variables[0]")
+        self.assertEqual(node.attrib['type'], stgxml.STG_STRUCT_TAG)
+        self.assertTrue('name' not in node.attrib)
+        self.assertEqual(node[0].text, "temperature")
+        node = stgxml.getNodeFromStrSpec(
+            self.flatXMLRoot, "temperatureBCs.vcList[0].variables[0].value")
+        self.assertEqual(node.attrib['type'], stgxml.STG_PARAM_TAG)
+        self.assertEqual(node.attrib['name'], "value")
+        self.assertEqual(node.text, "Temperature_CosineHill")
+        # Deep recursion - bad cases
+        # TODO
+        
+        # TODO: test this sort of stuff in CosineHillRotate.xml (maybe in a for
+        # loop)
+
+            
+
+    # Writing things out tests
     def test_setMergeType(self):
         stgxml.setMergeType(self.testParamNode, 'append')
         self.assertEqual(self.testParamNode.attrib['mergeType'], 'append')
