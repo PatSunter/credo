@@ -22,17 +22,17 @@ class StgCVGTestCase(unittest.TestCase):
         # perhaps in set-up
         cvgInfoEmpty = stgcvg.genConvergenceFileIndex(".")
         self.assertEqual(cvgInfoEmpty, {})
-        cvgInfo = stgcvg.genConvergenceFileIndex("./output")
+        cvgInfo = stgcvg.genConvergenceFileIndex("./sampleData")
         self.assertEqual(len(cvgInfo), 2)
         self.assertEqual(cvgInfo['TemperatureField'].filename, \
-            './output/CosineHillRotate-analysis.cvg')
+            './sampleData/CosineHillRotate-analysis.cvg')
         self.assertEqual(cvgInfo['TemperatureField'].dofColMap, {0:1,1:2})
         self.assertEqual(cvgInfo['VelocityField'].filename, \
-            './output/Analytic2-analysis.cvg')
+            './sampleData/Analytic2-analysis.cvg')
         self.assertEqual(cvgInfo['VelocityField'].dofColMap, {0:1})
 
     def test_getCheckStepsRange(self):
-        cvgFile = open("./output/CosineHillRotate-analysis.cvg","r")
+        cvgFile = open("./sampleData/CosineHillRotate-analysis.cvg","r")
         range = stgcvg.getCheckStepsRange(cvgFile,'all')
         self.assertEqual(range, [0,1,2])
         range = stgcvg.getCheckStepsRange(cvgFile,'last')
@@ -49,7 +49,7 @@ class StgCVGTestCase(unittest.TestCase):
         self.assertRaises(TypeError, stgcvg.getCheckStepsRange, cvgFile,'bana')
 
     def test_getDofErrors_ByDof(self):
-        cvgFileInfo = CvgFileInfo("./output/CosineHillRotate-analysis.cvg")
+        cvgFileInfo = CvgFileInfo("./sampleData/CosineHillRotate-analysis.cvg")
         cvgFileInfo.dofColMap={0:1,1:2}
         dofErrors = stgcvg.getDofErrors_ByDof(cvgFileInfo, steps='last')
         self.assertEqual(len(dofErrors), 2)
@@ -76,7 +76,7 @@ class StgCVGTestCase(unittest.TestCase):
 
 
     def test_getDofErrors_ByTimestep(self):
-        cvgFileInfo = CvgFileInfo("./output/CosineHillRotate-analysis.cvg")
+        cvgFileInfo = CvgFileInfo("./sampleData/CosineHillRotate-analysis.cvg")
         cvgFileInfo.dofColMap={0:1,1:2}
         dofErrors = stgcvg.getDofErrors_ByStep(cvgFileInfo, steps='last')
         self.assertEqual(len(dofErrors), 2)

@@ -8,7 +8,7 @@ from uwa.io.stgfreq import FreqOutput
 class StgFreqTestCase(unittest.TestCase):
     def setUp(self):
         self.basedir = os.path.realpath(tempfile.mkdtemp())
-        self.stgFreq = FreqOutput("./output")
+        self.stgFreq = FreqOutput("./sampleData")
         self.tSteps = [2, 4, 6, 8, 10]
         self.timeVals = [0.0125, 0.0375, 0.0625, 0.0875, 0.1125]
         self.VRMSVals = [3, 3.2, 3.8, 3.4, 2.6]
@@ -80,8 +80,8 @@ class StgFreqTestCase(unittest.TestCase):
         self.assertAlmostEqual(meanVal, calcMean)
 
     def test_plotOverTime(self):
-        self.stgFreq.plotOverTime("Time", show=False, path="output/temp")
-        self.stgFreq.plotOverTime("VRMS", show=False, path="output/temp")
+        self.stgFreq.plotOverTime("Time", show=False, path="sampleData/temp")
+        self.stgFreq.plotOverTime("VRMS", show=False, path="sampleData/temp")
     
     def test_printAllMinMax(self):
         self.stgFreq.printAllMinMax()
