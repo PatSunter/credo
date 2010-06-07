@@ -86,8 +86,9 @@ class ModelRun:
 
     def analysisXMLGen(self, filename="uwa-analysis.xml"):
         # create XML document
-        nsMap = {None: "http://www.vpac.org/StGermain/XML_IO_Handler/Jun2003"}
-        root = etree.Element(stgxml.stgRootTag, nsmap=nsMap)
+        # TODO: provide as a function in stgxml
+        nsMap = {None: stgxml.STG_NS}
+        root = etree.Element(stgxml.STG_ROOT_TAG, nsmap=nsMap)
         xmlDoc = etree.ElementTree(root)
         # Write key entries:
         stgxml.writeParam(root, 'outputPath', self.outputPath, mt='replace')

@@ -176,7 +176,7 @@ class FieldComparisonList(AnalysisOperation):
         compElt = stgxml.mergeComponent(rootNode, self.stgXMLCompName, \
             self.stgXMLCompType)
         # Create the plugin data
-        pluginDataElt = etree.SubElement(rootNode, stgxml.structTag, \
+        pluginDataElt = etree.SubElement(rootNode, stgxml.STG_STRUCT_TAG, \
             name=self.stgXMLSpecName, mergeType="replace")
         xmlFieldTestsList = self.fields.keys()
         # This is necessary due to format of this list in the FieldTest plugin:
@@ -213,12 +213,12 @@ class FieldComparisonList(AnalysisOperation):
         # create a flattened file
         ffile=stgxml.createFlattenedXML(inputFilesList)
         # Necessary, because the parser will prefix this this to tag names
-        stgNSText = stgxml.stgNSText
         xmlDoc = etree.parse(ffile)
         stgRoot = xmlDoc.getroot()
         # Go and grab necessary info from XML file
-        fieldTestDataEl = stgxml.getStruct(stgRoot, self.stgXMLSpecName)
-        fieldTestListEl = stgxml.getList(fieldTestDataEl, self.stgXMLSpecFList)
+        fieldTestDataEl = stgxml.getStructNode(stgRoot, self.stgXMLSpecName)
+        fieldTestListEl = stgxml.getListNode(fieldTestDataEl,
+            self.stgXMLSpecFList)
 
         fieldTestEls = fieldTestListEl.getchildren()
         # As per the current spec, the field names are followed by an index 
