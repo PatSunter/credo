@@ -431,13 +431,13 @@ def writeStgDataDocToFile(xmlDoc, filename):
     outFile.close()
 
 
-def createFlattenedXML(inputFiles):
-    '''Flatten a list of provided XML files (as a string), using the StGermain
-     FlattenXML tool'''
+def createFlattenedXML(inputFiles, cmdLineOverrides=""):
+    '''Flatten a list of provided XML files and optionally also
+    cmdLineOverrides (string), using the StGermain FlattenXML tool'''
     flattenExe=uwa.getVerifyStgExePath('FlattenXML')
 
     try:
-        p = Popen([flattenExe]+inputFiles, stdout=PIPE, stderr=PIPE)
+        p = Popen([flattenExe]+inputFiles+cmdLineOverrides.split(), stdout=PIPE, stderr=PIPE)
         (stdout, stderr) = p.communicate()
         # The 2nd clause necessary because FlattenXML doesn't return 
         # proper error codes (ie always returns 0) up to 1.4.2 release
