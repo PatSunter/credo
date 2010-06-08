@@ -8,8 +8,11 @@ from uwa.analysis import fields
 class ModelRun:
     '''A class to keep records about a StgDomain/Underworld Model Run,
     including access to the underlying XML of the actual model'''
+
+    allowedModelParamTypes = [int, float, long, bool, str]
+
     def __init__(self, name, modelInputFiles, outputPath, logPath="./log",
-     cpReadPath=None, nproc=1):
+      cpReadPath=None, nproc=1, paramOverrides={}):
         self.name = name
         # Be forgiving if the user passes a single string input file, rather
         # than list
@@ -17,6 +20,8 @@ class ModelRun:
             modelInputFiles = [modelInputFiles]
         self.modelInputFiles = modelInputFiles
         self.outputPath = outputPath
+        self.paramOverrides = paramOverrides
+        self.checkParamOverridesTypes()
         self.cpReadPath = cpReadPath
         self.logPath = logPath
         self.jobParams = JobParams(nproc) 
@@ -24,10 +29,25 @@ class ModelRun:
         self.simParams = None
         self.analysis = {}
         # TODO: is this really necessary to create by default?
-        # TODO: is this really necessary to create by default?
         self.analysis['fieldTests'] = fields.FieldComparisonList()
         self.cpFields = []
         self.analysisXML = None
+
+    def checkParamOverridesTypes(self):
+        for modelPath, paramVal in self.paramOverrides.iteritems():
+            if type(paramVal) not in self.allowedModelParamTypes:
+                raise ValueError("One of the parameters in paramOverrides"\
+                    " list, '%s', has value '%s', of type '%s', which"\
+                    " isn't in allowed types list [%s]"\
+                    % (modelPath, str(paramVal), type(paramVal),\
+                    self.allowedModelParamTypes))
+
+    def getParamOverridesAsStr(self):
+        self.checkParamOverridesTypes()
+        paramOverridesStr = ""
+        for modelPath, paramVal in self.paramOverrides.iteritems():
+            paramOverridesStr += " --%s=%s" % (modelPath, str(paramVal))
+        return paramOverridesStr    
 
     def postRunCleanup(self, runPath):
         if not os.path.exists(self.outputPath):
@@ -67,10 +87,19 @@ class ModelRun:
         self.jobParams.writeInfoXML(root)
         if not self.simParams:
             simParams = SimParams()
-            simParams.readFromStgXML(self.modelInputFiles)
+            # Make sure we include all override parameters
+            # by first writing to XML
+            paramOverridesStr = self.getParamOverridesAsStr()
+            simParams.readFromStgXML(self.modelInputFiles, paramOverridesStr)
             simParams.writeInfoXML(root)
-        else:    
+        else:
             self.simParams.writeInfoXML(root)
+        
+        paramOversNode = etree.SubElement(root, 'paramOverrides')
+        for modelPath, paramVal in self.paramOverrides.iteritems():
+            paramNode = etree.SubElement(paramOversNode, 'param')
+            paramNode.attrib['modelPath'] = modelPath
+            paramNode.attrib['paramVal'] = str(paramVal)
 
         analysisNode = etree.SubElement(root, 'analysis')
         for toolName, analysisTool in self.analysis.iteritems():
@@ -202,10 +231,10 @@ class SimParams:
                 stgxml.writeParam(xmlNode, stgParam.stgName, val,\
                     mt='replace')
 
-    def readFromStgXML(self, inputFilesList):
+    def readFromStgXML(self, inputFilesList, cmdLineOverrides):
         '''Reads all the parameters of this class from a given StGermain 
         set of input files'''
-        ffile=stgxml.createFlattenedXML(inputFilesList)
+        ffile=stgxml.createFlattenedXML(inputFilesList, cmdLineOverrides)
         xmlDoc = etree.parse(ffile)
         stgRoot = xmlDoc.getroot()
         for param, stgParam in self.stgParamInfos.iteritems():
@@ -272,25 +301,26 @@ def runModel(modelRun, extraCmdLineOpts=None):
 
     # Construct StGermain run command
     runExe=uwa.getVerifyStgExePath("StGermain")
-    stgPart = "%s " % (runExe)
+    stgRunStr = "%s " % (runExe)
     for inputFile in modelRun.modelInputFiles:    
-        stgPart += inputFile+" "
+        stgRunStr += inputFile+" "
     if modelRun.analysisXML:
-        stgPart += modelRun.analysisXML+" "
+        stgRunStr += modelRun.analysisXML+" "
 
+    stgRunStr += modelRun.getParamOverridesAsStr()
     # TODO: How to best handle custom command line options
     # Perhaps these should be passed through, either by script or as part of
     # model definition
     # Possibly a list would be better than a straight string, to help user
     # avoid spacing stuff-ups
     if extraCmdLineOpts:
-        stgPart += " "+extraCmdLineOpts
+        stgRunStr += " "+extraCmdLineOpts
 
     # BEGIN JOBRUNNER PART
     # Construct run line
     logFilename = "logFile.txt"
     mpiPart = "%s -np %d " % (mpiCommand, modelRun.jobParams.nproc)
-    runCommand = mpiPart + stgPart + " > " + logFilename
+    runCommand = mpiPart + stgRunStr + " > " + logFilename
 
     # Run the run command, sending stdout and stderr to defined log paths
     print "Running model '%s' with command '%s' ..."\
