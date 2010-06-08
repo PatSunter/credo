@@ -292,7 +292,16 @@ class StgXMLTestCase(unittest.TestCase):
             self.assertEqual(node.text.strip(), "FiniteElementContext")
             #NB: since the components list in the first XML is un-merged, we
             #can't access this entirely.
-            
+    
+    # TODO
+    #def test_insertItemAtStrSpec_CurrentCtx(self):    
+        #stgxml.insertItemAtStrSpec_CurrentCtx(resultNode, lastSpecStr, "2")
+
+    def test_getNodeFromStrSpec_CreateMode(self):
+        xmlDoc, root = stgxml.createNewStgDataDoc()
+        # resultNode, lastSpecStr = stgxml.navigateStrSpecHierarchy(root, "dim")
+        # TODO: actually test some stuff
+        stgxml.writeStgDataDocToFile(xmlDoc, "output/testInsert.xml")
 
     # Writing things out tests
     def test_setMergeType(self):

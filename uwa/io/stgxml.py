@@ -20,11 +20,11 @@ STG_PLUGINS_TAG = "plugins"
 STG_COMPONENTS_TAG = "components"
 STG_TOOLBOX_TAG = "toolbox"
 _stgSpecialListTags = [STG_IMPORT_TAG, STG_PLUGINS_TAG]
-_stgSpecialStructTags = [STG_COMPONENTS_TAG]
+_stgSpecialStructTags = [STG_COMPONENTS_TAG, STG_ROOT_TAG]
 _stgSpecialParamTags = [STG_TOOLBOX_TAG]
 
-#########
-# For interfacing with StGermain command-line programs for XML manipulation
+############
+# Utility functions
 
 def addNsPrefix(tagName):
     """Simple utility func to add the Namespace prefix that LXML adds to element
@@ -37,30 +37,156 @@ def removeNsPrefix(tagName):
     if tagName.startswith(_STG_NS_LXML):
         return tagName[len(_STG_NS_LXML):]
 
-def createFlattenedXML(inputFiles):
-    '''Flatten a list of provided XML files (as a string), using the StGermain
-     FlattenXML tool'''
-    flattenExe=uwa.getVerifyStgExePath('FlattenXML')
+###################
+# Key function for navigating a hierarchy when strSpec is given in StGermain
+# command-line style
 
-    try:
-        p = Popen([flattenExe]+inputFiles, stdout=PIPE, stderr=PIPE)
-        (stdout, stderr) = p.communicate()
-        # The 2nd clause necessary because FlattenXML doesn't return 
-        # proper error codes (ie always returns 0) up to 1.4.2 release
-        if p.returncode != 0 or stderr != "":
-            raise OSError("Error: Command to create flattened file, '%s' on"
-                " input files %s, failed, with error msg:\n%s" \
-                % (flattenExe,inputFiles,stderr))
-    except OSError, e:
-        raise OSError("Unexpected failure to execute Flatten command '%s'"\
-            " on input files %s. Error msg was:\n%s"\
-            % (flattenExe, inputFiles,str(e)))
+def navigateStrSpecHierarchy(currNode, strSpec, insertMode=False):
+    """Navigate a document, based on a remaining StGermain command-line style
+    element specification.
+    Returns currNode, nodeName of the final entry in the hierarchy"""
+    # Parse the string, checking if it specifies to recurse into a sub-struct or
+    # list.
 
-    ffile='output.xml'
-    return ffile
+    if strSpec == "":
+        raise ValueError("Can't operate on an empty strSpec string")
 
-#########
+    structSepPrefix, structSep, structRem = strSpec.partition(".")
+    listSepPrefix, listSep, listFirstRem = structSepPrefix.partition("[")
+
+    # The list is handled slightly different to structs: since list items are
+    # un-named, an immediate list spec (eg [5]) with no prefix means we're done.
+    if listSep == '[':
+        # Check and handle the list separator first, since the code above
+        # made sure that this must occur before any structSeps
+
+        # First re-do the partition, to get all remainder
+        listStartName, listStartSep, listStartRem = strSpec.partition('[')
+        listContents, listEndSep, listEndRem = listStartRem.partition(']')
+        if listEndSep != ']':
+            raise ValueError("Navigating section \"%s\" specified: badly"\
+                " formed list found, not closed correctly with '%s'."
+                % (strSpec, "]") )
+    
+        listNode = _getListNodeAtCurrent(currNode, listStartName, strSpec)
+        if listNode == None:
+            # TODO - insert mode
+            raise ValueError("Navigating section \"%s\" specified: list"\
+                " \"%s\" doesn't exist at this level of XML file."\
+                % (strSpec, listName) )
+
+        if listEndRem == "":
+            # We are done, because there's only one list spec at current context
+            # remaining in the string
+            return listNode, listStartSep+listStartRem
+        else:
+            # Navigate into the list contents
+            listItemNode = _getListItemFromStrSpec(listNode,
+                '['+listContents+']')
+
+            # Check the remaining contents appropriate
+            if listEndRem[0] == '.':
+                # Consume the . for a dictionary at next section
+                listEndRem = listEndRem[1:]
+            elif listEndRem[0] != '[':
+                raise ValueError("Navigating section \"%s\" specified:"\
+                    " List not followed by either a '%s' or '%s', error."\
+                    % (strSpec, '[', '.'))
+
+            #recurse again on the remainder, since there's stuff left to handle
+            return navigateStrSpecHierarchy(listItemNode, listEndRem)
+    elif structSep == '.':
+        structName = structSepPrefix
+        # There is no list separator, but a struct to recurse into.
+        structNode = getStructNode(currNode, structName)
+        if structNode == None:
+            if insertMode:
+                structNode = insertStructNode(currNode, structName)
+            else:
+                raise ValueError("Navigating section \"%s\" specified: struct"\
+                    " \"%s\" doesn't exist at this level of XML file."\
+                    % (strSpec, structName) )
+        # Recursively process the rest of the specification
+        return navigateStrSpecHierarchy(structNode, structRem)
+    else:
+        # We are at the correct hierarchy level - just return.
+        return currNode, strSpec
+
+
+def getItemFromStrSpec_CurrentCtx(currCtxNode, nodeSpecStr):
+    """Gets the node at a current context.
+    If context is a struct, treats nodeSpecStr as a named element.
+    If context is a list, nodeSpecStr must be a list specifier."""
+    currCtxNodeType = getElementType(currCtxNode)
+    if currCtxNodeType == STG_STRUCT_TAG:
+        eltNode = _getNamedElementNode(currCtxNode, nodeSpecStr)
+    elif currCtxNodeType == STG_LIST_TAG:
+        eltNode = _getListItemFromStrSpec(currCtxNode, nodeSpecStr)
+    else:
+        raise ValueError("Context node with tag %s is of incorrect type %s"\
+            % (currCtxNode.tag, currCtxNodeType))
+    return eltNode        
+
+def _getListItemFromStrSpec(currListNode, listItemStr):
+    """ Where listItemStr is in the form [4], or []"""
+    if listItemStr[0] != '[':
+        raise ValueError("\"%s\" not a well specified list item:"\
+            " not opened correctly with '%s'."
+            % (listItemStr, "[") )
+    listContents, listEndSep, listEndRem = listItemStr[1:].partition(']')
+    if listEndSep != ']':
+        raise ValueError("\"%s\" not a well specified list item:"\
+            " not closed correctly with '%s'."
+            % (listItemStr, "]") )
+    elif listEndRem != "":
+        raise ValueError("Navigating section \"%s\" specified: badly"\
+            " formed list found, trailing characters '%s' after list"\
+            " closed." % (listItemStr, listEndRem))
+
+    listIndex = _getListIndex(listContents)
+    # TODO - modify later for insertion
+    assert listIndex != None
+    if not listIndex < len(currListNode):
+        raise ValueError("Parsing listItemStr '%s', asked for list index %d,"\
+            " but list has only %d items"\
+            % (listItemStr, listIndex, len(currListNode)))
+        
+    # (Using the etree concise format here)
+    listItemNode = currListNode[listIndex]
+    return listItemNode
+
+def _getListIndex(listIndexStr):
+    if listIndexStr == "":
+        listIndex = None
+    else:        
+        if not listIndexStr.isdigit():
+            raise ValueError("list index '%s' isn't a set of digits"\
+                % (listIndexStr))
+        listIndex = int(listIndexStr)
+    return listIndex
+
+############################
 # For getting stuff out of an existing XML doc
+
+def getNodeFromStrSpec(parentNode, strSpec):
+    """From a given specification of a node in a StGermain model file (eg
+    plugins[0].Context), return the element to operate on."""
+
+    resultNode, lastSpecStr = navigateStrSpecHierarchy(parentNode, strSpec)
+
+    # We just need to return the element with the remaining spec string at the
+    # current context
+    # Remember it could be either a name (at a struct level), or an index (at a
+    # list level).
+    # It can also be of any any element type:-
+    # thus if the calling function expects a param, list or
+    # dict specifically, will need to check for that.
+    elementNode = getItemFromStrSpec_CurrentCtx(resultNode, lastSpecStr)
+    if elementNode == None:
+        raise ValueError("Navigating str spec \"%s\": last element"\
+            " \"%s\" doesn't exist at correct level of XML file."\
+            % (strSpec, lastSpecStr) )
+    return elementNode 
 
 def getElementType(elementNode):
     """Checks the "type" of a StGermain data node element. 
@@ -119,90 +245,6 @@ def _getListNodeAtCurrent(currNode, listName, strSpec):
     else:
         listNode = getListNode(currNode, listName)
     return listNode
-
-def _getListIndex(listIndexSpec, strSpec):
-    """Given a list index as a string, eg '[4]', return the list index as an
-    integer.
-    If the string is '[]', return None."""
-    listIndexStr, listCloseSep, rem = listIndexSpec.partition("]") 
-    if listCloseSep != "]":
-        raise ValueError("Navigating section \"%s\" specified: badly"\
-            " formed list found, not closed correctly with '%s'."
-            % (strSpec, "]") )
-    elif rem != "":
-        raise ValueError("Navigating section \"%s\" specified: badly"\
-            " formed list found, trailing characters '%s' after list"\
-            " closed." % (strSpec, rem))
-    if listIndexStr == "":
-        listIndex = None
-    else:        
-        if not listIndexStr.isdigit():
-            raise ValueError("Navigating section \"%s\" specified: badly"\
-                " formed list found, list index '%s' isn't a set of digits"\
-                % (strSpec, listIndexStr))
-        listIndex = int(listIndexStr)
-    return listIndex
-
-def getNodeFromStrSpec(parentNode, strSpec):
-    """From a given specification of a node in a StGermain model file (eg
-    plugins[0].Context), return the element to operate on."""
-
-    # Parse the string, checking if it specifies to recurse into a sub-struct or
-    # list.
-    # TODO - make all separators constants
-    structSepPrefix, structSep, structRem = strSpec.partition(".")
-    listSepPrefix, listSep, listFirstRem = structSepPrefix.partition("[")
-
-    if listSep == '[':
-        # Check and handle the list separator first, as the first of these 
-        # must always come before any struct separator if they exist
-        listNode = _getListNodeAtCurrent(parentNode, listSepPrefix, strSpec)
-        if listNode == None:
-            raise ValueError("Navigating section \"%s\" specified: list"\
-                " \"%s\" doesn't exist at this level of XML file."\
-                % (strSpec, listName) )
-
-        listIndex = _getListIndex(listFirstRem, strSpec)
-        # TODO - for insertion
-        assert listIndex != None
-
-        if not listIndex < len(listNode):
-            raise ValueError("Navigating section \"%s\" specified:"\
-                " asked for list index %d, but list has only %d items"\
-                % (strSpec, listIndex, len(listNode)))
-            
-        # (Using the etree concise format here)
-        listItemNode = listNode[listIndex]
-
-        if structSep == "":
-            # No more to handle, just return current.
-            return listItemNode
-        else:
-            #Have handled the list, now recurse again on the remainder
-            return getNodeFromStrSpec(listItemNode, structRem)
-    elif structSep:
-        # There is no list separator, but a struct to recurse into.
-        structNode = getStructNode(parentNode, structSepPrefix)
-        if structNode == None:
-            raise ValueError("Navigating section \"%s\" specified: struct"\
-                " \"%s\" doesn't exist at this level of XML file."\
-                % (strSpec, structSepPrefix) )
-        # Recursively process the rest of the specification
-        return getNodeFromStrSpec(structNode, structRem)
-    else:    
-        # We just need to return the element with the specified name. It can be
-        # any element type - if the calling function expects a param, list or
-        # dict specifically, will need to check for that.
-        elementNode = _getNamedElementNode(parentNode, structSepPrefix)
-        if elementNode == None:
-            raise ValueError("Navigating section \"%s\" specified: element"\
-                " \"%s\" doesn't exist at this level of XML file."\
-                % (strSpec, structSepPrefix) )
-        return elementNode
-
-    # Catch-all, should have returned or recursed by here.
-    assert False
-
 
 def getParamValue(elNode, paramName, castFunc):
     """Gets the value of a parameter from a StGermain XML model file that's a
@@ -263,19 +305,19 @@ def getListNode(elNode, listName):
             if resNodes is not []: return resNodes[0]
     return None
 
-def _getNamedElementNode(elNode, elName, elType=None):
+def _getNamedElementNode(ctxNode, elName, elType=None):
     """Returns the element node (in lxml form) of a particular element
-    that's a child of the given elNode with given elName.
+    that's a child of the given ctxNode with given elName.
     If a node with the given name not found, returns none.
     If elType is specified, will only return nodes of the given type.
     (Not designed to be used directly, but by getList etc.)
     Searches in both the element tag format (used by output files), and
     the param, list, struct format - and also for 'special' model elements such
     as plugins, imports and components."""
-    eltNode = _getNamedElementNode_elTag(elNode, elName)
+    eltNode = _getNamedElementNode_elTag(ctxNode, elName)
     if eltNode is not None: return eltNode
     # now check for the 'special' element tags
-    for eltNode in elNode.iterchildren():
+    for eltNode in ctxNode.iterchildren():
         # in this case, e.g. the list with asked for name 'import' will have
         # tag 'import'
         if eltNode.tag == addNsPrefix(elName):
@@ -286,7 +328,7 @@ def _getNamedElementNode(elNode, elName, elType=None):
             elif eltNode.tag in map(addNsPrefix, _stgSpecialStructTags):
                 return eltNode
     # now check the old param, list, struct format
-    for eltNode in elNode.iterchildren():
+    for eltNode in ctxNode.iterchildren():
         if eltNode.tag in map(addNsPrefix, _stgElementBaseTags):
             if elName == eltNode.attrib['name']:
                 return eltNode
@@ -306,8 +348,8 @@ def _getNamedElementNode_elTag(elNode, elName, elType=None):
                 return eltNode
     return None
 
-##########
-# For writing a new XML doc, using the eTree package
+#############################
+# For manipulating/updating an existing XML doc, using the eTree package
 
 def createNewStgDataDoc():
     """Create a new empty StGermain model XML file (can be merged with other
@@ -317,12 +359,6 @@ def createNewStgDataDoc():
     xmlDoc = etree.ElementTree(root)
     return xmlDoc, root
 
-def writeStgDataDocToFile(xmlDoc, filename):
-    """Write a given StGermain xmlDoc to the file given by filename"""
-    outFile = open(filename, 'w')
-    xmlDoc.write(outFile, pretty_print=True)
-    outFile.close()
-
 def setMergeType(xmlNode, mergeType):
     if mergeType is not None:
         if mergeType not in STG_MERGE_TYPES:
@@ -331,8 +367,14 @@ def setMergeType(xmlNode, mergeType):
                 % (mergeType, STG_MERGE_TYPES))
         xmlNode.attrib[STG_MERGE_ATTRIB] = mergeType
 
+# TODO: really needed??
+def insertNamedElementNode(parentNode, elementName, createType):
+    elementNode = etree.SubElement(parentNode, createType, name=elementName)
+    setMergeType(paramEl, "replace")
+    return elementNode
+
 def writeParam(parentNode, paramName, paramVal, mt=None):
-    paramEl=etree.SubElement(parentNode, STG_PARAM_TAG, name=paramName)
+    paramEl = etree.SubElement(parentNode, STG_PARAM_TAG, name=paramName)
     setMergeType(paramEl, mt)
     paramEl.text = str(paramVal)
     return paramEl
@@ -372,7 +414,41 @@ def writeValueUsingStrSpec(rootNode, strSpec, value):
     #  appropriately.
     #   
 
-# Write value
-#  if node is param, only allow params
-#  if node is list, only allow lists
-#  if node is struct, only allow dicts
+#def insertNodeAt
+    # navigate hierarchy - replace mode
+    # insert node name at remainder, of appropriate type
+    #  if node is param, only allow: Bool, int, double
+    #  if node is list, only allow Python lists
+    #  if node is struct, only allow Python dicts
+    #  Qtn: do we allow recursive of these?
+
+############################################
+# For actual file I/O
+def writeStgDataDocToFile(xmlDoc, filename):
+    """Write a given StGermain xmlDoc to the file given by filename"""
+    outFile = open(filename, 'w')
+    xmlDoc.write(outFile, pretty_print=True)
+    outFile.close()
+
+
+def createFlattenedXML(inputFiles):
+    '''Flatten a list of provided XML files (as a string), using the StGermain
+     FlattenXML tool'''
+    flattenExe=uwa.getVerifyStgExePath('FlattenXML')
+
+    try:
+        p = Popen([flattenExe]+inputFiles, stdout=PIPE, stderr=PIPE)
+        (stdout, stderr) = p.communicate()
+        # The 2nd clause necessary because FlattenXML doesn't return 
+        # proper error codes (ie always returns 0) up to 1.4.2 release
+        if p.returncode != 0 or stderr != "":
+            raise OSError("Error: Command to create flattened file, '%s' on"
+                " input files %s, failed, with error msg:\n%s" \
+                % (flattenExe,inputFiles,stderr))
+    except OSError, e:
+        raise OSError("Unexpected failure to execute Flatten command '%s'"\
+            " on input files %s. Error msg was:\n%s"\
+            % (flattenExe, inputFiles,str(e)))
+
+    ffile='output.xml'
+    return ffile
