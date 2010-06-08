@@ -104,6 +104,45 @@ def getElementType(elementNode):
         raise ValueError("Given node with tag '%s' is not a StGermainData"
             " element of known type." % (elementNode.tag))
 
+def _getListNodeAtCurrent(currNode, listName, strSpec):
+    """Get the list named at the current XML level. Note that if the list name
+    is '', then assumes current level is a list"""
+    if listName == "":
+        # This case is allowed - suppose we are in a recursive loop, dealing
+        # with a list entry within a list - then there would be no prefix,
+        # so just check we're already within a list
+        listNode = currNode
+        if STG_LIST_TAG != getElementType(listNode):
+            raise ValueError("Navigating section \"%s\" specified: implies"\
+                    " current section is a list, but is actually a %s element."\
+                    % (strSpec, getElementType(listNode)))
+    else:
+        listNode = getListNode(currNode, listName)
+    return listNode
+
+def _getListIndex(listIndexSpec, strSpec):
+    """Given a list index as a string, eg '[4]', return the list index as an
+    integer.
+    If the string is '[]', return None."""
+    listIndexStr, listCloseSep, rem = listIndexSpec.partition("]") 
+    if listCloseSep != "]":
+        raise ValueError("Navigating section \"%s\" specified: badly"\
+            " formed list found, not closed correctly with '%s'."
+            % (strSpec, "]") )
+    elif rem != "":
+        raise ValueError("Navigating section \"%s\" specified: badly"\
+            " formed list found, trailing characters '%s' after list"\
+            " closed." % (strSpec, rem))
+    if listIndexStr == "":
+        listIndex = None
+    else:        
+        if not listIndexStr.isdigit():
+            raise ValueError("Navigating section \"%s\" specified: badly"\
+                " formed list found, list index '%s' isn't a set of digits"\
+                % (strSpec, listIndexStr))
+        listIndex = int(listIndexStr)
+    return listIndex
+
 def getNodeFromStrSpec(parentNode, strSpec):
     """From a given specification of a node in a StGermain model file (eg
     plugins[0].Context), return the element to operate on."""
@@ -117,37 +156,16 @@ def getNodeFromStrSpec(parentNode, strSpec):
     if listSep == '[':
         # Check and handle the list separator first, as the first of these 
         # must always come before any struct separator if they exist
-        if listSepPrefix == "":
-            # This case is allowed - suppose we are in a recursive loop, dealing
-            # with a list entry within a list - then there would be no prefix,
-            # so just check we're already within a list
-            listNode = parentNode
-            if STG_LIST_TAG != getElementType(listNode):
-                raise ValueError("Navigating section \"%s\" specified: implies"\
-                    " current section is a list, but is actually a %s element."\
-                    % (strSpec, getElementType(listNode)))
-        else:
-            listNode = getListNode(parentNode, listSepPrefix)
-            if listNode == None:
-                raise ValueError("Navigating section \"%s\" specified: list"\
-                    " \"%s\" doesn't exist at this level of XML file."\
-                    % (strSpec, listSepPrefix) )
+        listNode = _getListNodeAtCurrent(parentNode, listSepPrefix, strSpec)
+        if listNode == None:
+            raise ValueError("Navigating section \"%s\" specified: list"\
+                " \"%s\" doesn't exist at this level of XML file."\
+                % (strSpec, listName) )
 
-        listIndexStr, listCloseSep, rem = listFirstRem.partition("]") 
-        if listCloseSep != "]":
-            raise ValueError("Navigating section \"%s\" specified: badly"\
-                " formed list found, not closed correctly with '%s'."
-                % (strSpec, "]") )
-        elif rem != "":
-            raise ValueError("Navigating section \"%s\" specified: badly"\
-                " formed list found, trailing characters '%s' after list"\
-                " closed." % (strSpec, rem))
-        elif not listIndexStr.isdigit():
-            raise ValueError("Navigating section \"%s\" specified: badly"\
-                " formed list found, list index '%s' isn't a set of digits"\
-                % (strSpec, listIndexStr))
+        listIndex = _getListIndex(listFirstRem, strSpec)
+        # TODO - for insertion
+        assert listIndex != None
 
-        listIndex = int(listIndexStr)
         if not listIndex < len(listNode):
             raise ValueError("Navigating section \"%s\" specified:"\
                 " asked for list index %d, but list has only %d items"\
@@ -344,6 +362,7 @@ def writeMergeComponent(rootNode, compName, compType):
 
 # Write out using StGermain command-line specification format
 def writeValueUsingStrSpec(rootNode, strSpec, value):
+    pass
     # if flattened XML:
     # check str spec exists in flattened XML first
 
