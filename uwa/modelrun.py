@@ -1,4 +1,5 @@
 import os, shutil
+import sys
 
 from lxml import etree
 import uwa.modelresult
@@ -12,7 +13,7 @@ class ModelRun:
     allowedModelParamTypes = [int, float, long, bool, str]
 
     def __init__(self, name, modelInputFiles, outputPath, logPath="./log",
-      cpReadPath=None, nproc=1, paramOverrides={}):
+      cpReadPath=None, nproc=1, simParams=None, paramOverrides={}):
         self.name = name
         # Be forgiving if the user passes a single string input file, rather
         # than list
@@ -20,13 +21,14 @@ class ModelRun:
             modelInputFiles = [modelInputFiles]
         self.modelInputFiles = modelInputFiles
         self.outputPath = outputPath
-        self.paramOverrides = paramOverrides
-        self.checkParamOverridesTypes()
         self.cpReadPath = cpReadPath
         self.logPath = logPath
         self.jobParams = JobParams(nproc) 
-        # TODO: should the below actually be compulsory?
-        self.simParams = None
+        self.simParams = simParams
+        self.paramOverrides = paramOverrides
+        self.checkParamOverridesTypes()
+        if self.simParams:
+            self.simParams.checkNoDuplicates(self.paramOverrides.keys())
         self.analysis = {}
         # TODO: is this really necessary to create by default?
         self.analysis['fieldTests'] = fields.FieldComparisonList()
@@ -43,6 +45,8 @@ class ModelRun:
                     self.allowedModelParamTypes))
 
     def getParamOverridesAsStr(self):
+        if self.simParams:
+            self.simParams.checkNoDuplicates(self.paramOverrides.keys())
         self.checkParamOverridesTypes()
         paramOverridesStr = ""
         for modelPath, paramVal in self.paramOverrides.iteritems():
@@ -179,7 +183,6 @@ class SimParams:
         'restartstep':StgParamInfo("restartTimestep",int, None) }
 
     def __init__(self, **kwargs):
-
         for paramName, stgParamInfo in self.stgParamInfos.iteritems():
             self.setParam(paramName, stgParamInfo.defVal)
 
@@ -213,6 +216,20 @@ class SimParams:
     def checkValidParams(self):
         if (self.nsteps is None) and (self.stoptime is None):
             raise ValueError("neither nsteps nor stoptime set")
+
+    def checkNoDuplicates(self, paramOverridesList):
+        """Function to check there are no duplicates between sim param overrides
+        set, and cmd-line parameter overrides."""
+
+        stgParamNamesSet = [simPInfo.stgName for simPInfo in \
+            self.stgParamInfos.itervalues()]
+
+        for modelPath in paramOverridesList:
+            if modelPath in stgParamNamesSet:
+                raise ValueError("Parameter '%s' found in both the model's"\
+                    " SimParams class and the paramater override list. Please"\
+                    " use only one of these methods for setting the parameter."\
+                    % modelPath)
 
     def writeInfoXML(self, parentNode):
         '''Writes information about this class into an existing, open XML doc
@@ -248,9 +265,6 @@ class SimParams:
 
 
 ##################
-
-import sys
-import os
 
 # Assume user has updated their path correctly.
 mpiCommand="mpirun"
