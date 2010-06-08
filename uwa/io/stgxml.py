@@ -6,7 +6,7 @@ import uwa
 
 STG_ROOT_TAG = 'StGermainData'
 STG_NS = 'http://www.vpac.org/StGermain/XML_IO_Handler/Jun2003'
-_STG_NS_ETREE = '{%s}' % STG_NS
+_STG_NS_LXML = '{%s}' % STG_NS
 
 STG_STRUCT_TAG = "struct"
 STG_LIST_TAG = "list"
@@ -18,11 +18,24 @@ STG_MERGE_TYPES = ['append','merge','replace']
 STG_IMPORT_TAG = "import"
 STG_PLUGINS_TAG = "plugins"
 STG_COMPONENTS_TAG = "components"
+STG_TOOLBOX_TAG = "toolbox"
 _stgSpecialListTags = [STG_IMPORT_TAG, STG_PLUGINS_TAG]
 _stgSpecialStructTags = [STG_COMPONENTS_TAG]
+_stgSpecialParamTags = [STG_TOOLBOX_TAG]
 
 #########
 # For interfacing with StGermain command-line programs for XML manipulation
+
+def addNsPrefix(tagName):
+    """Simple utility func to add the Namespace prefix that LXML adds to element
+    tag names when it parses in from a file"""
+    return _STG_NS_LXML+tagName
+
+def removeNsPrefix(tagName):
+    """Simple utility func to remove the Namespace prefix that LXML adds to
+    element tag names when it parses in from a file"""
+    if tagName.startswith(_STG_NS_LXML):
+        return tagName[len(_STG_NS_LXML):]
 
 def createFlattenedXML(inputFiles):
     '''Flatten a list of provided XML files (as a string), using the StGermain
@@ -56,9 +69,16 @@ def getElementType(elementNode):
     The elmement tag format, where type is an attribute.
     The special elements import, plugins -> list, components -> dict."""
     
-    if elementNode.tag in _stgElementBaseTags:
-        return elementNode.tag
-    elif elementNode.tag == STG_ELEMENT_TAG:
+    # The _STG_NS_LXML prefixes included below since ETree prefixes these to
+    # tag names to represent the namespace used when parsing in files.
+
+    tag = elementNode.tag
+
+    if tag in _stgElementBaseTags:
+        return tag
+    elif tag in map(addNsPrefix, _stgElementBaseTags):
+        return removeNsPrefix(tag)
+    elif tag == STG_ELEMENT_TAG or tag == addNsPrefix(STG_ELEMENT_TAG):
         try:
             typeAttr = elementNode.attrib['type']
         except KeyError:
@@ -71,9 +91,14 @@ def getElementType(elementNode):
             raise ValueError("Given node with tag '%s', type attr '%s' is"\
                 " not a StGermainData element of known type."\
                 % (elementNode.tag, typeAttr))
-    elif elementNode.tag in _stgSpecialListTags:
+    elif tag in _stgSpecialParamTags \
+            or tag in map(addNsPrefix, _stgSpecialParamTags):
+        return STG_PARAM_TAG
+    elif tag in _stgSpecialListTags \
+            or tag in map(addNsPrefix, _stgSpecialListTags):
         return STG_LIST_TAG
-    elif elementNode.tag in _stgSpecialStructTags:
+    elif tag in _stgSpecialStructTags \
+            or tag in map(addNsPrefix, _stgSpecialStructTags):
         return STG_STRUCT_TAG
     else:
         raise ValueError("Given node with tag '%s' is not a StGermainData"
@@ -179,36 +204,45 @@ def getParamNode(elNode, paramName):
     If a node with the given name not found, returns none."""
     # The default schema for written files (eg flattened files) is to use
     # "element" and set a type attribute, rather than "param" directly.
-    eltNode = _getNamedElementNode(elNode, paramName, STG_PARAM_TAG)
+    eltNode = _getNamedElementNode_elTag(elNode, paramName, elType=STG_PARAM_TAG)
     if eltNode is not None: return eltNode
-    for paramNode in elNode.iterchildren(tag=_STG_NS_ETREE+'param'):
+    for paramNode in elNode.iterchildren(tag=addNsPrefix('param')):
         if paramNode.attrib['name'] == paramName:
             return paramNode
-            break
+    for specialTag in _stgSpecialParamTags: 
+        if paramName == specialTag:
+            resNodes = list(elNode.iterchildren(tag=addNsPrefix(specialTag)))
+            if resNodes is not []: return resNodes[0]
     return None
 
 def getStructNode(elNode, structName):
     """Returns the element node (in lxml form) of a particular struct element
     that's a child of the given elNode with given structName.
     If a node with the given name not found, returns none."""
-    eltNode = _getNamedElementNode(elNode, structName, STG_STRUCT_TAG)
+    eltNode = _getNamedElementNode_elTag(elNode, structName, elType=STG_STRUCT_TAG)
     if eltNode is not None: return eltNode
-    for structNode in elNode.iterchildren(tag=_STG_NS_ETREE+'struct'):
+    for structNode in elNode.iterchildren(tag=addNsPrefix('struct')):
         if structNode.attrib['name'] == structName:
             return structNode
-            break
+    for specialTag in _stgSpecialStructTags: 
+        if structName == specialTag:
+            resNodes = list(elNode.iterchildren(tag=addNsPrefix(specialTag)))
+            if resNodes is not []: return resNodes[0]
     return None
 
 def getListNode(elNode, listName):
     """Returns the element node (in lxml form) of a particular list element
     that's a child of the given elNode with given listName.
     If a node with the given name not found, returns none."""
-    eltNode = _getNamedElementNode(elNode, listName, STG_LIST_TAG)
+    eltNode = _getNamedElementNode_elTag(elNode, listName, elType=STG_LIST_TAG)
     if eltNode is not None: return eltNode
-    for listNode in elNode.iterchildren(tag=_STG_NS_ETREE+'list'):
+    for listNode in elNode.iterchildren(tag=addNsPrefix('list')):
         if listNode.attrib['name'] == listName:
             return listNode
-            break
+    for specialTag in _stgSpecialListTags: 
+        if listName == specialTag:
+            resNodes = list(elNode.iterchildren(tag=addNsPrefix(specialTag)))
+            if resNodes is not []: return resNodes[0]
     return None
 
 def _getNamedElementNode(elNode, elName, elType=None):
@@ -216,14 +250,43 @@ def _getNamedElementNode(elNode, elName, elType=None):
     that's a child of the given elNode with given elName.
     If a node with the given name not found, returns none.
     If elType is specified, will only return nodes of the given type.
-    (Not designed to be used directly, but by getList etc.)"""
+    (Not designed to be used directly, but by getList etc.)
+    Searches in both the element tag format (used by output files), and
+    the param, list, struct format - and also for 'special' model elements such
+    as plugins, imports and components."""
+    eltNode = _getNamedElementNode_elTag(elNode, elName)
+    if eltNode is not None: return eltNode
+    # now check for the 'special' element tags
+    for eltNode in elNode.iterchildren():
+        # in this case, e.g. the list with asked for name 'import' will have
+        # tag 'import'
+        if eltNode.tag == addNsPrefix(elName):
+            if eltNode.tag in map(addNsPrefix, _stgSpecialParamTags):
+                return eltNode
+            if eltNode.tag in map(addNsPrefix, _stgSpecialListTags):
+                return eltNode
+            elif eltNode.tag in map(addNsPrefix, _stgSpecialStructTags):
+                return eltNode
+    # now check the old param, list, struct format
+    for eltNode in elNode.iterchildren():
+        if eltNode.tag in map(addNsPrefix, _stgElementBaseTags):
+            if elName == eltNode.attrib['name']:
+                return eltNode
+    return None        
+
+def _getNamedElementNode_elTag(elNode, elName, elType=None):
+    """Returns the element node (in lxml form) of a particular element
+    that's a child of the given elNode with given elName.
+    If a node with the given name not found, returns none.
+    If elType is specified, will only return nodes of the given type.
+    (Not designed to be used directly, but by getList etc.)
+    Searches in the element tag format."""
     
-    for eltNode in elNode.iterchildren(tag=_STG_NS_ETREE+'element'):
+    for eltNode in elNode.iterchildren(tag=addNsPrefix('element')):
         if eltNode.attrib['name'] == elName:
             if elType == None or eltNode.attrib['type'] == elType:
                 return eltNode
-                break
-    return None        
+    return None
 
 ##########
 # For writing a new XML doc, using the eTree package
@@ -257,6 +320,7 @@ def writeParam(parentNode, paramName, paramVal, mt=None):
     return paramEl
 
 def writeParamSet(parentNode, paramsDict, mt=None):
+    # TODO - check parent node is a struct
     for paramName, paramVal in paramsDict.iteritems():
         writeParam(parentNode, paramName, paramVal, mt)
 
@@ -268,7 +332,7 @@ def writeParamList(parentNode, listName, paramVals, mt=None):
         etree.SubElement(listElt, STG_PARAM_TAG).text = str(paramVal) 
     return listElt    
 
-def mergeComponent(rootNode, compName, compType):
+def writeMergeComponent(rootNode, compName, compType):
     '''Write XML to merge a given component to the components list - and
      return new comp elt'''
     assert rootNode.tag == STG_ROOT_TAG
@@ -277,3 +341,19 @@ def mergeComponent(rootNode, compName, compType):
     compElt = etree.SubElement(compList, STG_STRUCT_TAG, name=compName)
     writeParam(compElt, "Type", compType)
     return compElt
+
+# Write out using StGermain command-line specification format
+def writeValueUsingStrSpec(rootNode, strSpec, value):
+    # if flattened XML:
+    # check str spec exists in flattened XML first
+
+    # Get value from analysis XML (thus avoid creation of new unnec)
+    # Set the value
+    # This will be smart enough to know the type of variable used, and set
+    #  appropriately.
+    #   
+
+# Write value
+#  if node is param, only allow params
+#  if node is list, only allow lists
+#  if node is struct, only allow dicts

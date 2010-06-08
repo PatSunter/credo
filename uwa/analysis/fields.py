@@ -173,7 +173,7 @@ class FieldComparisonList(AnalysisOperation):
         if len(self.fields) == 0: return
 
         # Append the component to component list
-        compElt = stgxml.mergeComponent(rootNode, self.stgXMLCompName, \
+        compElt = stgxml.writeMergeComponent(rootNode, self.stgXMLCompName, \
             self.stgXMLCompType)
         # Create the plugin data
         pluginDataElt = etree.SubElement(rootNode, stgxml.STG_STRUCT_TAG, \
