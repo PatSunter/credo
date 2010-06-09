@@ -14,8 +14,9 @@ class SciBenchmarkTest(SysTest):
 
     description = '''Runs a user-defined science benchmark.'''
 
-    def __init__(self, inputFiles, outputPathBase, nproc=1):
-        SysTest.__init__(self, inputFiles, outputPathBase, nproc, "SciBenchmark")
+    def __init__(self, inputFiles, outputPathBase, nproc=1, paramOverrides={}):
+        SysTest.__init__(self, inputFiles, outputPathBase, nproc, 
+            paramOverrides, "SciBenchmark")
 
     def addTestComponent(self, testComp, testCompName):
         if not issubclass(testComp, TestComponent):
@@ -32,7 +33,8 @@ class SciBenchmarkTest(SysTest):
         mSuite = ModelSuite(outputPathBase=self.outputPathBase)
         self.mSuite = mSuite
         mRun = ModelRun(self.testName, self.inputFiles,
-            self.outputPathBase, nproc=self.nproc)
+            self.outputPathBase, nproc=self.nproc,
+            paramOverrides=self.paramOverrides)
 
         for tComp in self.testComponents.itervalues():
             tComp.attachOps(mRun)

@@ -24,8 +24,9 @@ class RestartTest(SysTest):
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             fieldsToTest = ['VelocityField','PressureField'], fullRunSteps=20,
-            fieldTols=None):
-        SysTest.__init__(self, inputFiles, outputPathBase, nproc, "Restart")
+            fieldTols=None, paramOverrides={}):
+        SysTest.__init__(self, inputFiles, outputPathBase, nproc,
+            paramOverrides, "Restart")
         self.initialOutputPath = os.path.join(self.outputPathBase, "initial")
         self.restartOutputPath = os.path.join(self.outputPathBase, "restart")
         self.fieldsToTest = fieldsToTest
@@ -46,7 +47,8 @@ class RestartTest(SysTest):
 
         # Initial run
         initRun = ModelRun(self.testName+"-initial", self.inputFiles,
-            self.initialOutputPath, nproc=self.nproc)
+            self.initialOutputPath, nproc=self.nproc,
+            paramOverrides=self.paramOverrides)
         initRun.simParams = SimParams(nsteps=self.fullRunSteps,
             cpevery=self.fullRunSteps/2, dumpevery=0)
         initRun.cpFields = self.fieldsToTest
@@ -54,7 +56,8 @@ class RestartTest(SysTest):
             " solutions.")
         # Restart run
         resRun = ModelRun(self.testName+"-restart", self.inputFiles,
-            self.restartOutputPath, nproc=self.nproc)
+            self.restartOutputPath, nproc=self.nproc,
+            paramOverrides=self.paramOverrides)
         resRun.simParams = SimParams(nsteps=self.fullRunSteps/2,
             cpevery=0, dumpevery=0, restartstep=self.fullRunSteps/2)
         resRun.cpReadPath = self.initialOutputPath    

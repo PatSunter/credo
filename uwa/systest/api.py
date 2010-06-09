@@ -38,7 +38,8 @@ class SysTest:
     '''A class for managing SysTests in UWA. This is an abstract base
     class: you must sub-class it to create actual system test types.'''
 
-    def __init__(self, inputFiles, outputPathBase, nproc, testType):
+    def __init__(self, inputFiles, outputPathBase, nproc, paramOverrides,
+            testType):
         self.testType = testType
         # Be forgiving of user passing a single string rather than a list,
         # and correct for this.
@@ -55,6 +56,7 @@ class SysTest:
         self.testStatus = None
         self.testComponents = {}
         self.nproc = nproc 
+        self.paramOverrides = paramOverrides
 
     def setup():
         '''For the setup phase of tests.

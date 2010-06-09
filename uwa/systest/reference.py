@@ -22,8 +22,9 @@ class ReferenceTest(SysTest):
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             fieldsToTest = ['VelocityField','PressureField'], runSteps=20,
-            fieldTols=None, createRefSolnMode=False ):
-        SysTest.__init__(self, inputFiles, outputPathBase, nproc, "Reference")
+            fieldTols=None, createRefSolnMode=False, paramOverrides={} ):
+        SysTest.__init__(self, inputFiles, outputPathBase, nproc,
+            paramOverrides, "Reference")
         self.expectedSolnPath = os.path.join("expected", self.testName)
         self.fieldsToTest = fieldsToTest
         self.runSteps = runSteps
@@ -41,7 +42,8 @@ class ReferenceTest(SysTest):
             " steps, and saving in dir '%s'" % \
             (self.runSteps, self.expectedSolnPath)
         mRun = ModelRun(self.testName+"-createReference", self.inputFiles,
-            self.expectedSolnPath, nproc=self.nproc)
+            self.expectedSolnPath, nproc=self.nproc,
+            paramOverrides=self.paramOverrides)
         mRun.simParams = SimParams(nsteps=self.runSteps, cpevery=self.runSteps,
             dumpevery=0)
         mRun.cpFields = self.fieldsToTest    

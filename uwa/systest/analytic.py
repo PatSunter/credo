@@ -20,8 +20,10 @@ class AnalyticTest(SysTest):
     defaultFieldTol = 3e-2    
     fTestName = 'Analytic Solution compare'
 
-    def __init__(self, inputFiles, outputPathBase, nproc=1, fieldTols=None):
-        SysTest.__init__(self, inputFiles, outputPathBase, nproc, "Analytic")
+    def __init__(self, inputFiles, outputPathBase, nproc=1, fieldTols=None,
+            paramOverrides={}):
+        SysTest.__init__(self, inputFiles, outputPathBase, nproc,
+            paramOverrides, "Analytic")
         self.testComponents[self.fTestName] = FieldWithinTolTest(
             defFieldTol=self.defaultFieldTol, fieldTols=fieldTols)
 
@@ -30,7 +32,8 @@ class AnalyticTest(SysTest):
         self.mSuite = mSuite
 
         mRun = ModelRun(self.testName, self.inputFiles,
-            self.outputPathBase, nproc=self.nproc)
+            self.outputPathBase, nproc=self.nproc,
+            paramOverrides=self.paramOverrides)
         # For analytic test, read fields to analyse from the XML
         fTests = self.testComponents[self.fTestName]
         fTests.attachOps(mRun)
