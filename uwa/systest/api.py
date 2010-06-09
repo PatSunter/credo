@@ -1,5 +1,6 @@
 import os
 from lxml import etree
+import uwa.modelrun as mrun
 
 class SysTestResult:
     detailMsg = None
@@ -148,6 +149,8 @@ class SysTest:
 
         nProcNode = etree.SubElement(specNode, "nproc")
         nProcNode.text = str(self.nproc)
+
+        mrun.writeParamOverridesInfoXML(self.paramOverrides, specNode)
         try:
             self.writeXMLCustomSpec(specNode)   
         except AttributeError, ae:

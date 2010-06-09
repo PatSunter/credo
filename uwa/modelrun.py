@@ -6,11 +6,13 @@ import uwa.modelresult
 from uwa.io import stgxml, stgfreq
 from uwa.analysis import fields
 
+# Global list of allowed Python types that can be saved as StGermain SimParams
+#  I.E. that StGermain's Dictionary knows how to handle.
+_allowedModelParamTypes = [int, float, long, bool, str]
+
 class ModelRun:
     '''A class to keep records about a StgDomain/Underworld Model Run,
     including access to the underlying XML of the actual model'''
-
-    allowedModelParamTypes = [int, float, long, bool, str]
 
     def __init__(self, name, modelInputFiles, outputPath, logPath="./log",
       cpReadPath=None, nproc=1, simParams=None, paramOverrides={}):
@@ -26,7 +28,7 @@ class ModelRun:
         self.jobParams = JobParams(nproc) 
         self.simParams = simParams
         self.paramOverrides = paramOverrides
-        self.checkParamOverridesTypes()
+        checkParamOverridesTypes(self.paramOverrides)
         if self.simParams:
             self.simParams.checkNoDuplicates(self.paramOverrides.keys())
         self.analysis = {}
@@ -34,24 +36,6 @@ class ModelRun:
         self.analysis['fieldTests'] = fields.FieldComparisonList()
         self.cpFields = []
         self.analysisXML = None
-
-    def checkParamOverridesTypes(self):
-        for modelPath, paramVal in self.paramOverrides.iteritems():
-            if type(paramVal) not in self.allowedModelParamTypes:
-                raise ValueError("One of the parameters in paramOverrides"\
-                    " list, '%s', has value '%s', of type '%s', which"\
-                    " isn't in allowed types list [%s]"\
-                    % (modelPath, str(paramVal), type(paramVal),\
-                    self.allowedModelParamTypes))
-
-    def getParamOverridesAsStr(self):
-        if self.simParams:
-            self.simParams.checkNoDuplicates(self.paramOverrides.keys())
-        self.checkParamOverridesTypes()
-        paramOverridesStr = ""
-        for modelPath, paramVal in self.paramOverrides.iteritems():
-            paramOverridesStr += " --%s=%s" % (modelPath, str(paramVal))
-        return paramOverridesStr    
 
     def postRunCleanup(self, runPath):
         if not os.path.exists(self.outputPath):
@@ -90,20 +74,19 @@ class ModelRun:
             etree.SubElement(root, 'cpReadPath').text = self.cpReadPath
         self.jobParams.writeInfoXML(root)
         if not self.simParams:
+            # In this case:
+            # We will write a copy of the simParams read from actual model
+            # XMLs, plus the over-ride parameters)
             simParams = SimParams()
             # Make sure we include all override parameters
             # by first writing to XML
-            paramOverridesStr = self.getParamOverridesAsStr()
+            paramOverridesStr = getParamOverridesAsStr(self.paramOverrides)
             simParams.readFromStgXML(self.modelInputFiles, paramOverridesStr)
             simParams.writeInfoXML(root)
         else:
             self.simParams.writeInfoXML(root)
         
-        paramOversNode = etree.SubElement(root, 'paramOverrides')
-        for modelPath, paramVal in self.paramOverrides.iteritems():
-            paramNode = etree.SubElement(paramOversNode, 'param')
-            paramNode.attrib['modelPath'] = modelPath
-            paramNode.attrib['paramVal'] = str(paramVal)
+        writeParamOverridesInfoXML(self.paramOverrides, root)
 
         analysisNode = etree.SubElement(root, 'analysis')
         for toolName, analysisTool in self.analysis.iteritems():
@@ -263,6 +246,32 @@ class SimParams:
         self.checkValidParams()
         os.remove(ffile)
 
+# Stuff for managing a paramOverrides list
+# TODO: as a class, sub-classing dict?
+
+def checkParamOverridesTypes(paramOverrides):
+    for modelPath, paramVal in paramOverrides.iteritems():
+        if type(paramVal) not in _allowedModelParamTypes:
+            raise ValueError("One of the parameters in paramOverrides"\
+                " list, '%s', has value '%s', of type '%s', which"\
+                " isn't in allowed types list [%s]"\
+                % (modelPath, str(paramVal), type(paramVal),\
+                _allowedModelParamTypes))
+
+def getParamOverridesAsStr(paramOverrides):
+    checkParamOverridesTypes(paramOverrides)
+    paramOverridesStr = ""
+    for modelPath, paramVal in paramOverrides.iteritems():
+        paramOverridesStr += " --%s=%s" % (modelPath, str(paramVal))
+    return paramOverridesStr
+
+def writeParamOverridesInfoXML(paramOverrides, parentNode):    
+    paramOversNode = etree.SubElement(parentNode, 'paramOverrides')
+    for modelPath, paramVal in paramOverrides.iteritems():
+        paramNode = etree.SubElement(paramOversNode, 'param')
+        paramNode.attrib['modelPath'] = modelPath
+        paramNode.attrib['paramVal'] = str(paramVal)
+
 
 ##################
 
@@ -321,7 +330,10 @@ def runModel(modelRun, extraCmdLineOpts=None):
     if modelRun.analysisXML:
         stgRunStr += modelRun.analysisXML+" "
 
-    stgRunStr += modelRun.getParamOverridesAsStr()
+    # Do a final check before the run, that there are no duplicate param specs
+    if modelRun.simParams:
+        modelRun.simParams.checkNoDuplicates(modelRun.paramOverrides.keys())
+    stgRunStr += getParamOverridesAsStr(modelRun.paramOverrides)
     # TODO: How to best handle custom command line options
     # Perhaps these should be passed through, either by script or as part of
     # model definition
