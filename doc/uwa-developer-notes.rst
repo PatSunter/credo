@@ -1,8 +1,8 @@
 .. _uwa-developer-notes:
 
-**********************************
-UWA - Documentation for developers
-**********************************
+**************************************
+Notes for UWA developers / maintainers
+**************************************
 
 Coding standards / style guides
 ===============================
