@@ -1,8 +1,11 @@
-e glob syntax.
+#Use glob syntax.
 syntax: glob
 
 *~
 *.pyc
+
+doc/_build/*
+sampledoc_tut*
 
 # switch to regexp syntax.
 syntax: regexp
