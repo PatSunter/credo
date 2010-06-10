@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    uwa-intro.rst
+   uwa-architecture.rst
 
 Indices and tables
 ==================
