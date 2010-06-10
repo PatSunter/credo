@@ -25,6 +25,20 @@ import sys, os
 extensions = ['sphinx.ext.pngmath']
 #extensions = ['sphinx.ext.pngmath', 'sphinx.ext.jsmath']
 
+sys.path.append(os.path.abspath('sphinxext'))
+sys.path.append(os.path.abspath('/home/psunter/AuScopeCodes/stgUnderworldE-uwaDev-work/uwa'))
+# Add any Sphinx extension module names here, as strings. They can
+# be extensions coming with Sphinx (named 'sphinx.ext.*') or your
+# custom ones.
+extensions = ['matplotlib.sphinxext.mathmpl',
+          'matplotlib.sphinxext.only_directives',
+          'matplotlib.sphinxext.plot_directive',
+          'sphinx.ext.autodoc',
+          'sphinx.ext.doctest',
+          'ipython_console_highlighting',
+          'inheritance_diagram',
+          'numpydoc']
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
