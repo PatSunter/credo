@@ -24,3 +24,5 @@ Some actual examples of System tests are:
 .. inheritance-diagram:: uwa.systest.api uwa.systest.analytic
     uwa.systest.restart uwa.systest.reference uwa.systest.analyticMultiRes
     :parts: 1
+
+
