@@ -96,7 +96,7 @@ Variable    Value to set to
 =========== ==================================================================
 PATH        needs to be extended with a reference to the uwa/scripts directory
             in your checkout.
-PYTHON_PATH needs to be extended to reference the main tree of UWA python
+PYTHONPATH  needs to be extended to reference the main tree of UWA python
             code (uwa/uwa)
 STG_BINDIR  needs to specify the path that StGermain executables have been
             compiled and installed to.
