@@ -77,8 +77,10 @@ To obtain this branch of the code for experimentation:
 You should now have a working version of the uwa-dev branch of the stgUnderworld
 codebase installed.
 
-Setting up your environment to use UWA source directly
-------------------------------------------------------
+.. _environment_setup:
+
+Setting up your environment to use UWA
+--------------------------------------
 
 Currently in UWA version 0.1.0, UWA is not integrated with the `SCons
 <http://www.scons.org/>`_ build system used by the rest of stgUnderworld.
