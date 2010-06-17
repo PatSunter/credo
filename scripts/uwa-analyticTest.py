@@ -29,15 +29,3 @@ mSuite.writeAllModelResultXMLs()
 
 print "Test result was %s" % testResult
 anTest.writeInfoXML()
-
-#==================
-
-# Multi-res ....
-
-#from uwa.systest import AnalyticTest, MultiResTest
-#import uwa.analysis
-
-#sysTest = AnalyticMultiResCvgTest(xmlFiles, outputPath, cmdLineOpts, resSet,
-#    uwa.analysis.DefaultMultiResChecker())
-
-# Then as follows for normal tests...
