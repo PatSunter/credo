@@ -132,6 +132,10 @@ class FieldCvgWithScaleTest(TestComponent):
             return True
 
     def writeXMLCustomSpec(self, specNode):
+        if self.fComps == None:
+            raise AttributeError("Unable to write XML for this TestComponent"\
+                " until attachOps() has been called, and have been able to"\
+                " read the model XML to find out name of fields to test.")
         etree.SubElement(specNode, 'fromXML', value=str(self.fComps.fromXML))
         fListNode = etree.SubElement(specNode, 'fields')
         for fName in self.fComps.fields.keys():
