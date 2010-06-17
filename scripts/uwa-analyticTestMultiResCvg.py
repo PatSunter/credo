@@ -23,6 +23,9 @@ anTest = AnalyticMultiResTest(inputFiles, outputPath, resSet, nproc=1)
 
 # Generate a suite of models to run as part of the test
 mSuite = anTest.genSuite()
+# Note that this writing needs to happen after the suite is generated, where it
+# is reading fields to test from the XML at suite-generation time.
+anTest.writePreRunXML()
 
 #jobRunner = mpich2JobRunner()
 mSuite.writeAllModelRunXMLs()
@@ -31,4 +34,5 @@ testResult = anTest.getStatus(suiteResults)
 mSuite.writeAllModelResultXMLs()
 
 print "Test result was %s" % testResult
-anTest.writeInfoXML()
+savedFile = anTest.updateXMLWithResult(suiteResults)
+print "(Wrote record of result to %s)" % (savedFile)

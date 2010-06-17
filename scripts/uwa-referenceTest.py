@@ -22,23 +22,26 @@ modelName, ext = os.path.splitext(args[0])
 modelName += "-referenceTest"
 outputPath = 'output/'+modelName
 
-referenceTest = ReferenceTest(inputFiles, outputPath, nproc=1)
+refTest = ReferenceTest(inputFiles, outputPath, nproc=1)
 
 if setupMode == True:
     print "Running in setup mode only:"
-    referenceTest.setup()
+    refTest.setup()
     print "Setup completed, exiting."
     sys.exit()
 
+refTest.writePreRunXML()
+
 # Generate a suite of models to run as part of the test
-mSuite = referenceTest.genSuite()
+mSuite = refTest.genSuite()
 
 #jobRunner = mpich2JobRunner()
 mSuite.writeAllModelRunXMLs()
 suiteResults = mSuite.runAll() # pass in jobRunner
 print "Checking test result:"
-testResult = referenceTest.getStatus(suiteResults)
+testResult = refTest.getStatus(suiteResults)
 mSuite.writeAllModelResultXMLs()
 
 print "Test result was %s" % testResult
-referenceTest.writeInfoXML()
+savedFile = refTest.updateXMLWithResult(suiteResults)
+print "(Wrote record of result to %s)" % (savedFile)

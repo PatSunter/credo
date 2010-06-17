@@ -17,6 +17,7 @@ modelName += "-restartTest"
 outputPath = 'output/'+modelName
 
 restartTest = RestartTest(inputFiles, outputPath, nproc=1)
+restartTest.writePreRunXML()
 
 # Generate a suite of models to run as part of the test
 mSuite = restartTest.genSuite()
@@ -29,4 +30,5 @@ testResult = restartTest.getStatus(suiteResults)
 mSuite.writeAllModelResultXMLs()
 
 print "Test result was %s" % testResult
-restartTest.writeInfoXML()
+savedFile = restartTest.updateXMLWithResult(suiteResults)
+print "(Wrote record of result to %s)" % (savedFile)
