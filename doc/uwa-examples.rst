@@ -88,8 +88,8 @@ Each line is invoking the *addStdTest* method of the SysTestRunner object, to
 add a system test of a particular type to the suite.
 
 The addStdTest method uses a special shorthand to add tests to the suite, to
-save some of the work from the uses in this high-level interface. It's arguments
-are:
+save some of the work from the users in this high-level interface.
+Its arguments are:
 
 * Test class: the class of test you're adding. Generally this should be one of
   the standard set imported above, i.e. RestartTest, ReferenceTest,

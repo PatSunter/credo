@@ -1,0 +1,27 @@
+***********************************
+UWA IO (Input Output functions) API
+***********************************
+
+:mod:`uwa.io.stgxml`
+==========================
+
+.. automodule:: uwa.io.stgxml
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+:mod:`uwa.io.stgfreq`
+==========================
+
+.. automodule:: uwa.io.stgfreq
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+:mod:`uwa.io.stgcvg`
+==========================
+
+.. automodule:: uwa.io.stgcvg
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -8,3 +8,12 @@ UWA Python Source API Documentation
 need to reference in detail later).
 
 (Qtn: how much of this should I use the auto-gen capabilities?)
+
+.. toctree::
+
+   api/model.rst
+   api/utils.rst
+   api/io.rst
+   api/analysis.rst
+   api/systest.rst
+

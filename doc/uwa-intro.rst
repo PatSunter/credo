@@ -10,7 +10,6 @@ Introduction to UWA (UnderWorld Analysis)
 benchmarking and analysis of Modelling tools based on the StGermain
 framework, such as *Underworld*.
 
-.. TODO: turn below into a footnote. 
 It is distributed with the *stgUnderworld* open source framework, but in future
 it's planned that it will be able to be obtained, installed and run
 independently.

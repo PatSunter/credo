@@ -35,6 +35,7 @@ extensions = ['matplotlib.sphinxext.mathmpl',
           'matplotlib.sphinxext.plot_directive',
           'sphinx.ext.autodoc',
           'sphinx.ext.doctest',
+          'sphinx.ext.autosummary',
           'ipython_console_highlighting',
           'inheritance_diagram',
           'numpydoc']
