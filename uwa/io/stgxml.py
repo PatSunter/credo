@@ -1,8 +1,16 @@
+"""
+This module is for accessing, manipulating and writing out XML files stored in
+the StGermain data format.
+
+It currently does not create a new Object-oriented representation of XML docs
+themselves, but most functions operate on an ElementTree object
+representative of an element in an open Stg XML document.
+"""
+
 import os
 from subprocess import *
 from lxml import etree
 import uwa
-
 
 STG_ROOT_TAG = 'StGermainData'
 STG_NS = 'http://www.vpac.org/StGermain/XML_IO_Handler/Jun2003'
@@ -360,6 +368,8 @@ def createNewStgDataDoc():
     return xmlDoc, root
 
 def setMergeType(xmlNode, mergeType):
+    """Set the "MergeType" of an XML node: usually for writing new nodes in an
+    XML designed to over-ride existing XML of a model."""
     if mergeType is not None:
         if mergeType not in STG_MERGE_TYPES:
             raise ValueError("The mergeType provided, '%s', is not one of"\
@@ -374,13 +384,16 @@ def insertNamedElementNode(parentNode, elementName, createType):
     return elementNode
 
 def writeParam(parentNode, paramName, paramVal, mt=None):
+    """Writes a particular parameter, with name of paramName, val of paramVal,
+    to the open XML file at position specified by parentNode."""
     paramEl = etree.SubElement(parentNode, STG_PARAM_TAG, name=paramName)
     setMergeType(paramEl, mt)
     paramEl.text = str(paramVal)
     return paramEl
 
 def writeParamSet(parentNode, paramsDict, mt=None):
-    # TODO - check parent node is a struct
+    """Writes a set of parameters, with name:value mappings as specified by
+    paramsDict, to the open XML file at position specified by parentNode."""
     for paramName, paramVal in paramsDict.iteritems():
         writeParam(parentNode, paramName, paramVal, mt)
 

@@ -1,14 +1,42 @@
+'''A Module for convenient access to StGermain FrequentOutput files.
+
+Primary construct is the FreqOutput class, which once constructed has numerous
+methods to access data from a FrequentOutput file.
+'''
+
 import os
 import operator
-
-'''A Module for convenient access to StGermain FrequentOutput files'''
 
 STG_DEF_FREQ_FILENAME='FrequentOutput.dat'
 FREQ_HEADER_LINESTART='#'
 
 class FreqOutput:
     '''A simple class to store information about a frequent output file,
-    and make it accessible.'''
+    and make it accessible. Once passed a filename of a FrequentOutput file
+    in it's constructor, has methods to get information and values from 
+    that named file.
+    
+    The FrequentOutput file can be either "cached" into memory using 
+    the :meth:`populateFromFile()` function so subsequent access
+    is quick, or else
+    calling an access function directly such as
+    :meth:`getRecordDictAtStep()` will
+    automatically populate the data cache for you behind the scenes.
+    
+    Key attributes:
+
+    .. attribute:: populated
+
+       Bool, states whether the class's data structures have been populated
+       from file, shouldn't be modified externally.
+
+    .. attribute:: headerColMap
+
+       dict, mapping header names in the FrequentOutput to the column number
+       they occupy in the file.
+
+    '''
+
     def __init__(self, path, filename=STG_DEF_FREQ_FILENAME):
         self.path = path
         self.filename = filename
@@ -32,12 +60,19 @@ class FreqOutput:
                 % (fullFilename))
 
     def populateFromFile(self):
+        """This function will read all essential data from the FrequentOutput
+        file associated with the class into data structures in memory, for fast
+        subsequent access. Saves the fact that this has occurred so it doesn't
+        neeed to be repeated in future."""
         self.getHeaders()
         self.getAllRecords()
         self.getTimestepMap()
         self.populated = True
     
     def getHeaders(self):
+        """Read the headers from the associated FrequentOutput file, populate
+        attr:`headerColMap`, and return the names of the headers
+        as a list."""
         if not self.populated:
             self.file.seek(0)
             firstLine = self.file.readline()
@@ -50,6 +85,12 @@ class FreqOutput:
         return self.headers
 
     def getTimestepMap(self):
+        """Calculate a map of timestep number of model, to record number in the
+        FrequentOutput file - stores this, and returns a reference to it.
+
+        This is important especially if the FrequentOutput has been sampled from
+        the model at a timstep frequency less than 1."""
+
         if not self.populated:
             self.file.seek(0)
             # First line should be headers, skip
@@ -68,6 +109,16 @@ class FreqOutput:
         return self.tStepMap    
 
     def getAllRecords(self):
+        """Get all records of timestep information from the associated
+        FrequentOutput file.
+
+        Records are stored in an array, where each entry is of the form
+        of a list of floats of the records at that timestep. Thus likely
+        needs to be used in conjunction with other functions to access the
+        data itself by header name, ie the self.headerColMap.
+        
+        Saves this as self.records, and returns a reference to it.
+        (Also populates the self._finalTimeStep attribute.)""" 
         if not self.populated:
             self.file.seek(0)
             self.headers = self.getHeaders()
@@ -90,6 +141,11 @@ class FreqOutput:
         return self.records
 
     def getRecordDictAtStep(self, tstep):
+        """For a given timestep tstep, looks up the records for that timestep
+        and returns a dictionary of "headername":recordVal mappings, where
+        headername is the name of each header in the FrequentOutput file, and
+        recordVal is the value of that property at the requested timestep."""
+
         if not self.populated: self.populateFromFile()
         record = self.getRecordAtStep(tstep)
         recordDict = {}
@@ -98,10 +154,15 @@ class FreqOutput:
         return recordDict    
     
     def finalStep(self):
+        """Returns the highest timestep number that has information recorded for
+        it in the associated FrequentOutput file."""
         if not self.populated: self.populateFromFile()
         return self._finalTimeStep
 
     def getValueAtStep(self, headerName, tstep):
+        """Gets the values of a property given by 'headerName', at a specified
+        timestep 'tstep'."""
+
         if not self.populated:
             # We will take the approach that you should always populate the 
             # info for fast access. If memory were really a concern, could use
@@ -114,7 +175,10 @@ class FreqOutput:
         return value
 
     def getRecordNum(self, tstep):
-        assert(self.populated)
+        """Gets the record number in the FrequentOutput file of a given
+        timestep. E.g. in a FrequentOutput file where values were saved
+        every 5 timesteps, then the 15th timestep will map to the 3rd record."""
+        if not self.populated: self.populateFromFile()
         try:
             recordNum = self.tStepMap[tstep]
         except KeyError:
@@ -125,12 +189,17 @@ class FreqOutput:
         return recordNum        
 
     def getRecordAtStep(self, tstep):
+        """Gets the record (in raw form, see getAllRecords) at a given
+        timestep, and returns."""
+        if not self.populated: self.populateFromFile()
         assert self.records
         recordNum = self.getRecordNum(tstep)
         record = self.records[recordNum]
         return record
 
     def getColNum(self, headerName):
+        """Get the column number in the record data structure/FrequentOutput
+        file itself - associated with a particular header name."""
         try:
             colNum = self.headerColMap[headerName]
         except KeyError:
@@ -140,6 +209,14 @@ class FreqOutput:
         return colNum        
 
     def getValuesArray(self, headerName, range="all"):
+        """Returns an array of all values over time for the property defined by
+        "headerName" in the associated FrequentOutput file.
+
+        .. note::
+
+           the "range" parameter is not yet operational and should be
+           ignored for now.
+        """
         if not self.populated: self.populateFromFile()
         # TODO: Check range input is ok. I need to find out the right way to
         # handling unusual values for these 
@@ -151,6 +228,14 @@ class FreqOutput:
         return valArray    
 
     def getTimeStepsArray(self, range="all"):    
+        """Returns an array of all timestep numbers
+        that have records saved in the associated FrequentOutput file.
+
+        .. note::
+
+           the "range" parameter is not yet operational and should be
+           ignored for now.
+        """   
         if not self.populated: self.populateFromFile()
         # TODO: Check range input is ok. I need to find out the right way to
         # handling unusual values for these 
@@ -171,9 +256,11 @@ class FreqOutput:
     def getMean(self, headerName):
         '''gets the Mean of the records for a given header.
         
-        Note: this is provided for convenience. If user wants to do more complex
-        statistical operations, use the getValuesArray, then process this
-        directly using stats functions/libraries.'''
+        .. note::
+        
+           this is provided for convenience. If user wants to do more complex
+           statistical operations, use the getValuesArray, then process this
+           directly using stats functions/libraries.'''
         if not self.populated: self.populateFromFile()
         valArray = self.getValuesArray(headerName)
         return sum(valArray, 0.0) / len(valArray)
@@ -217,6 +304,19 @@ class FreqOutput:
         return retVal, retStep
 
     def plotOverTime(self, headerName, depName='Timestep', show=False, save=True, path="."):
+        """Plot the value of property given by 'headerName', against parameter
+        'depName', which defaults to 'Timestep'.
+        
+        .. note::
+
+            Use of this function requires the Python library matplotlib to be
+            installed.
+
+        The argument "show" enables whether the graph is to be immediately shown
+        interactively, and "save" if it should be saved. If "save" is true, the
+        "path" parameter determines the path the resulting plot file will
+        be saved under.
+        """
         try:
             import matplotlib.pyplot as plt
         except ImportError:
