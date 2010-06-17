@@ -2,8 +2,12 @@
 UWA IO (Input Output functions) API
 ***********************************
 
+.. automodule:: uwa.io
+
 :mod:`uwa.io.stgxml`
 ==========================
+
+.. module:: uwa.io/stgxml
 
 .. automodule:: uwa.io.stgxml
    :members:
@@ -12,6 +16,8 @@ UWA IO (Input Output functions) API
 
 :mod:`uwa.io.stgfreq`
 ==========================
+
+.. module:: uwa.io/stgfreq
 
 .. automodule:: uwa.io.stgfreq
    :members:
