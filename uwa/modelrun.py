@@ -1,3 +1,11 @@
+"""A core module for UWA, since it defines and manages running models of a
+StGermain-based code such as Underworld.
+
+Primary interface is via the :class:`ModelRun`, which enables you to specify,
+configure and run a Model, and save records of this as an XML. This process will
+produce a :class:`uwa.modelresult.ModelResult` class.
+"""
+
 import os, shutil
 import sys
 
@@ -12,7 +20,18 @@ _allowedModelParamTypes = [int, float, long, bool, str]
 
 class ModelRun:
     '''A class to keep records about a StgDomain/Underworld Model Run,
-    including access to the underlying XML of the actual model'''
+    including access to the underlying XML of the actual model.
+    
+    Key attributes:
+    
+    .. attribute:: name
+    
+       name of the modelRun.
+       
+    .. attribute:: modelInputFiles
+    
+       'Input files' that comprise the XML model that will be run.
+    '''
 
     def __init__(self, name, modelInputFiles, outputPath, logPath="./log",
       cpReadPath=None, nproc=1, simParams=None, paramOverrides={}):
@@ -38,6 +57,10 @@ class ModelRun:
         self.analysisXML = None
 
     def postRunCleanup(self, runPath):
+        """function designed to be run after a modelRun has completed, and will
+        do any post-run cleanup to get ready for analysis - e.g. moving files 
+        into the output directory that were created to configure the run and
+        need to be kept."""
         if not os.path.exists(self.outputPath):
             os.makedirs(self.outputPath)
 
@@ -48,10 +71,18 @@ class ModelRun:
             analysisOp.postRun(self, runPath)
 
     def defaultModelRunFilename(self):    
+        """Calculates and returns a default filename for the ModelRun's XML
+        record filename."""
         return 'ModelRun-'+self.name+'.xml'
 
     def writeInfoXML(self, outputPath="", filename="", update=False,
             prettyPrint=True):
+        """Writes an XML recording the key details of this ModelRun, in UWA
+        format - useful for benchmarking etc.
+        
+        "outputPath" and "filename" can be specified, if not they will use
+        default values (the outputPath of the model, and the value returned by
+        :attr:`defaultModelRunFilename()`, respectively)."""    
         if filename == "":
             filename = self.defaultModelRunFilename()
         if outputPath == "":
@@ -101,6 +132,24 @@ class ModelRun:
         return outputPath+filename
 
     def analysisXMLGen(self, filename="uwa-analysis.xml"):
+        """Generates an XML file, in StGermainData XML format, to over-ride
+        necessary parameters of the model as specified on this ModelRun
+        instance. Returns the name of the just-written XML file.
+
+        Overrides can have the following main sources:
+
+        * Overriden simulation parameters that have been specified as members of
+          the ModelRun itself, such as cpReadPath, and cpFields;
+        * Over-ridden simulation parameters on this ModelRun's SimParams
+          attribute (if it exists);  
+        * Requested analysis operations that've been added to the ModelRun,
+          as specified in the self.analysis member list.
+
+        .. note::
+           Remember that as well as those overrides written to this XML,
+           the user can over-ride particular parameters in the ModelRun via the
+           command line by setting the self.paramOverrides member dictionary.
+        """ 
         xmlDoc, root = stgxml.createNewStgDataDoc()
         # Write key entries:
         stgxml.writeParam(root, 'outputPath', self.outputPath, mt='replace')
@@ -124,6 +173,14 @@ class ModelRun:
 
 
 class JobParams:
+    """Small class, to record parameters that specify job control of a ModelRun,
+    such as numbers of processors used.
+    
+    .. note::
+
+       Needs fleshing out, it's likely this could be expanded in future as the
+       ability to run Models via PBS or over the grid is developed.
+    """
     def __init__(self, nproc):
         self.nproc = int(nproc)
 
