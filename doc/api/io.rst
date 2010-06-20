@@ -7,8 +7,6 @@ UWA IO (Input Output functions) API
 :mod:`uwa.io.stgxml`
 ==========================
 
-.. module:: uwa.io/stgxml
-
 .. automodule:: uwa.io.stgxml
    :members:
    :undoc-members:
@@ -17,7 +15,7 @@ UWA IO (Input Output functions) API
 :mod:`uwa.io.stgfreq`
 ==========================
 
-.. module:: uwa.io/stgfreq
+.. inheritance-diagram:: uwa.io.stgfreq
 
 .. automodule:: uwa.io.stgfreq
    :members:
@@ -26,6 +24,8 @@ UWA IO (Input Output functions) API
 
 :mod:`uwa.io.stgcvg`
 ==========================
+
+.. inheritance-diagram:: uwa.io.stgcvg
 
 .. automodule:: uwa.io.stgcvg
    :members:

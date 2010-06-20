@@ -7,6 +7,8 @@ UWA Analysis API
 
 Core interface for analysis in UWA.
 
+.. inheritance-diagram:: uwa.analysis.api
+
 .. automodule:: uwa.analysis.api
    :members:
    :undoc-members:
@@ -14,6 +16,8 @@ Core interface for analysis in UWA.
 
 :mod:`uwa.analysis.fields`
 ==========================
+
+.. inheritance-diagram:: uwa.analysis.fields
 
 .. automodule:: uwa.analysis.fields
    :members:

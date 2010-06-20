@@ -2,8 +2,12 @@
 UWA SysTest API
 ***********************************
 
+.. automodule:: uwa.systest
+
 :mod:`uwa.systest.api`
 ==========================
+
+.. inheritance-diagram:: uwa.systest.api
 
 .. automodule:: uwa.systest.api
    :members:
@@ -13,6 +17,8 @@ UWA SysTest API
 :mod:`uwa.systest.systestrunner`
 ================================
 
+.. inheritance-diagram:: uwa.systest.systestrunner
+
 .. automodule:: uwa.systest.systestrunner
    :members:
    :undoc-members:
@@ -20,6 +26,12 @@ UWA SysTest API
 
 Core System Test class implementations
 ======================================
+
+(Some sort of intro text).
+
+.. inheritance-diagram:: uwa.systest.analytic
+    uwa.systest.restart uwa.systest.reference uwa.systest.analyticMultiRes
+    uwa.systest.scibenchmark
 
 :mod:`uwa.systest.analytic`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -61,6 +73,9 @@ Core System Test class implementations
 
 Core TestComponent implementations
 ==================================
+
+.. inheritance-diagram:: uwa.systest.fieldWithinTolTest
+    uwa.systest.fieldCvgWithScaleTest uwa.systest.outputWithinRangeTest
 
 :mod:`uwa.systest.fieldWithinTolTest`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
