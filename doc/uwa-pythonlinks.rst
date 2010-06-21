@@ -21,6 +21,12 @@ Good intoductory tutorials for learning Python.
 * Software Carpentry: http://software-carpentry.org/ (A good all-round
   intro to Software for scientists & engineers, but with a
   particular focus on Python)
+* S Lott's `Building Skills in Python
+  <http://homepage.mac.com/s_lott/books/python/html/index.html>`_ - looks really
+  good.
+
+  * Includes a section on `writing CSV, XML and other file formats
+    <http://homepage.mac.com/s_lott/books/python/html/p04/p04c07_file2.html>`_.
 
 Tutorials particularly from the perspective of those with experience in Perl
 scripting, and Bash scripting:
