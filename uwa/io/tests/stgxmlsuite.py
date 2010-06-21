@@ -4,7 +4,7 @@ import unittest
 import shutil
 
 from uwa.io import stgxml
-from lxml import etree
+from xml.etree import ElementTree as etree
 
 class StgXMLTestCase(unittest.TestCase):
 
@@ -296,6 +296,14 @@ class StgXMLTestCase(unittest.TestCase):
     # TODO
     #def test_insertItemAtStrSpec_CurrentCtx(self):    
         #stgxml.insertItemAtStrSpec_CurrentCtx(resultNode, lastSpecStr, "2")
+
+    def test_createNewDataDoc(self):
+        xmlDoc, root = stgxml.createNewStgDataDoc()
+        stgxml.writeParam(root, "testParam", 45)
+        stgxml.writeStgDataDocToFile(xmlDoc, "output/testCreate.xml")
+        xmlDocRead = etree.parse("output/testCreate.xml")
+        rootRead = xmlDocRead.getroot()
+        testParamNode = stgxml.getParamNode(rootRead, "testParam")
 
     def test_getNodeFromStrSpec_CreateMode(self):
         xmlDoc, root = stgxml.createNewStgDataDoc()

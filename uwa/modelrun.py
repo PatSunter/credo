@@ -9,7 +9,8 @@ produce a :class:`uwa.modelresult.ModelResult` class.
 import os, shutil
 import sys
 
-from lxml import etree
+from xml.etree import ElementTree as etree
+from uwa.io.stgxml import writeXMLDoc
 import uwa.modelresult
 from uwa.io import stgxml, stgfreq
 from uwa.analysis import fields
@@ -132,7 +133,7 @@ class ModelRun:
         if not os.path.exists(outputPath):
             os.makedirs(outputPath)
         outFile = open(outputPath+filename, 'w')
-        xmlDoc.write(outFile, pretty_print=prettyPrint)
+        writeXMLDoc(xmlDoc, outFile, prettyPrint)
         outFile.close()
         return outputPath+filename
 

@@ -9,7 +9,7 @@ representative of an element in an open Stg XML document.
 
 import os
 from subprocess import *
-from lxml import etree
+from xml.etree import ElementTree as etree
 import uwa
 
 STG_ROOT_TAG = 'StGermainData'
@@ -30,9 +30,33 @@ STG_TOOLBOX_TAG = "toolbox"
 _stgSpecialListTags = [STG_IMPORT_TAG, STG_PLUGINS_TAG]
 _stgSpecialStructTags = [STG_COMPONENTS_TAG, STG_ROOT_TAG]
 _stgSpecialParamTags = [STG_TOOLBOX_TAG]
+_stgSpecialLists = {
+    STG_STRUCT_TAG:_stgSpecialStructTags,
+    STG_LIST_TAG:_stgSpecialListTags,
+    STG_PARAM_TAG:_stgSpecialParamTags }
 
 ############
 # Utility functions
+
+def indentForPrettyPrint(elem, level=0, spacer="  "):
+    """Indent an XML file in xml.etree format, useful for pretty printing.
+
+    Credit to http://infix.se/2007/02/06/gentlemen-indent-your-xml"""
+
+    i = "\n" + level*spacer
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = i + "  "
+        for e in elem:
+            indentForPrettyPrint(e, level+1)
+            if not e.tail or not e.tail.strip():
+                e.tail = i + "  "
+        if not e.tail or not e.tail.strip():
+            e.tail = i
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = i
+
 
 def addNsPrefix(tagName):
     """Simple utility func to add the Namespace prefix that LXML adds to element
@@ -81,7 +105,7 @@ def navigateStrSpecHierarchy(currNode, strSpec, insertMode=False):
             # TODO - insert mode
             raise ValueError("Navigating section \"%s\" specified: list"\
                 " \"%s\" doesn't exist at this level of XML file."\
-                % (strSpec, listName) )
+                % (strSpec, listStartName) )
 
         if listEndRem == "":
             # We are done, because there's only one list spec at current context
@@ -266,55 +290,75 @@ def getParamValue(elNode, paramName, castFunc):
     else:
         return None
 
+def _getSpecialTagNode(elNode, eltName, eltType):
+    '''Checks to see if the current elNode has a child element with special tag
+    equal to given eltName'''
+
+    try:
+        specialTagsList = _stgSpecialLists[eltType]
+    except KeyError:
+        raise ValueError("The eltType argument must be one of %s" \
+            % _stgSpecialLists.keys())
+
+    for specialTag in specialTagsList: 
+        if eltName == specialTag:
+            for childNode in elNode.getchildren():
+                if childNode.tag == addNsPrefix(specialTag):
+                    return childNode
+    return None
+
 def getParamNode(elNode, paramName):
-    """Returns the element node (in lxml form) of a particular Param parameter
+    """Returns the element node (in etree form) of a particular Param parameter
     that's a child of the given elNode with given paramName.
     If a node with the given name not found, returns none."""
     # The default schema for written files (eg flattened files) is to use
     # "element" and set a type attribute, rather than "param" directly.
     eltNode = _getNamedElementNode_elTag(elNode, paramName, elType=STG_PARAM_TAG)
     if eltNode is not None: return eltNode
-    for paramNode in elNode.iterchildren(tag=addNsPrefix('param')):
+    for paramNode in elNode.getchildren():
+        if paramNode.tag != addNsPrefix('param'): continue
         if paramNode.attrib['name'] == paramName:
             return paramNode
-    for specialTag in _stgSpecialParamTags: 
-        if paramName == specialTag:
-            resNodes = list(elNode.iterchildren(tag=addNsPrefix(specialTag)))
-            if resNodes is not []: return resNodes[0]
+
+    specialNode = _getSpecialTagNode(elNode, paramName, STG_PARAM_TAG)
+    if specialNode is not None: return specialNode
+
     return None
 
 def getStructNode(elNode, structName):
-    """Returns the element node (in lxml form) of a particular struct element
+    """Returns the element node (in etree form) of a particular struct element
     that's a child of the given elNode with given structName.
     If a node with the given name not found, returns none."""
     eltNode = _getNamedElementNode_elTag(elNode, structName, elType=STG_STRUCT_TAG)
     if eltNode is not None: return eltNode
-    for structNode in elNode.iterchildren(tag=addNsPrefix('struct')):
+    for structNode in elNode.getchildren():
+        if structNode.tag != addNsPrefix('struct'): continue
         if structNode.attrib['name'] == structName:
             return structNode
-    for specialTag in _stgSpecialStructTags: 
-        if structName == specialTag:
-            resNodes = list(elNode.iterchildren(tag=addNsPrefix(specialTag)))
-            if resNodes is not []: return resNodes[0]
+
+    specialNode = _getSpecialTagNode(elNode, structName, STG_STRUCT_TAG)
+    if specialNode is not None: return specialNode
+
     return None
 
 def getListNode(elNode, listName):
-    """Returns the element node (in lxml form) of a particular list element
+    """Returns the element node (in etree form) of a particular list element
     that's a child of the given elNode with given listName.
     If a node with the given name not found, returns none."""
     eltNode = _getNamedElementNode_elTag(elNode, listName, elType=STG_LIST_TAG)
     if eltNode is not None: return eltNode
-    for listNode in elNode.iterchildren(tag=addNsPrefix('list')):
+    for listNode in elNode.getchildren():
+        if listNode.tag != addNsPrefix('list'): continue
         if listNode.attrib['name'] == listName:
             return listNode
-    for specialTag in _stgSpecialListTags: 
-        if listName == specialTag:
-            resNodes = list(elNode.iterchildren(tag=addNsPrefix(specialTag)))
-            if resNodes is not []: return resNodes[0]
+
+    specialNode = _getSpecialTagNode(elNode, listName, STG_LIST_TAG)
+    if specialNode is not None: return specialNode
+
     return None
 
 def _getNamedElementNode(ctxNode, elName, elType=None):
-    """Returns the element node (in lxml form) of a particular element
+    """Returns the element node (in etree form) of a particular element
     that's a child of the given ctxNode with given elName.
     If a node with the given name not found, returns none.
     If elType is specified, will only return nodes of the given type.
@@ -325,7 +369,7 @@ def _getNamedElementNode(ctxNode, elName, elType=None):
     eltNode = _getNamedElementNode_elTag(ctxNode, elName)
     if eltNode is not None: return eltNode
     # now check for the 'special' element tags
-    for eltNode in ctxNode.iterchildren():
+    for eltNode in ctxNode.getchildren():
         # in this case, e.g. the list with asked for name 'import' will have
         # tag 'import'
         if eltNode.tag == addNsPrefix(elName):
@@ -336,21 +380,22 @@ def _getNamedElementNode(ctxNode, elName, elType=None):
             elif eltNode.tag in map(addNsPrefix, _stgSpecialStructTags):
                 return eltNode
     # now check the old param, list, struct format
-    for eltNode in ctxNode.iterchildren():
+    for eltNode in ctxNode.getchildren():
         if eltNode.tag in map(addNsPrefix, _stgElementBaseTags):
             if elName == eltNode.attrib['name']:
                 return eltNode
     return None        
 
 def _getNamedElementNode_elTag(elNode, elName, elType=None):
-    """Returns the element node (in lxml form) of a particular element
+    """Returns the element node (in etree form) of a particular element
     that's a child of the given elNode with given elName.
     If a node with the given name not found, returns none.
     If elType is specified, will only return nodes of the given type.
     (Not designed to be used directly, but by getList etc.)
     Searches in the element tag format."""
     
-    for eltNode in elNode.iterchildren(tag=addNsPrefix('element')):
+    for eltNode in elNode.getchildren():
+        if eltNode.tag != addNsPrefix('element'): continue
         if eltNode.attrib['name'] == elName:
             if elType == None or eltNode.attrib['type'] == elType:
                 return eltNode
@@ -363,7 +408,8 @@ def createNewStgDataDoc():
     """Create a new empty StGermain model XML file (can be merged with other
     model files)."""
     nsMap = {None: STG_NS}
-    root = etree.Element(STG_ROOT_TAG, nsmap=nsMap)
+    # For the Python 2.5 version xml.etree, namespace mapping is simplified
+    root = etree.Element(STG_ROOT_TAG, xmlns=STG_NS)
     xmlDoc = etree.ElementTree(root)
     return xmlDoc, root
 
@@ -437,12 +483,19 @@ def writeValueUsingStrSpec(rootNode, strSpec, value):
 
 ############################################
 # For actual file I/O
+
+def writeXMLDoc(xmlDoc, outFile, prettyPrint=True):
+    """Necessary because the xml.etree doesn't include a pretty_print
+    functionality by default (unlike lxml)"""
+    if prettyPrint:
+        indentForPrettyPrint(xmlDoc.getroot())
+    xmlDoc.write(outFile)
+
 def writeStgDataDocToFile(xmlDoc, filename):
     """Write a given StGermain xmlDoc to the file given by filename"""
     outFile = open(filename, 'w')
-    xmlDoc.write(outFile, pretty_print=True)
+    writeXMLDoc(xmlDoc, outFile)
     outFile.close()
-
 
 def createFlattenedXML(inputFiles, cmdLineOverrides=""):
     '''Flatten a list of provided XML files and optionally also

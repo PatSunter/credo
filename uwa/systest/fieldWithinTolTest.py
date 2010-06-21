@@ -1,4 +1,4 @@
-from lxml import etree
+from xml.etree import ElementTree as etree
 
 from uwa.systest.api import TestComponent, UWA_PASS, UWA_FAIL
 import uwa.analysis.fields as fields

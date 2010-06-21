@@ -45,7 +45,7 @@ class ModelResultTestCase(unittest.TestCase):
         tol = 0.01
         results.recordFieldResult('VelocityField', tol, [3.5e-4, 4.4e-3])
         results.recordFieldResult('PressureField', tol, [3.5e-2])
-        mres.writeModelResultsXML(results)
+        mres.writeModelResultsXML(results, prettyPrint=True)
 
     def test_updateModelResultsXMLFieldInfo(self):
         modName = 'TestModel'

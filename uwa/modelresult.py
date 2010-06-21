@@ -1,7 +1,8 @@
-from lxml import etree
+from xml.etree import ElementTree as etree
 import os
 
 from uwa.io import stgfreq
+from uwa.io.stgxml import writeXMLDoc
 from uwa.analysis import fields
 
 class ModelResult:
@@ -79,7 +80,7 @@ def writeModelResultsXML(modelResult, path="", filename="", prettyPrint=True):
 
     # Write the file, default name if filename provided is empty
     outFile = open(path+filename, 'w')
-    xmlDoc.write(outFile, pretty_print=prettyPrint)
+    writeXMLDoc(xmlDoc, outFile, prettyPrint)
     outFile.close()
     return path+filename
 
@@ -105,7 +106,7 @@ def updateModelResultsXMLFieldInfo(filename, newFieldResult, prettyPrint=True):
 
     # Write the file, default name if filename provided is empty
     outFile = open(filename, 'w')
-    xmlDoc.write(outFile, pretty_print=prettyPrint)
+    writeXMLDoc(xmlDoc, outFile, prettyPrint)
     outFile.close()
 
 def defaultModelResultFilename(modelName):

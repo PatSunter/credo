@@ -17,7 +17,7 @@ across multiple runs, e.g. :func:`calcFieldCvgWithScale`.
 
 import os
 import math
-from lxml import etree
+from xml.etree import ElementTree as etree
 
 import uwa.utils
 from uwa.analysis import AnalysisOperation
@@ -195,7 +195,7 @@ class FieldComparisonList(AnalysisOperation):
 
     def add(self, fieldComparisonOp):
         """Add another :class:`FieldComparisonOp` to the list to compare."""
-        self.fields[ComparisonOp.name] = ComparisonOp    
+        self.fields[fieldComparisonOp.name] = fieldComparisonOp    
 
     def postRun(self, modelRun, runPath):
         uwa.utils.moveAllToOutputPath(runPath, modelRun.outputPath,

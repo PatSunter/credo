@@ -1,6 +1,7 @@
 import os
-from lxml import etree
+from xml.etree import ElementTree as etree
 import uwa.modelrun as mrun
+from uwa.io.stgxml import writeXMLDoc
 
 class SysTestResult:
     detailMsg = None
@@ -114,7 +115,7 @@ class SysTest:
             os.makedirs(outputPath)
         outFilePath = os.path.join(outputPath, filename)
         outFile = open(outFilePath, 'w')
-        xmlDoc.write(outFile, pretty_print=prettyPrint)
+        writeXMLDoc(xmlDoc, outFile, prettyPrint)
         outFile.close()
         return outFilePath
 
@@ -123,11 +124,11 @@ class SysTest:
             outputPath, filename)
 
         outFile = open(os.path.join(outputPath, filename), 'r+')
-        # use a custom parser to remove blank text, so the doc can be correctly
-        # re-prettyPrinted when done (see 
-        # http://codespeak.net/lxml/FAQ.html
-        #  #why-doesn-t-the-pretty-print-option-reformat-my-xml-output
-        parser = etree.XMLParser(remove_blank_text=True)
+        parser = etree.XMLParser()
+        # Note: we haven't removed blank spaces from the output
+        # (xml.etree doesn't have an automatic option for this),
+        # but that shouldn't pose a problem as no whitespace should
+        # interfere with meaningful element text.
         xmlDoc = etree.parse(outFile, parser)
         baseNode = xmlDoc.getroot()
         return baseNode, xmlDoc
@@ -172,7 +173,7 @@ class SysTest:
         tcListNode = baseNode.find('testComponents')
         tcCompsAndXMLs = zip(self.testComponents.iterkeys(),
             self.testComponents.itervalues(),
-            tcListNode.iterchildren())
+            tcListNode.getchildren())
         for tcName, testComponent, testCompXMLNode in tcCompsAndXMLs:
             assert tcName == testCompXMLNode.attrib['name']
             assert testComponent.tcType == testCompXMLNode.attrib['type']
