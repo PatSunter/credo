@@ -1,10 +1,13 @@
-from uwa.analysis.fields import FieldTest, FieldTestsInfo
+from uwa.modelresult import ModelResult
+from uwa.analysis.fields import FieldComparisonOp, FieldComparisonList
 from uwa.io import stgcvg
 
 fComps = FieldComparisonList()
 fComp = FieldComparisonOp('VelocityField')
-fComps.add(fTest)
-results = fieldTests.testConvergence("./output/realistic")
+fComps.add(fComp)
+# TODO: perhaps should be an interface that doesn't require a full mRes?
+mRes = ModelResult("testMod", "./output/realistic", 0.0)
+results = fComps.getAllResults(mRes)
 
 fr = results[0]
 
