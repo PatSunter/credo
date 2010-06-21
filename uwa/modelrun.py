@@ -31,6 +31,11 @@ class ModelRun:
     .. attribute:: modelInputFiles
     
        'Input files' that comprise the XML model that will be run.
+
+    .. attribute:: outputPath
+    
+       Output path that all model results will be saved to (is passed through to
+       StGermain).
     '''
 
     def __init__(self, name, modelInputFiles, outputPath, logPath="./log",
