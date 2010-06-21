@@ -203,6 +203,8 @@ benchmark conditions. In this case, we're checking that the Vrms output into the
 FrequentOutput.txt each timestep has a maximum value within a specified range,
 within a specified time range.
 
+.. _uwa-examples-analysis:
+
 Doing Model analysis with UWA
 =============================
 
