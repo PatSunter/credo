@@ -1,17 +1,26 @@
-# A library of useful stats functions for analysis operations
+"""A library of useful stats functions for analysis operations.
 
-# Trying custom func
+The aim is for simple functions to be able to run without further dependencies
+... with more advanced stats libraries from the likes of SciPy being able to be
+loaded at the user's discretion."""
+
 from math import sqrt
 
-# From http://www.answermysearches.com/how-to-do-a-simple-linear-regression-in-python/124/
-# eg When applied to a list of resolution & field errors, the return values 
 def linreg(X, Y):
     """
     Summary
         Linear regression of y = ax + b
+
     Usage
         real, real, real = linreg(list, list)
+
     Returns coefficients to the regression line "y=ax+b" from x[] and y[], and R^2 Value
+
+    (Obtained from From
+    http://www.answermysearches.com/how-to-do-a-simple-linear-regression-in-python/124/)
+    Useful for field analysis, e.g. when applied to a list of length scales
+    & field errors, to calculate convergence info, such as
+    :func:`uwa.analysis.fields.calcFieldCvgWithScale`.
     """
     if len(X) != len(Y):  raise ValueError, 'unequal length'
     N = len(X)
