@@ -2,10 +2,10 @@
 UWA Analysis API
 ***********************************
 
+.. automodule:: uwa.analysis
+
 :mod:`uwa.analysis.api`
 ==========================
-
-Core interface for analysis in UWA.
 
 .. inheritance-diagram:: uwa.analysis.api
 
