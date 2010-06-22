@@ -6,6 +6,19 @@
 Welcome to UWA (UnderWorld Analysis)'s documentation!
 =====================================================
 
+This documentation describes the UWA (UnderWorld Analysis) toolkit. It comprises
+several sections, outlined below, for different purposes.
+
+**For users of UWA:** we suggest you start by reading the :ref:`uwa-intro`
+section, then the :ref:`uwa-install` section to get up and running, followed by
+running through several of the :ref:`uwa-examples`. The examples should be
+self-explanatory, but if you're not familiar with the Python programming and
+scripting language, you might like to check out the :ref:`uwa-pythonlinks` section.
+
+**For developers of UWA:**, you'll likely want to jump straight to the
+:ref:`uwa-apidocs`, informed by the overall description in
+:ref:`uwa-architecture`.
+
 Contents:
 
 .. toctree::
