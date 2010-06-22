@@ -8,6 +8,7 @@ produce a :class:`uwa.modelresult.ModelResult` class.
 
 import os, shutil
 import sys
+import subprocess
 
 from xml.etree import ElementTree as etree
 from uwa.io.stgxml import writeXMLDoc
@@ -322,9 +323,17 @@ def checkParamOverridesTypes(paramOverrides):
                 _allowedModelParamTypes))
 
 def getParamOverridesAsStr(paramOverrides):
+    """Given a list of parameter overrides, return these as a string ready for
+    passing to StGermain on the command line. """
+    if paramOverrides == []: return ""
+
     checkParamOverridesTypes(paramOverrides)
     paramOverridesStr = ""
-    for modelPath, paramVal in paramOverrides.iteritems():
+    #create the string in sorted order, for tidiness and user-friendliness
+    modelPaths = paramOverrides.keys()
+    modelPaths.sort()
+    for modelPath in modelPaths:
+        paramVal = paramOverrides[modelPath]
         paramOverridesStr += " --%s=%s" % (modelPath, str(paramVal))
     return paramOverridesStr
 
@@ -376,7 +385,20 @@ def generateResOpts(resTuple):
 
 # TODO: some of this functionality could be handled via strategy pattern - 
 # JobRunner (the MPI stuff)
-def runModel(modelRun, extraCmdLineOpts=None):
+def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
+    """Run the specified modelRun, and return a 
+    :class:`~uwa.modelresult.ModelResult` recording the results of the run.
+
+    If extraCmdLineOpts specified, these will be passed through to the run.
+
+    If dryRun is set as True, just print what you _would_ do, but don't
+    actually run anything.
+
+    .. Note:
+
+       It's planned for much of this functionality to move to a JobRunner class
+       in future, to allow things like launching PBS or grid jobs.
+    """
 
     # Check runExe found in path
 
@@ -416,7 +438,10 @@ def runModel(modelRun, extraCmdLineOpts=None):
         % (modelRun.name, runCommand)
     # TODO: the mpirunner should check things like mpd are set up properly,
     # in case of mpich2
-    import subprocess
+
+    # If we're only doing a dry run, return here.
+    if dryRun == True: return None
+
     p = subprocess.Popen(runCommand,shell=True,stderr=subprocess.PIPE)
     retcode = p.wait()
     # Check status of run (eg error status)
