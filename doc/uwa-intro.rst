@@ -32,32 +32,22 @@ much easier and clearer - and also in a readily repeatable manner so that
 the status of a code as it evolves can be readily checked (e.g. as part of
 a continuous integration system).
 
+To meet these goals, we chose the *Python* scripting and programming language,
+explained more in the :ref:`uwa-why_python` section below.
+
 .. Would be good to footnote some stuff in the paragraph above.
 
-Language choice - why Python?
-=============================
 
-The UWA code is written in the dynamic scripting and programming language
-**Python**. Python was chosen as the implementation language because of:
+How UWA fits into the workflow of using the Underworld modelling code
+=====================================================================
 
-* It's ability to run in either interactive or scripted mode:- and thus
-  facilitate either scripted, repeatable workflows, or interactive exploration;
-* The fact that it's clear, concise syntax and high level of abstraction is
-  recommended for human developer productivity - while computationally
-  intensive tasks can be performed in compiled languages and libraries (such as
-  Underworld itself).
-* The fact that it's a highly portable language between operating systems and
-  architectures.
-* The increasingly stable, feature-rich and wide-ranging set of open source
-  packages for mathematical and scientific analysis in Python, such as 
-  `SciPy <http://www.scipy.org/>`_, Numeric, Matplotlib, SAGE, Paraview,
-  and MayaVI.
 
-.. Something about not preventing users from using 3rd-part tools, libs
-  afterwards - in this case, UWA helps access data in needed format.
+.. image:: _static/UWAnalysis-detail.*
+   :scale: 70 %
 
-More about the rationale for, and approach to, benchmarking of Underworld
-=========================================================================
+
+Benchmarking of Underworld and other StGermain applications
+===========================================================
 
 ..  (Harvest from the specification, and Bec's paper). And also some
   examples of the Wiki pages.
@@ -98,10 +88,26 @@ Scientific analysis of computational codes - core capabilities
 A discussion of the basic sorts of things we need to do - eg testing outputs,
 fields.
 
-How UWA fits into the workflow / system of using the Underworld modelling code
-==============================================================================
+.. _uwa-why_python:
 
-Discuss images / screenshots
+Language choice - why Python?
+=============================
 
-  .. image:: _static/UWAnalysis-detail.jpg
+The UWA code is written in the dynamic scripting and programming language
+**Python**. Python was chosen as the implementation language because of:
 
+* It's ability to run in either interactive or scripted mode:- and thus
+  facilitate either scripted, repeatable workflows, or interactive exploration;
+* The fact that it's clear, concise syntax and high level of abstraction is
+  recommended for human developer productivity - while computationally
+  intensive tasks can be performed in compiled languages and libraries (such as
+  Underworld itself).
+* The fact that it's a highly portable language between operating systems and
+  architectures.
+* The increasingly stable, feature-rich and wide-ranging set of open source
+  packages for mathematical and scientific analysis in Python, such as 
+  `SciPy <http://www.scipy.org/>`_, Numeric, Matplotlib, SAGE, Paraview,
+  and MayaVI.
+
+.. Something about not preventing users from using 3rd-part tools, libs
+  afterwards - in this case, UWA helps access data in needed format.
