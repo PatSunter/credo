@@ -4,10 +4,19 @@
 UWA Python Source API Documentation
 ***********************************
 
-(Note that you don't need to read this in detail if just a user of UWA, but will
-need to reference in detail later).
+These are the API (Application Programming Interface) documents for UWA,
+describing the Python classes and functions provided by the library and how they
+function. They are automatically generated from documentation strings
+"docstrings" in the UWA Python source code - so in an interactive Python session
+you can access this same information using the `help()` function on objects in
+your session.
 
-(Qtn: how much of this should I use the auto-gen capabilities?)
+**For users**: you may wish to start with the :ref:`uwa-examples` section, and
+then refer back to this API as you become more familiar with UWA and need to
+look up details.
+
+**For developers:** the :ref:`uwa-architecture` section gives an initial
+overview of how the various sub-packages in UWA relate and are integrated.
 
 .. toctree::
 
