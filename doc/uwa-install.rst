@@ -10,8 +10,74 @@ obtaining UWA is as a core part of the *stgUnderworld* geophysics framework.
 So setting up to use UWA is very similar to setting up stgUnderworld,
 except for some extra Python configuration at the conclusion.
 
-Temporary instructions for beta users
-=====================================
+Installing Dependencies and Options
+===================================
+
+UWA has been designed to operate with just Python as a core dependency - other
+libraries for more advanced functionality are optional, although are recommended
+to use the full functionality.
+
+Required- Python: 2.5 or 2.6
+============================
+
+UWA is written to work with Python 2.5 or 2.6. One of these versions should come
+pre-installed on most Linux systems (including supercomputees), Mac OS
+machines, and clusters. For Windows, you may need to download and install Python
+yourself - check out the `Python website <http://www.python.org>`_ for
+instructions and documentation.
+
+NB: Python and scientific library "super set installs"
+------------------------------------------------------
+
+For users with a Mac machine or intending to run analysis on a cluster, you may
+wish to consider one of the "scientific Python" distributions, which will
+install Python, plus a large set of useful scientific libraries including those
+mentioned below, as a group in one large install package. The idea is this takes
+away some of the pain of individually installing these libraries, and making
+sure you have compatible versions installed. Some of the leading
+"install sets" of this type are:
+
+* `SAGE Math <http://www.sagemath.org/>`_: SAGE is a collection of open source
+  Python libraries, aiming to provide a free open source alternative to MATLAB
+  etc. As well as the libraries, it provides a customised Python
+  interpreter, that includes a more mathematical syntax for defining math
+  functions etc.
+
+* `Enthought Python Distribution <http://www.enthought.com/products/epd.php>`_:
+  Enthought are a commercial company and provide their Python distribution with
+  a per-user licence model, but also have an academic licence for trials of the
+  software.
+
+.. Note::
+   we don't expressly recommend either of these packages at this time, but
+   provide them as alternative options to the regular install process. 
+   As mentioned above, they may be especially relevant to Mac machines,
+   where installing several of the optional packages used by UWA is non-trivial.
+
+Optional Packages
+-----------------
+
+These packages are optional, they provide extra capabilities to UWA such as
+plotting and visualisation of output, but are not essential for running system
+tests and doing basic analysis.
+
+* **Matplotlib**: http://matplotlib.sourceforge.net:  A good plotting Library
+  available in Python. UWA has several functions/options to auto-create plots 
+  of things of interest using Matplotlib.
+* **NumPy** and **SciPy**: http://numpy.scipy.org/ and http://www.scipy.org/.
+  These libraries are mature and provide efficient and effective interfaces for
+  operating on Numerical data. UWA doesn't use either explicitly currently, but
+  they may be useful for doing custom analysis on StGermain data made available
+  by UWA.
+* Visualisation: **ParaView** or **MayaVI**: http://www.paraview.org/,
+  http://mayavi.sourceforge.net/: these two open-source visualisation packages,
+  both based on the VTK toolkit, provide considerable capabilities for operating
+  on the sorts of 2D and 3D datasets StGermain-based applications produce, and
+  interact well with Python. We are considering providing explicit integration
+  support for one or both of these packages in future.
+
+Setting up UWA - Temporary instructions for beta users
+======================================================
 
 The instructions below are for setting up to use the current beta release of
 UWA, 0.1.0 . In future the process will become more streamlined as part of
