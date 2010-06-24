@@ -27,6 +27,9 @@ overview of how the various sub-packages in UWA relate and are integrated.
 
 *API Documentation contents:*
 
+.. TODO: Need to add command-line programs (eg uwa-restartTest.py) to this
+   API reference.
+
 .. toctree::
 
    api/model.rst
