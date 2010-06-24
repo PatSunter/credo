@@ -35,7 +35,7 @@ Contents:
 Indices and tables
 ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
+* (UWA Python framework) :ref:`genindex`
+* (UWA Python framework) :ref:`modindex`
 * :ref:`search`
 

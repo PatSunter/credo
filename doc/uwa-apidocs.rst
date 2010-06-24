@@ -19,6 +19,12 @@ look up details.
 **For developers:** the :ref:`uwa-architecture` section gives an initial
 overview of how the various sub-packages in UWA relate and are integrated.
 
+.. Note::
+   As well as navigating via the contents below, you can also
+   use the name-sorted
+   :ref:`genindex` of all functions and members, or the module-sorted
+   :ref:`modindex`.
+
 *API Documentation contents:*
 
 .. toctree::
