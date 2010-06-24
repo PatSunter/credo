@@ -46,6 +46,7 @@ and finishing with::
 
 The following sections will explain how the file is set up, and show what the different sections do.
 
+
 Importing UWA and creating a testRunner object
 ----------------------------------------------
 
@@ -71,6 +72,8 @@ with the preceding *import* statement. Currently the SysTestRunner takes no
 options, in future versions we
 expect you'll be able to set paramaters or configure in more detail how the
 tests should be run.  
+
+.. seealso:: The :class:`uwa.systest.systestrunner.SysTestRunner` class.
 
 Adding system tests to the suite, and configuring them
 ------------------------------------------------------
@@ -180,7 +183,9 @@ So for example, to run a RestartTest on the Multigrid.xml model, type::
 
 ... which will run the test.
 
-.. TODO: include output
+.. TODO: include output examples
+.. TODO: Also, need to actually document these script programs properly in the
+   API reference
 
 Running and configuring Scientific Benchmark Tests
 ==================================================
@@ -208,4 +213,4 @@ within a specified time range.
 Doing Model analysis with UWA
 =============================
 
-
+TODO: under construction!
