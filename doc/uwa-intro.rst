@@ -8,7 +8,7 @@ Introduction to UWA (UnderWorld Analysis)
 
 **UWA** (UnderWorld Analysis) is a Python toolkit for system testing,
 benchmarking and analysis of Modelling tools based on the StGermain
-framework, such as *Underworld*.
+framework, such as `Underworld <http://www.underworldproject.org>`_.
 
 It is distributed with the *stgUnderworld* open source framework, but in future
 it's planned that it will be able to be obtained, installed and run
@@ -35,37 +35,45 @@ a continuous integration system).
 To meet these goals, we chose the *Python* scripting and programming language,
 explained more in the :ref:`uwa-why_python` section below.
 
-.. Would be good to footnote some stuff in the paragraph above.
-
-
 How UWA fits into the workflow of using the Underworld modelling code
 =====================================================================
 
+UWA still runs StGermain codes such as Underworld "under the hood", but it's
+role is to:
+
+* Construct XML data files based on the analysis/testing the user asks for in a
+  UWA script;
+* Launch the necessary StGermain jobs required to perform the analysis;
+* ..and finally provide access to the results created by the model at a
+  high-level, facilitate post-processing of these results, and perform any
+  post-run analysis required by tests/benchmarks.
+
+This is summarised in the diagram below.
 
 .. image:: _static/UWAnalysis-detail.*
    :scale: 70 %
 
+As such, it currently explicity doesn't provide run-time access to the
+StGermain objects (written in a custom framework implemented in the C language).
+Rather, it works in detail with the StGermain XML format for defining models,
+and the defined StGermain data output formats.
 
-Benchmarking of Underworld and other StGermain applications
-===========================================================
-
-..  (Harvest from the specification, and Bec's paper). And also some
-  examples of the Wiki pages.
+UWA's Benchmarking Goals / Motivation
+=====================================
 
 There has long been an interest in a more systematic way of testing both
 the software performance, and scientific/numerical reliability of the
-StgUnderworld code – for example the issue was explored in Rebecca
-Farrington's paper presented at the APAC05 conference.
+StgUnderworld code – for example the issue was explored in a
+paper presented at the APAC05 conference [FarringtonEtAl2005]_. 
 
-.. TODO Ref above
-
-The benefits of getting such a system operational would be as follows:
+The benefits of such a system are:
 
 * A clear and up-to-date record of the performance and reliability of the
   code to present to scientists interested in using it or comparing it
   to similar codes. The chosen benchmarks would be of a “scope” of much
   more interest to modellers and scientists than the detailed unit
-  and integration tests.
+  and integration tests. This ties in to the concept of 'reproducible research'
+  ([FomelHennenfent2007]_).
 * A definitive record to examine the changing performance of the code over
   time, which has always been a big concern among the existing research
   community using the code;
@@ -85,8 +93,24 @@ The benefits of getting such a system operational would be as follows:
 Scientific analysis of computational codes - core capabilities
 ==============================================================
 
-A discussion of the basic sorts of things we need to do - eg testing outputs,
-fields.
+To achieve the above goals, the features below are either provided by UWA, or
+under active development:
+
+* Ability to quickly extract and compare observables that are produced during
+  runs of the code (such as :term:`VRMS`). This includes testing that an
+  observable is within a given range at a given time.
+* Ability to extract information about the 2D or 3D :term:`mesh`, :term:`field`
+  or :term:`swarm` data produced by a StGermain application.
+
+  * For testing purposes, this includes functions like checking that a field
+    produced by the model run compares as expected with a reference field,
+    loaded in from a separate data file.
+
+* Ability to record, and compare performance metadata about the code, such as
+  time that simulations ran for, memory usage, etc.
+
+Examples of doing this sort of analysis and testing is provided in the 
+:ref:`uwa-examples` section.
 
 .. _uwa-why_python:
 
@@ -107,7 +131,24 @@ The UWA code is written in the dynamic scripting and programming language
 * The increasingly stable, feature-rich and wide-ranging set of open source
   packages for mathematical and scientific analysis in Python, such as 
   `SciPy <http://www.scipy.org/>`_, Numeric, Matplotlib, SAGE, Paraview,
-  and MayaVI.
+  and MayaVI. 
+  
+.. seealso:: :ref:`uwa-pythonlinks`
 
-.. Something about not preventing users from using 3rd-part tools, libs
-  afterwards - in this case, UWA helps access data in needed format.
+The fact that UWA is written in Python doesn't prevent you from using a
+favourite tool or language for your final analysis work - in this case, UWA is
+being written to allow you to extract the needed observables from a set of model
+results in common formats such as CSV or XML files.
+
+**References**
+
+.. [FarringtonEtAl2005] Farrington, R, Moresi, L, Quenette, S, Turnbull, R, &
+   Sunter, P, 2005, 'Geodynamic benchmarking tests in HPC', Presented at the
+   2005 APAC Conference, Gold Coast, Australia.
+
+.. [FomelHennenfent2007] S. Fomel and G. Hennenfent, 2007,
+   'Reproducible computational experiments using SCons,' in
+   *Proc. IEEE Int. Conf. on Acoustics, Speech and Signal Processing,
+   vol. 4, Apr. 2007, pp. 1257–1260*. [Online].
+   Available: http://slim.eos.ubc.ca/Publications/Public/Conferences/ICASSP/2007/fomel07icassp.pdf
+
