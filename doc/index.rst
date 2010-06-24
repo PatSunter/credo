@@ -31,6 +31,7 @@ Contents:
    uwa-apidocs.rst
    uwa-pythonlinks.rst
    uwa-developer-notes.rst
+   uwa-glossary.rst
 
 Indices and tables
 ==================
