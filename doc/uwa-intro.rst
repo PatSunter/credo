@@ -35,6 +35,8 @@ a continuous integration system).
 To meet these goals, we chose the *Python* scripting and programming language,
 explained more in the :ref:`uwa-why_python` section below.
 
+.. _uwa-intro-workflow:
+
 How UWA fits into the workflow of using the Underworld modelling code
 =====================================================================
 
@@ -140,7 +142,7 @@ favourite tool or language for your final analysis work - in this case, UWA is
 being written to allow you to extract the needed observables from a set of model
 results in common formats such as CSV or XML files.
 
-**References**
+.. rubric:: Footnotes
 
 .. [FarringtonEtAl2005] Farrington, R, Moresi, L, Quenette, S, Turnbull, R, &
    Sunter, P, 2005, 'Geodynamic benchmarking tests in HPC', Presented at the

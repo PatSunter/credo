@@ -25,8 +25,8 @@ Contents:
    :maxdepth: 2
 
    uwa-intro.rst
-   uwa-architecture.rst
    uwa-install.rst
+   uwa-architecture.rst
    uwa-examples.rst
    uwa-apidocs.rst
    uwa-pythonlinks.rst
