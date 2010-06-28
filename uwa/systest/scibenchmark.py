@@ -19,9 +19,9 @@ class SciBenchmarkTest(SysTest):
             paramOverrides, "SciBenchmark")
 
     def addTestComponent(self, testComp, testCompName):
-        if not issubclass(testComp, TestComponent):
+        if not isinstance(testComp, TestComponent):
             raise TypeError("Test component passed in to be added to"\
-                " benchmark, '%s', not a subclass of TestComponent."\
+                " benchmark, '%s', not an instance of a TestComponent."\
                 % (testComp))
         self.testComponents[testCompName] = testComp
 
