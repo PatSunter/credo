@@ -43,6 +43,7 @@ Doing Model analysis with UWA
 =============================
 
 .. toctree::
+   :maxdepth: 1
 
    examples/raytay-run-basic.rst
    examples/raytay-run-suite.rst
@@ -53,5 +54,6 @@ Scientific Benchmarking using UWA
 =================================
 
 .. toctree::
+   :maxdepth: 1
 
    examples/configure-scibenchmark.rst
