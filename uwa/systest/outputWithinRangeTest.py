@@ -63,7 +63,7 @@ class OutputWithinRangeTest(TestComponent):
             elif self.tRange:
                 tMin, tMax = self.tRange
                 withinTRange = (tMin <= self.actualTime <= tMax)
-                if not self.withinTRange:
+                if not withinTRange:
                     if numRuns > 1:
                         statusMsg += "For run %d out of %d: " % (runI, numRuns)
                     statusMsg += "Model output '%s' value %g within"\
