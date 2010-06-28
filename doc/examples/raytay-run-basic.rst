@@ -49,11 +49,9 @@ graph of the value of Vrms over time in the model.
 Outputs
 """""""
 
-Running this script at the terminal produces::
+Running this script at the terminal produces:
 
-  Running model 'RayTay-basicBenchmark' with command 'mpirun -np 1 /home/psunter/AuScopeCodes/stgUnderworldE-uwaDev-work/build/bin/StGermain RayleighTaylorBenchmark.xml uwa-analysis.xml  --gravity=1 > logFile.txt' ...
-  Model ran successfully.
-  Maximum value of Vrms was 0.000365, at time 64
+.. literalinclude:: RayTayBasic/scriptTerminalOutput.txt
 
 Where the last line is the result of our post-processing query.
 

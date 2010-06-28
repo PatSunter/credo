@@ -9,6 +9,9 @@ a particular benchmark. This interface was chosen since benchmarks generally
 require more detailed specification and configuration than standard system
 tests.
 
+Setup
+"""""
+
 The one example benchmark so far is testing a Rayleigh Taylor model can perform
 as required by the Van Keken benchmark:
 
@@ -21,3 +24,27 @@ benchmark conditions. In this case, we're checking that the Vrms output into the
 FrequentOutput.txt each timestep has a maximum value within a specified range,
 within a specified time range.
 
+Outputs
+"""""""
+
+Running the above script will take some time on most PCs, as we've asked for a
+significant number of steps at a reasonable resolution. 
+
+It should show something like the following at the terminal:
+
+.. literalinclude:: RayTayBenchmark/scriptTerminalOutput.txt
+
+and will save outputs from the run in the directory
+`output/RayleighTaylor-VanKekenBenchmark/`.
+
+These include the following XML description of the SysTest as a record of the
+result:
+
+.. literalinclude:: RayTayBenchmark/SysTest-RayleighTaylorBenchmark-sciBenchmarkTest.xml
+
+
+In future we will add capability to automatically save images of important
+aspects of the System test, such as a graph of VRMS against time like the one
+below, and compare them to expected results:
+
+.. image:: ./RayTayBenchmark/Vrms-timeSeries.png

@@ -12,7 +12,7 @@ on the same Model XML, but varying different parameters.
    first as it goes into more detail about set-up and results.
 
 .. Note:: This capability of the UWA toolkit is under active development,
-   so check back here regularly for new features and updates..
+   so check back here regularly for new features and updates.
 
 Setup
 """""
@@ -117,9 +117,9 @@ parameter changes the initial conditions of the models by using a file or image
 browser to examine some of the window.png files. For example, here are two of
 the images at timestep 1, for a perturbation of 0.02 versus 0.07 respectively:
 
-.. image:: ./RayTaySuite/window-pert-0.02.png
+.. image:: ./RayTaySuite/window-pert-0_02.png
 
-.. image:: ./RayTaySuite/window-pert-0.07.png
+.. image:: ./RayTaySuite/window-pert-0_07.png
 
 Each directory will also contain a saved VRMS over time plot, as discussed in
 :ref:`Basic Ray-Tay example <uwa-examples-raytay-run-basic-plot>`.
