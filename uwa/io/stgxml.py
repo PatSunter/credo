@@ -223,9 +223,11 @@ def getNodeFromStrSpec(parentNode, strSpec):
 def getElementType(elementNode):
     """Checks the "type" of a StGermain data node element. 
     Here, we deal with 3 possibilities:
-    The param, list, struct node tag format.
-    The elmement tag format, where type is an attribute.
-    The special elements import, plugins -> list, components -> dict."""
+
+    * The <param>, <list>, <struct> node tag format.
+    * The <elmement> tag format, where type is an attribute.
+    * The special elements <import>, <plugins> -> list, <components> -> dict.
+    """
     
     # The _STG_NS_LXML prefixes included below since ETree prefixes these to
     # tag names to represent the namespace used when parsing in files.
