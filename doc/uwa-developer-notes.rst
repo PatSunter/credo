@@ -31,6 +31,6 @@ It's important to write unit tests for all new classes and to maintain and
 improve the suite for existing ones. Unittest is pretty easy to use and is well
 documented.
 
-*NB: currently the UWA unit test suite isn't well integrated into the SCons
-build system to build stgUnderworld, or the Bitten continuous integration
-system. These are both coming soon though.*
+.. note:: Currently the UWA unit test suite isn't well integrated into the
+   SCons build system to build stgUnderworld, or the *Bitten* continuous
+   integration system. These are both coming soon though.
