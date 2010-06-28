@@ -1,0 +1,7 @@
+<StgModelResult>
+  <modelName>RayTay-basicBenchmark</modelName>
+  <outputPath>output/raytay-scibench-uwa-basic</outputPath>
+  <jobMetaInfo>
+    <simtime>64.0557</simtime>
+  </jobMetaInfo>
+</StgModelResult>
