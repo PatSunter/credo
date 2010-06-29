@@ -1,3 +1,6 @@
+"""A module for general utility functions in UWA, that don't clearly fit
+into other modules."""
+
 import sys
 import os
 import inspect
@@ -9,6 +12,9 @@ from uwa.io import stgcvg
 STG_BINDIRKEY = 'STG_BINDIR'
 
 def getVerifyStgExePath(exeName):
+    """For a given executable name (eg "StGermain"), return the full path
+    name of that executable (in the path given by the STG_BINDIR env variable).
+    """
     stgPath = getStgBinPath()
     fullExePath = os.path.join(stgPath, exeName)
     if not os.path.exists(fullExePath):
@@ -19,6 +25,7 @@ def getVerifyStgExePath(exeName):
     return fullExePath    
 
 def getStgBinPath():
+    """Get the path of StGermain binaries (given by env variable STG_BINDIR)."""
     try:
         stgBinPath=os.environ[STG_BINDIRKEY]
     except KeyError, keyE:
@@ -42,6 +49,8 @@ def getStgBinPath():
     return stgBinPath    
 
 def moveAllToOutputPath(runPath, outputPath, fileExt):
+    """Move all files with extension `fileExt` from `runPath` to
+    `outputPath`."""
     if not os.path.exists(outputPath):
         os.makedirs(outputPath)
     for fname in glob.glob(os.path.join(runPath, "*."+fileExt)):
@@ -51,6 +60,8 @@ def moveAllToOutputPath(runPath, outputPath, fileExt):
         shutil.move(fname, outputPath)
 
 def prepareOutputLogDirs(outputPath, logPath):
+    """Prepare the output and log dirs - usually in preparation
+    for running a :class:`uwa.modelrun.ModelRun`."""
     # TODO: complete    
     if not os.path.exists(outputPath):
         os.makedirs(outputPath)
@@ -58,6 +69,3 @@ def prepareOutputLogDirs(outputPath, logPath):
     if not os.path.exists(logPath):
         os.makedirs(logPath)
 
-def cleanupOutputLogDirs(outputPath, logPath):
-    #TODO
-    pass
