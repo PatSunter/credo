@@ -4,6 +4,17 @@ import inspect
 from uwa.systest.api import *
 
 class SysTestRunner:
+    """Class that manages and runs a set of :class:`~uwa.systest.api.SysTest`.
+
+    For examples of how to use, see the UWA documentation, especially
+    :ref:`uwa-examples-run-systest`.
+
+    .. attribute:: sysTests
+
+       List of system tests that should be run and reported upon. Generally
+       shouldn't be accessed directly, recommend using :meth:`.addStdTest`
+       to add to this list, and other methods to run and report on it.
+    """
 
     def __init__(self, sysTests=[], nproc=1):
         self.sysTests = sysTests
@@ -11,6 +22,19 @@ class SysTestRunner:
         self.nproc = nproc
     
     def addStdTest(self, testClass, inputFiles, **testOpts):
+        """Instantiate and add a "standard" system test type to the list
+        of System tests to be run. (The "standard" refers to the user needing
+        to have access to the module containing the system test type to be
+        added, usually from a `from uwa.systest import *` statement.
+
+        :param testClass: Python class of the System test to be added. This
+          needs to be a sub-class of :class:`~uwa.systest.api.SysTest`.
+        :param inputFiles: model input files to be passed through to the 
+          System test when instantiated.
+        :param `**testOpts`: any other keyword arguments the user wishes to
+          passed through to the System test when it's instantiated.
+          Can be used to customise a test."""
+
         if not inspect.isclass(testClass):
             raise TypeError("The testClass argument must be a type that's"\
                 " a subclass of the UWA SysTest type. Arg passed in, '%s',"\
@@ -33,6 +57,11 @@ class SysTestRunner:
         self.sysTests.append(newSysTest)
 
     def runTest(self, sysTest):
+        """Run a given sysTest, and return the 
+        :class:`uwa.systest.api.SysTestResult` it produces.
+        Usually sysTest should be from the attribute :attr:`.sysTests`.
+        Will also write an XML record of the System test, and each ModelRun
+        and ModelResult in the suite that made up the test."""
         mSuite = sysTest.genSuite()
         mSuite.cleanAllOutputPaths()
         print "Writing pre-test info to XML"
@@ -48,6 +77,9 @@ class SysTestRunner:
         return testResult
 
     def runAll(self):
+        """Run all tests that have been added to the :attr:".sysTests" list.
+        Will also save all appropriate XMLs (as discussed in :meth:`.runTest`)
+        and print a summary of results."""
         results = []
         for testI, sysTest in enumerate(self.sysTests):
             print "Running System test %d, with name '%s':" \
@@ -56,6 +88,8 @@ class SysTestRunner:
         self.printResultsSummary(self.sysTests, results)
     
     def printResultsSummary(self, sysTests, results):
+        """Print a textual summary of the results of running a set of sys
+        tests."""
         if len(sysTests) != len(results):
             raise ValueError("The sysTests and results args must be"\
                 " same length, but sysTests of len %d vs results of"\

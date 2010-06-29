@@ -8,9 +8,14 @@ from uwa.systest.api import SysTest, TestComponent, UWA_PASS, UWA_FAIL
 class SciBenchmarkTest(SysTest):
     '''A Science benchmark test.
         This is an open-ended system test, designed for the user to add multiple
-        test components which test the conditions of the benchmark.
+        :class:`~uwa.systest.api.TestComponent` s to,
+        which test the conditions of the benchmark.
         Contains extra capabilities to report more fully on the test result
-        than a standard system test.'''
+        than a standard system test.
+        
+        See the examples section of the UWA documentation,
+        :ref:`uwa-examples-scibenchmarking`, for examples of sci benchmarking
+        in practice.'''
 
     description = '''Runs a user-defined science benchmark.'''
 
@@ -19,17 +24,29 @@ class SciBenchmarkTest(SysTest):
             paramOverrides, "SciBenchmark")
 
     def addTestComponent(self, testComp, testCompName):
+        """Add a testComponent (:class:`~uwa.systest.api.TestComponent`)
+        with name testCompName to the list of test
+        components to be applied as part of determining if the benchmark
+        has passed."""
         if not isinstance(testComp, TestComponent):
             raise TypeError("Test component passed in to be added to"\
                 " benchmark, '%s', not an instance of a TestComponent."\
                 % (testComp))
         self.testComponents[testCompName] = testComp
 
-    def writeXMLCustomSpec(self, specNode):
+    def _writeXMLCustomSpec(self, specNode):
         # TODO: write stuff like paper references here?
         pass
 
     def genSuite(self):
+        """See base class :meth:`~uwa.systest.api.SysTest.genSuite`.
+        
+        By default will create just a single model run.
+
+        .. note:: for Benchmarks that involve running a suite of models, this 
+           API may need re-thinking. Or else a separate SciBenchmarkSuite
+           class could be added.
+        """
         mSuite = ModelSuite(outputPathBase=self.outputPathBase)
         self.mSuite = mSuite
         mRun = ModelRun(self.testName, self.inputFiles,
@@ -42,12 +59,14 @@ class SciBenchmarkTest(SysTest):
         return mSuite
 
     def checkResultValid(self, resultsSet):
+        """See base class :meth:`~uwa.systest.api.SysTest.checkResultValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:
             pass
 
     def getStatus(self, resultsSet):
+        """See base class :meth:`~uwa.systest.api.SysTest.getStatus`."""
         self.checkResultValid(resultsSet)
         mResult = resultsSet[0]
 

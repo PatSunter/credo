@@ -9,9 +9,24 @@ from uwa.systest.fieldCvgWithScaleTest import FieldCvgWithScaleTest
 
 class AnalyticMultiResTest(SysTest):
     '''A Multiple Resolution system test.
-        This test can be used to convert any existing system test that
-        analyses fields, to check that the convergence improves as res.
-        improves'''
+       This test can be used to convert any existing system test that
+       analyses fields, to check that the error between the analytic
+       solution fields and the actual results improves at the required
+       rate as the model resolution is increased. Uses a
+       :class:`~uwa.systest.fieldCvgWithScaleTest.FieldCvgWithScaleTest`
+       test component to perform the check.
+
+       Optional constructor keywords:
+
+       * resSet: a list of resolutions to use for the test, as tuples.
+         E.g. to specify testing at 10x10 res then 20x20, resSet would
+         be [(10,10), (20,20)]
+       
+       .. attribute:: resSet
+
+          Set of resolutions to use, as described for the resSet keyword
+          to the constructor.
+       '''
 
     description = '''Runs an existing test with multiple resolutions.'''
 
@@ -24,6 +39,12 @@ class AnalyticMultiResTest(SysTest):
         self.testComponents['fieldConvChecker'] = cvgChecker
 
     def genSuite(self):
+        """See base class :meth:`~uwa.systest.api.SysTest.genSuite`.
+
+        The generated suite will contain model runs all with the same model
+        XML files, but with increasing resolution as specified by the 
+        :attr:`.resSet` attribute.
+        """
         mSuite = ModelSuite(outputPathBase=self.outputPathBase)
         self.mSuite = mSuite
         
@@ -43,6 +64,7 @@ class AnalyticMultiResTest(SysTest):
         return mSuite
 
     def checkResultValid(self, resultsSet):
+        """See base class :meth:`~uwa.systest.api.SysTest.checkResultValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:
@@ -51,6 +73,7 @@ class AnalyticMultiResTest(SysTest):
             pass
 
     def getStatus(self, resultsSet):
+        """See base class :meth:`~uwa.systest.api.SysTest.getStatus`."""
         self.checkResultValid(resultsSet)
 
         testStatus = UWA_PASS("The solution compared to the analytic result"\
@@ -63,7 +86,7 @@ class AnalyticMultiResTest(SysTest):
         self.testStatus = testStatus
         return testStatus
 
-    def writeXMLCustomSpec(self, specNode):
+    def _writeXMLCustomSpec(self, specNode):
         resSetNode = etree.SubElement(specNode, "resSet")
         for res in self.resSet:
             resNode = etree.SubElement(resSetNode, "res")

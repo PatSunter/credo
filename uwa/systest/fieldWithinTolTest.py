@@ -73,7 +73,7 @@ class FieldWithinTolTest(TestComponent):
             self.tcStatus = UWA_PASS(statusMsg)
         return overallResult
 
-    def writeXMLCustomSpec(self, specNode):
+    def _writeXMLCustomSpec(self, specNode):
         etree.SubElement(specNode, 'fromXML', value=str(self.fComps.fromXML))
         etree.SubElement(specNode, 'testTimestep',
             value=str(self.fComps.testTimestep))
@@ -87,7 +87,7 @@ class FieldWithinTolTest(TestComponent):
             fNode = etree.SubElement(fListNode, 'field', name=fName,
                 tol=str(self.getTolForField(fName)))
 
-    def writeXMLCustomResult(self, resNode, resultsSet):
+    def _writeXMLCustomResult(self, resNode, resultsSet):
         frNode = etree.SubElement(resNode, 'fieldResultDetails')
         for fName, fComp in self.fComps.fields.iteritems():
             fieldTol = self.getTolForField(fName)

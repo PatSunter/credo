@@ -9,9 +9,30 @@ from uwa.systest.fieldWithinTolTest import FieldWithinTolTest
 
 class ReferenceTest(SysTest):
     '''A Reference System test.
-        This case simply runs a given model for a set number of steps,
-        then checks the resultant solution matches within a tolerance
-        of a previously-generated reference solution.'''
+       This case simply runs a given model for a set number of steps,
+       then checks the resultant solution matches within a tolerance
+       of a previously-generated reference solution. Uses a
+       :class:`~uwa.systest.fieldWithinTolTest.FieldWithinTolTest`
+       test component to perform the check.
+
+       Optional constructor keywords:
+
+       * runSteps: number of steps the reference solution should run for.
+       * fieldsToTest: Which fields in the model should be compared with the
+         reference solution.
+       * fieldTols: a dictionary of tolerances to use when testing particular
+         fields, rather than the default tolerance defined by 
+         :attr:`.defaultFieldTol`.
+       
+       .. attribute:: defaultFieldTol
+
+          The default tolerance to be applied when comparing fields of
+          interest to the analytic solution.
+          
+       .. attribute:: fTestName
+
+          Standard name to use for this test's field comparison TestComponent
+          in the :attr:`~uwa.systest.api.SysTest.testComponents` list.'''
 
     description = '''Runs a Model for a set number of timesteps,
         then checks the specified fields match a previously-generated
@@ -22,7 +43,7 @@ class ReferenceTest(SysTest):
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             fieldsToTest = ['VelocityField','PressureField'], runSteps=20,
-            fieldTols=None, createRefSolnMode=False, paramOverrides={} ):
+            fieldTols=None, paramOverrides={} ):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
             paramOverrides, "Reference")
         self.expectedSolnPath = os.path.join("expected", self.testName)
@@ -59,6 +80,10 @@ class ReferenceTest(SysTest):
     # TODO: a pre-check phase - check the reference dir exists?
 
     def genSuite(self):
+        """See base class :meth:`~uwa.systest.api.SysTest.genSuite`.
+
+        For this test, just a single model run is needed, to run
+        the model and compare against the reference solution."""
         mSuite = ModelSuite(outputPathBase=self.outputPathBase)
         self.mSuite = mSuite
         # Normal mode
@@ -73,6 +98,7 @@ class ReferenceTest(SysTest):
         return mSuite
 
     def checkResultValid(self, resultsSet):
+        """See base class :meth:`~uwa.systest.api.SysTest.checkResultValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:
@@ -81,6 +107,7 @@ class ReferenceTest(SysTest):
             pass
 
     def getStatus(self, resultsSet):
+        """See base class :meth:`~uwa.systest.api.SysTest.getStatus`."""
         self.checkResultValid(resultsSet)
         fTests = self.testComponents[self.fTestName]
         result = fTests.check(resultsSet)
@@ -93,7 +120,7 @@ class ReferenceTest(SysTest):
         self.testStatus = testStatus
         return testStatus
         
-    def writeXMLCustomSpec(self, specNode):
+    def _writeXMLCustomSpec(self, specNode):
         etree.SubElement(specNode, 'runSteps').text = str(self.runSteps)
         etree.SubElement(specNode, 'defaultFieldTol').text = \
             str(self.defaultFieldTol)   

@@ -27,7 +27,17 @@ UWA SysTest API
 Core System Test class implementations
 ======================================
 
-(Some sort of intro text).
+UWA provides a set of core :class:`~uwa.systest.api.SysTest` instantations,
+which supercede the functionality of the pre-existing test scripts system,
+which are documented below.
+
+The user can always add to this list, by defining new SysTest classes to use.
+
+The most flexible of the set is the
+:class:`~uwa.systest.scibenchmark.SciBenchmarkTest`, but this requires the
+most customisation (i.e. generally can't be created in the short-hand form
+of the other tests using the sysTestRunner's
+:meth:`~uwa.systest.systestrunner.SysTestRunner.addStdTest` method).
 
 .. inheritance-diagram:: uwa.systest.analytic
     uwa.systest.restart uwa.systest.reference uwa.systest.analyticMultiRes

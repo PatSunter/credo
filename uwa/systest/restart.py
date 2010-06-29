@@ -9,10 +9,32 @@ from uwa.systest.fieldWithinTolTest import FieldWithinTolTest
 
 class RestartTest(SysTest):
     '''A Restart System test.
-        This case simply runs a given model for set number of steps,
-        then restarts half-way through, and checks the same result is
-        obtained. (Thus it's largely a regression test to ensure 
-        checkpoint-restarting works for various types of models).
+       This case simply runs a given model for set number of steps,
+       then restarts half-way through, and checks the same result is
+       obtained. (Thus it's largely a regression test to ensure 
+       checkpoint-restarting works for various types of models).
+       Uses a :class:`~uwa.systest.fieldWithinTolTest.FieldWithinTolTest`
+       test component to perform the check.
+
+       Optional constructor keywords:
+
+       * fullRunSteps: number of steps to do the initial "full" run for.
+         Must be a multiple of 2, so it can be restarted half-way through.
+       * fieldsToTest: Which fields in the model should be compared with the
+         reference solution.
+       * fieldTols: a dictionary of tolerances to use when testing particular
+         fields, rather than the default tolerance defined by 
+         :attr:`.defaultFieldTol`.  
+
+       .. attribute:: defaultFieldTol
+
+          The default tolerance to be applied when comparing fields of
+          interest to the analytic solution.
+          
+       .. attribute:: fTestName
+
+          Standard name to use for this test's field comparison TestComponent
+          in the :attr:`~uwa.systest.api.SysTest.testComponents` list.  
         '''
 
     description = '''Runs a Model for a set number of timesteps,
@@ -42,6 +64,12 @@ class RestartTest(SysTest):
             testTimestep=self.fullRunSteps)
 
     def genSuite(self):
+        """See base class :meth:`~uwa.systest.api.SysTest.genSuite`.
+
+        For this test, will create a suite containing 2 model runs:
+        one to initally run the requested Model and save the results,
+        and a 2nd to restart mid-way through, so that the results can
+        be compared at the end."""
         mSuite = ModelSuite(outputPathBase=self.outputPathBase)
         self.mSuite = mSuite
 
@@ -68,6 +96,7 @@ class RestartTest(SysTest):
         return mSuite
 
     def checkResultValid(self, resultsSet):
+        """See base class :meth:`~uwa.systest.api.SysTest.checkResultValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:
@@ -76,6 +105,7 @@ class RestartTest(SysTest):
             pass
 
     def getStatus(self, resultsSet):
+        """See base class :meth:`~uwa.systest.api.SysTest.getStatus`."""
         self.checkResultValid(resultsSet)
         fTests = self.testComponents[self.fTestName]
         # We are only interested in checking the restart run
@@ -89,7 +119,7 @@ class RestartTest(SysTest):
         self.testStatus = testStatus
         return testStatus
         
-    def writeXMLCustomSpec(self, specNode):
+    def _writeXMLCustomSpec(self, specNode):
         etree.SubElement(specNode, 'fullRunSteps').text = str(self.fullRunSteps)
         etree.SubElement(specNode, 'defaultFieldTol').text = \
             str(self.defaultFieldTol)

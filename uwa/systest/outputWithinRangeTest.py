@@ -17,7 +17,7 @@ class OutputWithinRangeTest(TestComponent):
         self.actualTime = None
         self.withinRange = None
 
-    def writeXMLCustomSpec(self, specNode):
+    def _writeXMLCustomSpec(self, specNode):
         etree.SubElement(specNode, 'outputName', value=self.outputName)
         etree.SubElement(specNode, 'reductionOp', value=str(self.reductionOp))
         etree.SubElement(specNode, 'allowedRange-min',
@@ -87,7 +87,7 @@ class OutputWithinRangeTest(TestComponent):
             self.tcStatus = UWA_PASS(statusMsg)
         return overallResult
 
-    def writeXMLCustomResult(self, resNode, resultsSet):
+    def _writeXMLCustomResult(self, resNode, resultsSet):
         avNode = etree.SubElement(resNode, 'actualValue')
         avNode.text = "%6e" % self.actualVal
         atNode = etree.SubElement(resNode, 'actualTime')

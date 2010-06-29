@@ -108,7 +108,7 @@ class FieldCvgWithScaleTest(TestComponent):
 
     def check(self, resultsSet):
         # NB: could store this another way in model info?
-        lenScales = self.getLenScales(resultsSet)    
+        lenScales = self._getLenScales(resultsSet)    
         self.fErrorsByRun = {}
         self.fCvgMeetsReq = {}
         self.fCvgResults = {}
@@ -131,7 +131,7 @@ class FieldCvgWithScaleTest(TestComponent):
             self.tcStatus = UWA_PASS(statusMsg)
             return True
 
-    def writeXMLCustomSpec(self, specNode):
+    def _writeXMLCustomSpec(self, specNode):
         if self.fComps == None:
             raise AttributeError("Unable to write XML for this TestComponent"\
                 " until attachOps() has been called, and have been able to"\
@@ -145,9 +145,9 @@ class FieldCvgWithScaleTest(TestComponent):
             fNode.attrib['cvgRate'] = cvgRate=str(fieldCvgCrit[0])
             fNode.attrib['corr'] = str(fieldCvgCrit[1])
 
-    def writeXMLCustomResult(self, resNode, resultsSet):
+    def _writeXMLCustomResult(self, resNode, resultsSet):
         frNode = etree.SubElement(resNode, 'fieldResultDetails')
-        lenScales = self.getLenScales(resultsSet)    
+        lenScales = self._getLenScales(resultsSet)    
         for fName, fComp in self.fComps.fields.iteritems():
             fieldNode = etree.SubElement(frNode, "field", name=fName)
             fieldNode.attrib['cvgMeetsReq'] = str(self.fCvgMeetsReq[fName])
@@ -166,7 +166,7 @@ class FieldCvgWithScaleTest(TestComponent):
                     dofErrorNode.attrib["error"] = "%6e" % dofError
 
 
-    def getLenScales(self, resultsSet):
+    def _getLenScales(self, resultsSet):
         lenScales = []
         for runI, mResult in enumerate(resultsSet):
             cvgIndex = stgcvg.genConvergenceFileIndex(mResult.outputPath)

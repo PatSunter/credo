@@ -8,10 +8,29 @@ from uwa.systest.fieldWithinTolTest import FieldWithinTolTest
 
 class AnalyticTest(SysTest):
     '''An Analytic System test.
-        This case requires the user to have configured the XML correctly
-        to load an anlytic soln, and compare it to the correct fields.
-        Will check that each field flagged to be analysed is within
-        the expected tolerance'''
+       This case requires the user to have configured the XML correctly
+       to load an anlytic soln, and compare it to the correct fields.
+       Will check that each field flagged to be analysed is within
+       the expected tolerance. Uses a
+       :class:`~uwa.systest.fieldWithinTolTest.FieldWithinTolTest`
+       test component to perform the check.
+       
+       Optional constructor keywords:
+
+       * fieldTols: a dictionary of tolerances to use when testing particular
+         fields, rather than the default tolerance defined by 
+         :attr:`.defaultFieldTol`.
+
+       .. attribute:: defaultFieldTol
+
+          The default tolerance to be applied when comparing fields of
+          interest to the analytic solution.
+          
+       .. attribute:: fTestName
+
+          Standard name to use for this test's field comparison TestComponent
+          in the :attr:`~uwa.systest.api.SysTest.testComponents` list.
+        '''
 
     description = '''Runs a Model that has a defined analytic solution,
         and checks the outputted fields are within a given error tolerance
@@ -28,6 +47,10 @@ class AnalyticTest(SysTest):
             defFieldTol=self.defaultFieldTol, fieldTols=fieldTols)
 
     def genSuite(self):
+        """See base class :meth:`~uwa.systest.api.SysTest.genSuite`.
+
+        For this test, just a single model run is needed, to run
+        the model and compare against the analytic solution."""
         mSuite = ModelSuite(outputPathBase=self.outputPathBase)
         self.mSuite = mSuite
 
@@ -42,6 +65,7 @@ class AnalyticTest(SysTest):
         return mSuite
 
     def checkResultValid(self, resultsSet):
+        """See base class :meth:`~uwa.systest.api.SysTest.checkResultValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:
@@ -50,6 +74,7 @@ class AnalyticTest(SysTest):
             pass
 
     def getStatus(self, resultsSet):
+        """See base class :meth:`~uwa.systest.api.SysTest.getStatus`."""
         self.checkResultValid(resultsSet)
         mResult = resultsSet[0]
         fTests = self.testComponents[self.fTestName]
@@ -67,6 +92,6 @@ class AnalyticTest(SysTest):
         self.testStatus = testStatus
         return testStatus
         
-    def writeXMLCustomSpec(self, specNode):
+    def _writeXMLCustomSpec(self, specNode):
         etree.SubElement(specNode, 'defaultFieldTol').text = \
             str(self.defaultFieldTol)   
