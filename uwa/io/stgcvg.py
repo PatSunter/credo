@@ -1,24 +1,65 @@
+'''A Module for dealing with StGermain "Convergence" files, i.e. records of 
+comparison between a set of Fields and either reference or Analytic solutions,
+produced by the FieldTester Component.
+
+The module is not fully object-oriented, and in the current design allows for
+the possibility of a set of cvg files in one path that should all be referenced.
+(e.g. the see function :func:`genConvergenceFileIndex`).
+
+It provides a similar, though not identical, interface to the 
+:mod:`uwa.io.stgfreq` module.
+
+The format of CVG files is space-separated, of the form:
+
+* Header lines, which may be repeated throughout the file::
+
+    #Res        FieldName1      FieldName2 ...
+
+* Values lines, which are of the form::
+
+    <len scale> <field value 1> <field value 2>
+
+For example::
+
+  #Res TemperatureField1 TemperatureField2
+  1.000000e-01 6.16e-03 5.5e-2
+  #Res TemperatureField1 TemperatureField2
+  1.000000e-01 6.14e-03 5.4e-2
+  #Res TemperatureField1 TemperatureField2
+  1.000000e-01 6.12235812e-03 5.3e-2
+'''
+
 import os
 import glob
 import linecache
-
-'''A Module for dealing with StGermain Convergence files, produced by the
-FieldTester Component.'''
 
 CVG_EXT='cvg'
 CVG_HEADER_LINESTART='#'
 
 class CvgFileInfo:
     '''A simple class to store info about what fields map to what 
-     convergence files'''
+     convergence files. Currently implicit is the name of the Field,
+     this is usually handled by storing CvgFileInfos in a dictionary,
+     with the keys being Field names.
+     
+     .. attribute:: filename
+
+        The filename (as a string) that the cvg info is stored in.
+
+     .. attribute:: dofColMap
+
+        A dictionary mapping for each degree of freedom of a field, the 
+        column number it is stored in in the cvg file.
+     '''
+
     def __init__(self, filename):
         self.filename=filename
-        # the dofInfo is just a dict mapping dof number to column number
         self.dofColMap={}
 
+
 def genConvergenceFileIndex(path):
-    '''Returns a dictionary relating field names to convergence file info
-    classes, for all .cvg files in the given path'''
+    '''Returns a dictionary relating field names to :class:`CvgFileInfo` 
+    classes, after reading all .cvg files in the given path.'''
     
     # get list of all convergence files
     cvgFiles=glob.glob(os.path.join(path, "*."+CVG_EXT))
@@ -54,6 +95,21 @@ def genConvergenceFileIndex(path):
 # where operations are performed on a CVG file, and support e.g. slice notation?
 
 def getCheckStepsRange(cvgFile, steps):
+    """Checks that "steps" specified is valid for a given cvgFile (Python File),
+    and if so converts it into a list of step numbers within the range
+    specified. into a tuple of start and end values.
+    If steps isn't valid, raises assertion.
+
+    "steps" can be of the format:
+
+    * The string "all", meaning a list from 0 to the last step number will 
+      be returned;
+    * The string "last", meaning that a list containing only the last step
+      number in the cvgFile will be returned;
+    * A tuple of two step numbers (integers), in which case a list will
+      be returned containing a range between the two steps (using Python's
+      range() function).
+    """
     lineTot = sum(1 for line in cvgFile)
     cvgFile.seek(0)
 
@@ -85,7 +141,9 @@ def getCheckStepsRange(cvgFile, steps):
 
     return stepRange        
 
-def getLineValues(cvgFilename, stepNum):
+def _getLineValues(cvgFilename, stepNum):
+    """Get all the values in the given step number in the filename given by
+    cvgFilename. Returned as a list."""
     # Given every 2nd line is a header, need to handle these
     lineNum = stepNum*2+1
     # The linecache.getline function indexes file lines from 1, hence
@@ -104,7 +162,11 @@ def getLineValues(cvgFilename, stepNum):
     return colVals
 
 def getDofErrorsForStep(cvgFileInfo, stepNum):
-    colVals = getLineValues(cvgFileInfo.filename, stepNum)
+    """For the given :class:`CvgFileInfo` and step number, returns
+    a list indexed by dof number of the error of each dof in that step.
+    """
+
+    colVals = _getLineValues(cvgFileInfo.filename, stepNum)
 
     dofErrorsForStep = []
     for dof, colIndex in cvgFileInfo.dofColMap.iteritems():
@@ -114,7 +176,9 @@ def getDofErrorsForStep(cvgFileInfo, stepNum):
 
 
 def getRes(cvgFilename, steps='all'):
-    '''For a given cvgFile, return the resolutions for each line'''
+    """For a given cvg Filename, return the 'resolutions' (length scale)
+    for the given set of steps, where "steps" is of the form documented
+    in :func:`getCheckStepsRange`."""
 
     cvgFile = open(cvgFilename,"r")
     stepRange = getCheckStepsRange(cvgFile, steps)
@@ -122,10 +186,10 @@ def getRes(cvgFilename, steps='all'):
     resResult = []
 
     if len(stepRange) == 1:
-        resResult = getLineValues(cvgFilename, stepRange[0])[0]
+        resResult = _getLineValues(cvgFilename, stepRange[0])[0]
     else:
         for stepNum in stepRange:
-            res = getLineValues(cvgFilename, stepNum)[0]
+            res = _getLineValues(cvgFilename, stepNum)[0]
             resResult.append(res)
             
     cvgFile.close()
@@ -135,12 +199,12 @@ def getRes(cvgFilename, steps='all'):
 # Question: should we use Numeric for this? - as performance for very large
 #  CVG files could be a bit ordinary
 def getDofErrors_ByDof(cvgFileInfo, steps='all'):
-    '''For a given cvgFileInfo, get the errors in the specified dof from
+    """For a given cvgFileInfo, get the errors in the specified dof from
     the specified file, indexed primarily by Dof.
     The 'steps' arg can be either 'all' (for all timesteps), 'last',
-    or a tuple specifying range.
+    or a tuple specifying range (see :func:`getCheckStepsRange` for more).
     If only one step result is asked for, the dofs are returned as a
-    simple 1D array.'''
+    simple 1D array, otherwise they're returned as a list."""
 
     cvgFile = open(cvgFileInfo.filename,"r")
 
@@ -163,12 +227,13 @@ def getDofErrors_ByDof(cvgFileInfo, steps='all'):
 
 
 def getDofErrors_ByStep(cvgFileInfo, steps='all'):
-    '''For a given cvgFileInfo, get the errors in the specified dof from
-    the specified file - for each timestep, indexed primarily by Timestep.
-    The 'steps' arg can be either 'all' (for all timesteps), 'last',
-    or a tuple specifying range.
+    """For a given :class:`CvgFileInfo`, return the errors in the 
+    cvgFileInfo's specified file - for the timestep range specified by
+    `steps`, indexed primarily by Timestep.
+    The `steps` arg can be either 'all' (for all timesteps), 'last',
+    or a tuple specifying range (see :func:`getCheckStepsRange` for more).
     If only one step result is asked for, the dofs are returned as a
-    simple 1D array.'''
+    simple 1D array."""
 
     cvgFile = open(cvgFileInfo.filename,"r")
 
