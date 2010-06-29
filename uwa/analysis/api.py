@@ -29,7 +29,7 @@ class AnalysisOperation:
         '''Does any required post-run actions for this analysis op, e.g. moving
         generated files into the correct output directory. Is passed
         a reference to a :class:`~uwa.modelrun.ModelRun`, so can use it's
-        attributes such as :attr:`uwa.modelrun.ModelRun.outputPath`.'''
+        attributes such as :attr:`~uwa.modelrun.ModelRun.outputPath`.'''
 
         raise NotImplementedError("This is a virtual method and must be"
             " overwritten")       

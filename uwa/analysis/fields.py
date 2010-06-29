@@ -8,7 +8,7 @@ StgFEM, which allows comparison between one or more Fields in a model run (eg
 
 The UWA Field functions allow either single-model comparisons, e.g. those
 defined by :class:`.FieldComparisonOp`, or analysis on fields to be performed
-across multiple runs, e.g. :func:`calcFieldCvgWithScale`.
+across multiple runs, e.g. :func:`~calcFieldCvgWithScale`.
 
 .. Note::
    In future it's planned to add functions that load a checkpointed field result
@@ -29,7 +29,12 @@ class FieldComparisonOp:
     Currently uses the functionality of the FieldTest component in StgFEM,
     and requires using a :class:`FieldComparisonList` to run a group of
     FieldComparisons at once (this is as a result of the structure of the
-    FieldTest component).'''
+    FieldTest component).
+    
+    .. attribute:: name
+    
+       name of the field that is being compared (to an analytic or ref soln).
+    '''
 
     def __init__(self, fieldName):
         self.name = fieldName
@@ -40,11 +45,11 @@ class FieldComparisonOp:
         return etree.SubElement(parentNode, 'field', name=self.name)
 
     def getResult(self, modelResult):
-        '''Gets the result of the operator on the given fields, given a 
-        modelResult which refers to a directory containing field comparisons
+        '''Gets the result of the operator on the given fields (as a
+        :class:`.FieldComparisonResult`), given a 
+        modelResult (:class:`~uwa.modelresult.ModelResult`) which
+        refers to a directory containing field comparisons
         (i.e. cvg files, see :mod:`uwa.io.stgcvg`).
-        Returns a :class:`FieldComparisonResult` to allow analysis of the
-        result.
         '''
         cvgIndex = stgcvg.genConvergenceFileIndex(modelResult.outputPath)
         try:
@@ -67,8 +72,30 @@ class FieldComparisonResult:
     By default only contains the difference between the field DOFs at the final
     timestep - but recording a reference to the
     :class:`uwa.io.stgcvg.CvgFileInfo` for this field allows more complex
-    analysis.'''
+    analysis.
+    
+    .. attribute:: fieldName
 
+       Name of the field that has been compared.
+
+    .. attribute:: dofErrors
+
+       Comparison errors for each DOF of the field, at the final timestep
+       that was run.
+
+    .. attribute:: cvgFileInfo
+
+       A :class:`uwa.io.stgcvg.CvgFileInfo` allowing detailed access to the CVG
+       result for this field. Required for plotting etc. Is optional, needs
+       to be recorded after the class has been constructed.
+    
+    .. attribute:: plottedCvgFilename
+
+       If the :meth:`.plotOverTime` method has been called, this attribute
+       will record the filename the plot was saved to.
+    '''
+
+    # These are for reading/writing StGermain XML.
     XML_INFO_TAG = "fieldResult"
     XML_INFO_LIST_TAG = "fieldResults"
 
@@ -84,15 +111,15 @@ class FieldComparisonResult:
             self.dofErrors.append(float(errorStr))
         
         self.cvgFileInfo = None
-        self.plottedCvgFile = None
+        self.plottedCvgFilename = None
     
     def writeInfoXML(self, fieldResultsNode):
         '''Writes information about a FieldComparisonResult into an existing,
          open XML doc node'''
         fr = etree.SubElement(fieldResultsNode, self.XML_INFO_TAG)
         fr.attrib['fieldName'] = self.fieldName
-        if self.plottedCvgFile:
-            fr.attrib['plottedCvgFile'] = self.plottedCvgFile
+        if self.plottedCvgFilename:
+            fr.attrib['plottedCvgFilename'] = self.plottedCvgFilename
         for dofIndex in range(len(self.dofErrors)):
             dr = etree.SubElement(fr, 'dofResult')
             dr.attrib['dof'] = str(dofIndex)
@@ -155,7 +182,7 @@ class FieldComparisonResult:
         if save:
             filename = os.path.join(path, self.fieldName+"-cvg.png")
             plt.savefig(filename, format="png")
-            self.plottedCvgFile = filename
+            self.plottedCvgFilename = filename
         if show: plt.show()
 
     def withinTol(self, tol):
@@ -169,8 +196,12 @@ class FieldComparisonResult:
 class FieldComparisonList(AnalysisOperation):
     '''Class for maintaining and managing a list of field comparisons
     (managed as a list of :class:`FieldComparisonOp` objects),
-    including IO from StGermain XML files.'''
+    including IO from StGermain XML files.
+    
+    Currently maps to the "FieldTest" component's functionality in StgFEM.'''
 
+    # These attributes are all needed as to read/write the XML description
+    # of this Op in StGermain (FieldTest).
     stgXMLCompType = 'FieldTest'
     stgXMLCompName = 'uwaFieldTester'
     # This component is unusual in that it needs a "pluginData" struct
@@ -188,6 +219,8 @@ class FieldComparisonList(AnalysisOperation):
         self.testTimestep = 0
 
     def getCmpSrcString(self):
+        """Returns an appropriate string to document the comparison source 
+        of the fields being compared - i.e. either reference or analytic."""
         if self.useReference == True:
             return "reference"
         else:
@@ -198,6 +231,8 @@ class FieldComparisonList(AnalysisOperation):
         self.fields[fieldComparisonOp.name] = fieldComparisonOp    
 
     def postRun(self, modelRun, runPath):
+        """Implements :meth:`AnalysisOperation.postRun`. In this case, moves
+        all CVG files created to output path."""
         uwa.utils.moveAllToOutputPath(runPath, modelRun.outputPath,
             stgcvg.CVG_EXT)
     
@@ -289,9 +324,11 @@ class FieldComparisonList(AnalysisOperation):
         os.remove(ffile)
 
     def getAllResults(self, modelResult):
-        """Return a list of :class:`FieldComparisonResult`s based on all the
+        """Return a list of :class:`FieldComparisonResult` based on all the
         :class:`FieldComparisonOps` specified to be done during
-        a run."""
+        a run, from the given modelResult
+        (:class:`~uwa.modelresult.ModelResult`)."""
+
         fComps = self.fields.values()
         return [fCompOp.getResult(modelResult) for fCompOp in fComps]
 
@@ -300,14 +337,16 @@ class FieldComparisonList(AnalysisOperation):
 
 def getFieldScaleCvgData_SingleCvgFile(cvgFilePath):
     '''Given a path that CVG files reside in, returns the length scales of
-    each run (as a list), and a list of field error data for each field/cvg info
-    in the given path.
+    each run (as a list), and a list of field error data for each field/cvg
+    info in the given path.
     Thus is a utility function for generating necessary fieldErrorData for a
     multi-res convergence analysis.
     
     .. Note::
+
        This assumes all cvg info is stored in the same 
-       convergence file (the default approach of the legacy SYS tests)'''
+       convergence file (the default approach of the legacy SYS tests)
+    '''
     cvgIndex = stgcvg.genConvergenceFileIndex(cvgFilePath)
     fieldErrorData = {}
     for fieldName, cvgFileInfo in cvgIndex.iteritems():
