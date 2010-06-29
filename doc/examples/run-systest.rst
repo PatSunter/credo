@@ -141,8 +141,10 @@ principle is the same for all of these regarding SysTestRunner suites though:
 just specify the options as you would to the constructor of an individual
 SystemTest, and they will be passed through by the SysTestRunner.
 
-.. TODO: would be good if some of this was in the API direct docos. And
-   hyperlinking in to them
+.. seealso:: The :class:`~uwa.systest.analytic.AnalyticTest`,
+   :class:`~uwa.systest.restart.RestartTest`,
+   :class:`~uwa.systest.reference.ReferenceTest`, and
+   :class:`~uwa.systest.analyticMultiRes.AnalyticMultiResTest` classes.
 
 Getting the testRunner to run all tests
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
