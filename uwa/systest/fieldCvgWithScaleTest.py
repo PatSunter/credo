@@ -11,6 +11,14 @@ defFieldScaleCvgCriterions = {
     'StrainRateField':(0.85,0.99) }
 
 def testAllCvgWithScale(lenScales, fieldErrorData, fieldCvgCriterions):    
+    """Given a lists of length scales, field error data (a dictionary 
+    mapping field names to dofError lists for that field), and field
+    convergence criterions, returns a Bool specifying whether all
+    the fields met their required convergence criterions.
+    
+    The first two arguments can be created by running
+    :func:`~uwa.analysis.fields.getFieldScaleCvgData_SingleCvgFile`
+    on a path containing a single cvg file."""
     overallResult = True
     for fieldName, dofErrors in fieldErrorData.iteritems():
         result = testCvgWithScale(fieldName, lenScales, dofErrors,
@@ -25,8 +33,8 @@ def testCvgWithScale(fieldName, lenScales, dofErrors, fieldCvgCriterion):
     and list of dofErrors (indexed by Dof, then run) - that they converge
     according to the given fieldCvgCriterion.
     
-    Returns: result of test (Bool), then a list indexed by dof, giving a tuple
-    of (cvgRate, correlation) of that dof.'''
+    :returns: result of test (Bool), then a list indexed by dof, giving a
+      tuple of (cvgRate, correlation) of that dof.'''
 
     fieldConv = fields.calcFieldCvgWithScale(fieldName, lenScales, dofErrors)
     reqCvgRate, reqCorr = fieldCvgCriterion
@@ -64,7 +72,7 @@ def getNumDofs(fComp, mResult):
 
 def getDofErrorsByRun(fComp, resultsSet):
     '''For a given field comparison op, get all the dof errors from a set of
-    runs, indexed primarily by run index'''
+    runs, indexed primarily by run index.'''
 
     # A bit of a hack: need to store # of dofs per field better somewhere
     numDofs = getNumDofs(fComp, resultsSet[0])
@@ -81,6 +89,72 @@ def getDofErrorsByRun(fComp, resultsSet):
 
 
 class FieldCvgWithScaleTest(TestComponent):
+    """Checks whether, for a particular set of fields, the error
+    between each field and an (analytic or reference) solution
+    reduces with increasing resolution at a required rate. 
+    Thus similar to :class:`~uwa.systest.fieldWithinTolTest.FieldWithinTolTest`,
+    except tests accuracy of solution with increasing resolution.
+
+    .. note:: Currently, only one convergence-checking algorithm,
+       that provided by :func:`uwa.analysis.fields.calcFieldCvgWithScale`,
+       can be used, but in future if required this class could be
+       generalised to allow other convergence-check algorithms to be used.
+
+    This relies largely on functionality of:
+
+    * :mod:`uwa.analysis.fields` to specify the comparison operations
+    * :mod:`uwa.io.stgcvg` to analyse the "convergence" files containing
+      comparison information produced by these operations.
+    
+    .. attribute:: fieldsToTest 
+
+       A list of strings containing the names of fields that should be tested-
+       i.e. those that will be compared with an expected solution. If left
+       as `None` in constructor, this means the fieldsToTest list will be 
+       expected to be defined in the StGermain model XML files themselves.
+    
+    .. attribute:: fieldCvgCrits
+
+       List of Convergence criterions to be used when checking the fields.
+       Currently required to be in the form used by the convernce checking 
+       :func:`uwa.analysis.fields.calcFieldCvgWithScale`, which requires 
+       tuples of the form (cvg_rate, correlation).
+
+    .. attribute:: testCvgFunc
+
+       Function to use to test acceptable convergence of errors of a group
+       of runs - currently based on 
+       :func:`uwa.analysis.fields.calcFieldCvgWithScale`.
+    
+    .. attribute:: fComps
+
+        A :class:`uwa.analysis.fields.FieldComparisonList` used as an
+        operator to attach to ModelRuns to be tested, and do the actual
+        comparison between fields.
+    
+    .. attribute:: fErrorsByRun
+
+       Initially {}, after the test is completed will store a dictionary
+       mapping each field name to a list of floats representing the global
+       normalised error in the comparison, for each ModelRun, indexed by
+       ModelRun.
+
+    .. attribute:: fCvgMeetsReq
+
+       Initially {}, after the test is completed will store a dictionary
+       mapping each field name to a Bool recording whether the field error
+       converged acceptably as resolution increased, according to the 
+       convergence algorithm used.
+
+    .. attribute:: fCvgResults
+
+       Initially {}, after the test is completed will store a dictionary
+       mapping each field name to a tuple containing information on
+       actual convergence rate. See the return value of 
+       :func:`.testCvgWithScale` for more.
+
+    """  
+
     def __init__(self, fieldsToTest = None,
             testCvgFunc = testCvgWithScale,
             fieldCvgCrits = defFieldScaleCvgCriterions):
@@ -98,6 +172,8 @@ class FieldCvgWithScaleTest(TestComponent):
         self.fCvgResults = {}
 
     def attachOps(self, modelRun):
+        """Implements base class
+        :meth:`uwa.systest.api.TestComponent.attachOps`."""
         self.fComps = fields.FieldComparisonList()
         if self.fieldsToTest == None:
             self.fComps.readFromStgXML(modelRun.modelInputFiles)
@@ -107,6 +183,11 @@ class FieldCvgWithScaleTest(TestComponent):
         modelRun.analysis['fieldComparisons'] = self.fComps
 
     def check(self, resultsSet):
+        """Implements base class
+        :meth:`uwa.systest.api.TestComponent.check`.
+        
+        As well as performing check, will save relevant into to attributes
+        :attr:`.fErrorsByRun`, :attr:`.fCvgMeetsReq`, :attr:`.fCvgResults`."""
         # NB: could store this another way in model info?
         lenScales = self._getLenScales(resultsSet)    
         self.fErrorsByRun = {}

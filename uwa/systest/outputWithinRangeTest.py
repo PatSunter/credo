@@ -1,11 +1,60 @@
 from xml.etree import ElementTree as etree
 
 from uwa.systest.api import TestComponent, UWA_PASS, UWA_FAIL
-import uwa.analysis.fields as fields
 
 class OutputWithinRangeTest(TestComponent):
     '''Test component to check that a given output parameter 
-    (found in the frequent output) is within a given range'''
+    (found in the frequent output) is within a given range, and
+    optionally also that this occurs within a given set of model times.
+    
+    .. seealso:: :mod:`uwa.io.stgfreq`.
+
+    .. attribute:: outputName
+
+       The name of the model observable to check, as it's recorded in the
+       Frequent Output file. E.g. "Vrms".
+
+    .. attribute:: reductionOp
+
+       The reduction operation to perform in choosing where the value should
+       be checked.
+       Simple examples using Python built-ins could be:
+
+       * `max() <http://docs.python.org/library/functions.html#max>`_
+         - the Maximum value
+       * `min() <http://docs.python.org/library/functions.html#min>`_
+         - the Minimum value
+
+       .. seealso:: :func:`uwa.io.stgfreq.FreqOutput.getReductionOp`  
+
+    .. attribute:: allowedRange
+
+       The allowed range for the paramter to fall into for the test to pass.
+       A tuple of (min,max) form.
+
+    .. attribute:: tRange
+
+       (Optional) determines if a secondary check should be performed, that
+       the parameters value checked (eg max) also fell within a given range
+       of model simulation times as a (min,max) tuple. If `None`, this 
+       secondary check won't be performed.
+       
+    .. attribute:: actualVal
+
+       After the check is performed, the actual value of the parameter is 
+       recorded here.
+
+    .. attribute:: actualTime
+
+       After the check is performed, records the model sim time at which the 
+       parameters chosen property (eg max or min) occurred.
+
+    .. attribute:: withinRange
+
+       After the check is performed, records a Bool saying whether
+       the test component passed.
+    '''
+
     def __init__(self, outputName, reductionOp, allowedRange,  
             tRange=None):
         TestComponent.__init__(self, "outputWithinRange")
@@ -32,12 +81,20 @@ class OutputWithinRangeTest(TestComponent):
                 
 
     def attachOps(self, modelRun):
+        """Implements base class
+        :meth:`uwa.systest.api.TestComponent.attachOps`.
+        
+        .. note:: Currently does nothing. Intend to make it ensure the
+           correct plugin is set to be loaded (to make sure observable
+           is generated in FrequentOutput.dat)."""
         # TODO: here we have to make sure the correct plugin is set to be
         # loaded .
         # Maybe with the aid of a lookup table of param->plugins?
         pass
 
     def check(self, resultsSet):
+        """Implements base class
+        :meth:`uwa.systest.api.TestComponent.check`."""
         self.actualVal = None
         self.withinRange = None
         statusMsg = ""

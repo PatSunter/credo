@@ -40,7 +40,7 @@ class AnalyticTest(SysTest):
     fTestName = 'Analytic Solution compare'
 
     def __init__(self, inputFiles, outputPathBase, nproc=1, fieldTols=None,
-            paramOverrides={}):
+            paramOverrides=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
             paramOverrides, "Analytic")
         self.testComponents[self.fTestName] = FieldWithinTolTest(

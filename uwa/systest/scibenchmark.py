@@ -19,7 +19,7 @@ class SciBenchmarkTest(SysTest):
 
     description = '''Runs a user-defined science benchmark.'''
 
-    def __init__(self, inputFiles, outputPathBase, nproc=1, paramOverrides={}):
+    def __init__(self, inputFiles, outputPathBase, nproc=1, paramOverrides=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc, 
             paramOverrides, "SciBenchmark")
 

@@ -4,6 +4,64 @@ from uwa.systest.api import TestComponent, UWA_PASS, UWA_FAIL
 import uwa.analysis.fields as fields
 
 class FieldWithinTolTest(TestComponent):
+    """Checks whether, for a particular set of fields, the error
+    between each field and an (analytic or reference) solution
+    is below a specificed tolerance.
+
+    This relies largely on functionality of:
+
+    * :mod:`uwa.analysis.fields` to specify the comparison operations
+    * :mod:`uwa.io.stgcvg` to analyse the "convergence" files containing
+      comparison information produced by these operations.
+
+    Other than those that are directly saved as attributes documented below,
+    the constructor arguments of interest are:
+
+    * useReference: determines whether the fields are compared against
+      a reference, or analytic solution. See 
+      :meth:`uwa.analysis.fields.FieldComparisonList.useReference`
+    * referencePath: See   
+      :meth:`uwa.analysis.fields.FieldComparisonList.referencePath`
+    * referencePath: See   
+      :meth:`uwa.analysis.fields.FieldComparisonList.testTimestep`
+
+    .. attribute:: fieldsToTest 
+
+       A list of strings containing the names of fields that should be tested-
+       i.e. those that will be compared with an expected solution. If left
+       as `None` in constructor, this means the fieldsToTest list will be 
+       expected to be defined in the StGermain model XML files themselves.
+    
+    .. attribute:: defFieldTol
+
+       The default allowed tolerance for global normalised error when comparing
+       Fields with their expected values.
+
+    .. attribute:: fieldTols
+
+       A dictionary, mapping particular field names to particular tolerances
+       to use, overriding the default. E.g. {"VelocityField":1e-4} means
+       the tolerance used for the VelocityField will be 1e-4.
+
+    .. attribute:: fComps
+
+        A :class:`uwa.analysis.fields.FieldComparisonList` used as an
+        operator to attach to ModelRuns to be tested, and do the actual
+        comparison between fields.
+
+    .. attribute:: fieldResults
+
+       Initially {}, after the test is completed will store a dictionary
+       mapping each field name to a Bool saying whether or not it was within
+       the required tolerance.
+
+    .. attribute:: fieldErrors
+
+       Initially {}, after the test is completed will store a dictionary
+       mapping each field name to a float representing the global normalised
+       error in the comparison.
+    """  
+
     def __init__(self, fieldsToTest=None,
             defFieldTol=0.01,
             fieldTols=None,
@@ -23,6 +81,8 @@ class FieldWithinTolTest(TestComponent):
         self.fieldErrors = {}
 
     def attachOps(self, modelRun):
+        """Implements base class
+        :meth:`uwa.systest.api.TestComponent.attachOps`."""
         if self.fieldsToTest == None:
             self.fComps.readFromStgXML(modelRun.modelInputFiles)
         else:
@@ -31,6 +91,9 @@ class FieldWithinTolTest(TestComponent):
         modelRun.analysis['fieldComparisons'] = self.fComps
 
     def getTolForField(self, fieldName):
+        """Utility func: given fieldName, returns the tolerance to use for
+        testing that field (may be given by :attr:`.defFieldTol`, or
+        been over-ridden in :attr:`.fieldTols`)."""
         if (self.fieldTols is not None) and fieldName in self.fieldTols:
             fieldTol = self.fieldTols[fieldName]
         else:
@@ -38,6 +101,8 @@ class FieldWithinTolTest(TestComponent):
         return fieldTol
 
     def check(self, resultsSet):
+        """Implements base class
+        :meth:`uwa.systest.api.TestComponent.check`."""
         self.fieldResults = {}
         self.fieldErrors = {}
         statusMsg = ""

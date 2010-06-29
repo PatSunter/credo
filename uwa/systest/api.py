@@ -128,6 +128,8 @@ class SysTest:
         self.testComponents = {}
         self.nproc = nproc 
         self.paramOverrides = paramOverrides
+        if self.paramOverrides == None:
+            self.paramOverrides = {}
 
     def setup(self):
         '''For the setup phase of tests.

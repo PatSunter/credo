@@ -31,7 +31,7 @@ class AnalyticMultiResTest(SysTest):
     description = '''Runs an existing test with multiple resolutions.'''
 
     def __init__(self, inputFiles, outputPathBase, resSet, nproc=1,
-            paramOverrides={}):
+            paramOverrides=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
             paramOverrides, "AnalyticMultiResConvergence")
         self.resSet = resSet
