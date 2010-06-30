@@ -198,7 +198,43 @@ class FieldComparisonList(AnalysisOperation):
     (managed as a list of :class:`FieldComparisonOp` objects),
     including IO from StGermain XML files.
     
-    Currently maps to the "FieldTest" component's functionality in StgFEM.'''
+    Currently maps to the "FieldTest" component's functionality in StgFEM.
+
+    .. Note:: Currently the whole _list_ of Field comparisons is a single
+       :class:`uwa.analysis.api.AnalysisOperation`,
+       because this is the design of the FieldTest component
+       in StgFEM. In future we may look at modularising this functionality
+       further so that single comparisons can be managed as operators.
+    
+    .. attribute:: fields
+
+       A dictionary mapping field names that need to be compared, to
+       :class:`.FieldComparisonOp` to perform the comparison.
+       
+    .. attribute:: fromXML
+
+       If True, means the list of fields to compare (ie :attr:`.fields`)
+       should be read from the Model XML files of the model to attach to.
+       If False, the user has to manually specify the fields to compare.
+
+    .. attribute:: useReference
+
+       Determines whether fields are compared against a reference solution
+       (if True), or analytic (if False). If useReference is true, user
+       must also specify :attr:`.referencePath` so that the appropriate
+       StGermain XML for the operation can be written.
+
+    .. attribute:: referencePath
+
+       (Relative or absolute) path to the reference solutions for the 
+       specified fields.
+
+    .. attribute:: testTimestep
+
+       Integer, the timestep of the model that the comparison will occur at.
+       If 0, means the final timestep. Based on the capability of the 
+       StGermain FieldTest component.
+    '''
 
     # These attributes are all needed as to read/write the XML description
     # of this Op in StGermain (FieldTest).
@@ -211,8 +247,8 @@ class FieldComparisonList(AnalysisOperation):
     stgXMLSpecRList = 'ReferenceFields'
 
     def __init__(self, fieldsList=None):
-        self.fields = fieldsList
-        if self.fields == None: self.fields = {}
+        if fieldsList == None:
+            self.fields = {}
         self.fromXML = False
         self.useReference = False
         self.referencePath = None
