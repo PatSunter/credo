@@ -1,3 +1,10 @@
+"""This module allows recording and post-processing of the results of running
+a StGermain-based application.
+
+The primary interface is via the :class:`~uwa.modelrun.ModelRun` class.
+
+.. seealso:: :mod:`uwa.modelrun`."""
+
 from xml.etree import ElementTree as etree
 import os
 
@@ -6,8 +13,41 @@ from uwa.io.stgxml import writeXMLDoc
 from uwa.analysis import fields
 
 class ModelResult:
-    '''A class to keep records about the results of a StgDomain/Underworld
-     model run'''
+    """A class to keep records about the results of a StgDomain/Underworld
+     model run. These are normally produced as a result of running a
+     :class:`~uwa.modelrun.ModelRun`. 
+
+     .. note:: In future, we intend to add the ability to create a ModelResult
+        class by reading in an XML file specifying output directory, etc.
+
+     .. attribute:: modelName
+
+        Name of the Model that was run.
+
+     .. attribute:: outputPath
+
+        Path to the output results the ModelRun produced.
+
+     .. attribute:: jobMetaInfo
+
+        A :class:`.JobMetaInfo`, recording information about the run such as
+        time taken, Memory usage etc.
+
+     .. attribute:: fieldResults
+
+        A list of FieldComparisonResult objects.
+
+        .. note:: is a legacy of early design of UWA to allow construction of
+           XML files from pre-existing sys test scripts, may be removed soon.
+
+     .. attribute:: freqOutput
+
+        Initially `None`, if :meth:`.readFrequentOutput` is called, this will
+        be populated with a reference to a :class:`uwa.io.stgfreq.FreqOutput`
+        class, to allow post-processing of info in the Frequent Output file
+        saved as part of the model run.
+
+     """
 
     XML_INFO_TAG = 'StgModelResult'
 
@@ -21,6 +61,11 @@ class ModelResult:
         self.freqOutput = None
 
     def readFrequentOutput(self):
+        """Opens and reads in info from the Frequent Output file produced
+        as part of the run, and saves to the attribute :attr:`.freqOutput`.
+
+        .. seealso: :class:`uwa.io.stgfreq.FreqOutput` for info on how to
+           use this attribute once created."""
         self.freqOutput = stgfreq.FreqOutput(self.outputPath)    
 
     # TODO: is this function still appropriate?
@@ -37,7 +82,13 @@ class ModelResult:
 # Or maybe sub-class from dict, and just add some parameter checking.
 class JobMetaInfo:
     '''A simple class for recording meta info about a job, such as walltime,
-    memory usage, etc'''
+    memory usage, etc.
+
+    .. attribute:: simtime
+
+       Simulated time the model ran for.
+    '''
+
     XML_INFO_TAG = "jobMetaInfo"
 
     def __init__(self, simtime):
@@ -55,6 +106,7 @@ class JobMetaInfo:
 # Key XML tags
 
 def writeModelResultsXML(modelResult, path="", filename="", prettyPrint=True):
+    """Write an XML record of a :class:`.ModelResult`."""
     mres = modelResult
     assert isinstance(mres, ModelResult)
     if filename == "":
@@ -86,6 +138,8 @@ def writeModelResultsXML(modelResult, path="", filename="", prettyPrint=True):
 
 
 def updateModelResultsXMLFieldInfo(filename, newFieldResult, prettyPrint=True):
+    """Update an existing XML record of a :class:`.ModelResult` with info
+    about a particular fieldResult."""
     assert filename != ""
 
     xmlDoc = etree.parse(filename)
@@ -110,5 +164,7 @@ def updateModelResultsXMLFieldInfo(filename, newFieldResult, prettyPrint=True):
     outFile.close()
 
 def defaultModelResultFilename(modelName):
+    """Get the default filename to use, based on the model name of a
+    particular model."""
     return 'ModelResult-'+modelName+'.xml'
 

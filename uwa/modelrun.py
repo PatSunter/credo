@@ -23,6 +23,22 @@ _allowedModelParamTypes = [int, float, long, bool, str]
 class ModelRun:
     '''A class to keep records about a StgDomain/Underworld Model Run,
     including access to the underlying XML of the actual model.
+
+    This is one of the key core classes in UWA, useful on it's own for
+    managing analysis, but also underlying the :mod:`uwa.systest` module.
+
+    The basic usage pattern of this class is that a ModelRun needs to be
+    constructed and configured to specify the basic XML files defining
+    a StGermain Model, but also any customisations and 
+    :class:`uwa.analysis.api.AnalysisOperation` classes attached to be
+    performed.
+
+    After the model is run (currently by calling :func:`.runModel`), 
+    a :class:`~uwa.modelresult.ModelResult` will be produced as a record of the run and
+    for further analysis.
+
+    Examples of using the ModelRun are documented in UWA, see
+    :ref:`uwa-examples-analysis`.
     
     Key attributes:
     
@@ -38,10 +54,69 @@ class ModelRun:
     
        Output path that all model results will be saved to (is passed through to
        StGermain).
+
+    .. attribute:: cpReadPath
+    
+       Path that checkpoints are read from (is passed through to StGermain).
+
+    .. attribute:: logPath
+    
+       Path that log files of the run will be saved to.
+
+    .. attribute:: jobParams
+    
+       A :class:`.JobParams` class, to record options needed to define
+       how the model should be actually run (eg number of procs to use).
+
+    .. attribute:: simParams
+
+       A :class:`.SimParams` object, recording key parameters to control the
+       model. This defaults to `None`, unless the user specifically
+       instantiates one either in the constructor or subsequently sets this
+       directly later. This idiom assumes that if simParams is `None`, all
+       the necessary parameters are defined in the StGermain XML directly.
+
+       .. note:: You shouldn't provide a particular parameter in both a
+          SimParams object, and as an override of the ModelRun's
+          :attr:`.paramOverrides` list. At both construction-time and
+          just before the model is run, a check is performed that this
+          has not occurred.
+    
+    .. attribute:: paramOverrides
+
+       A list of StGermain XML parameter overrides that should be applied,
+       in the form (XML_param_path, override_value). These will then be
+       passed through at the command line.
+
+       E.g. if paramOverrides is set to [("gravity",0.8)], it means that
+       the "gravity" model parameter will be set to the value 0.8.
+
+       .. note:: Currently this is a conceptual "catch-all" for overriding
+          model parameters, for things not specific to the :attr:`.simParams`
+          list. In future this approach may be refactored.
+
+    .. attribute:: analysis
+
+       A list of :class:`uwa.analysis.api.AnalysisOperation` that are
+       associated with this ModelRun, and will be applied when the 
+       model is actually run (which involves writing and submitting
+       additional StGermain XML).
+
+    .. attribute:: cpFields
+
+       A list of fields that the user wishes to checkpoint in the run.
+       Defaults to [], in which case the list (if any) in the model
+       run's XML will be left as-is.
+    
+    .. attribute:: analysisXML
+
+       Initally `None`, this will be populated with the filename of the
+       additional XML document written containing parameter overrides,
+       and requested analysis operations.
     '''
 
     def __init__(self, name, modelInputFiles, outputPath, logPath="./log",
-      cpReadPath=None, nproc=1, simParams=None, paramOverrides={}):
+      cpReadPath=None, nproc=1, simParams=None, paramOverrides=None):
         self.name = name
         # Be forgiving if the user passes a single string input file, rather
         # than list
@@ -54,12 +129,12 @@ class ModelRun:
         self.jobParams = JobParams(nproc) 
         self.simParams = simParams
         self.paramOverrides = paramOverrides
+        if self.paramOverrides == None:
+            self.paramOverrides = {}
         checkParamOverridesTypes(self.paramOverrides)
         if self.simParams:
             self.simParams.checkNoDuplicates(self.paramOverrides.keys())
         self.analysis = {}
-        # TODO: is this really necessary to create by default?
-        self.analysis['fieldTests'] = fields.FieldComparisonList()
         self.cpFields = []
         self.analysisXML = None
 
@@ -187,6 +262,10 @@ class JobParams:
 
        Needs fleshing out, it's likely this could be expanded in future as the
        ability to run Models via PBS or over the grid is developed.
+
+    .. attribute:: nproc
+
+       Number of processors to use in a parallel job.
     """
     def __init__(self, nproc):
         self.nproc = int(nproc)
@@ -197,13 +276,28 @@ class JobParams:
         jpNode = etree.SubElement(parentNode, 'jobParams')
         etree.SubElement(jpNode, 'nproc').text = str(self.nproc)
 
+
 class StgParamInfo:
     '''A simple Class that keeps track of the type of a StgParam, and it's full
-    name'''
+    name.
+    
+    .. attribute:: stgName
+
+       The name of this parameter used in the StGermain dictionary and Model
+       XML files.
+
+    .. attribute:: pType
+
+       Type of this parameter (will be used in casting etc).
+       
+    .. attribute:: defVal
+
+       Default value of the parameter.
+    '''
     def __init__( self, stgName, pType, defVal ):
         self.stgName = str(stgName)
         assert isinstance(pType, type)
-        assert pType in [int,float,str,bool]
+        assert pType in _allowedModelParamTypes
         self.pType = pType
         # Allow None as a special value, else the default value should be of
         # correct type during construction
@@ -212,6 +306,7 @@ class StgParamInfo:
         self.defVal = defVal
 
     def checkType( self, value ):
+        """Checks that the value is of the correct type of this parameter."""
         if (value is not None) and (not isinstance(value, self.pType)):
             raise ValueError("Tried to set StgParam \"%s\" to %s, of type %s,"\
                 "but this param is of type %s" % \
@@ -219,8 +314,19 @@ class StgParamInfo:
 
 
 class SimParams:
-    '''A class to keep records about the simulation parameters used for a
-     StgDomain/Underworld Model Run, such as number of timesteps to run for'''
+    """A class to keep records about the simulation parameters used for a
+     StgDomain/Underworld Model Run, such as number of timesteps to run for.
+     Has functionality to save this list to an XML record, and also read
+     them from a StGermain XML.
+
+     After construction, it will make all these parameters directly available
+     as attributes of the SimParams object.
+     
+     .. attribute:: stgParamInfos
+     
+        A dictionary of :class:`.StgParamInfo`, specifying which parameters
+        are actually controlled by this class. The keys are the short-hand
+        names which can be used to refer to them, as well as Stgermain names."""
 
     stgParamInfos = { \
         'nsteps':StgParamInfo("maxTimeSteps", int, None), \
@@ -258,15 +364,18 @@ class SimParams:
         self.stgParamInfos[paramName].checkType(val)
 
     def getParam(self, paramName):    
+        """Get the value of a parameter with given paramName."""
         return self.__dict__[paramName]
 
     def checkValidParams(self):
+        """Checks that the parameter set is valid to run a StGermain model
+        (e.g. that either the stop time, or total number of steps, is set)."""
         if (self.nsteps is None) and (self.stoptime is None):
             raise ValueError("neither nsteps nor stoptime set")
 
     def checkNoDuplicates(self, paramOverridesList):
-        """Function to check there are no duplicates between sim param overrides
-        set, and cmd-line parameter overrides."""
+        """Function to check there are no duplicates between sim param 
+        overrides set, and cmd-line parameter overrides."""
 
         stgParamNamesSet = [simPInfo.stgName for simPInfo in \
             self.stgParamInfos.itervalues()]
@@ -314,6 +423,8 @@ class SimParams:
 # TODO: as a class, sub-classing dict?
 
 def checkParamOverridesTypes(paramOverrides):
+    """Checks that, for a given list of paramOverrides, each is of a valid
+    type that can actually be successfully used in a StGermain dictionary."""
     for modelPath, paramVal in paramOverrides.iteritems():
         if type(paramVal) not in _allowedModelParamTypes:
             raise ValueError("One of the parameters in paramOverrides"\
@@ -338,6 +449,8 @@ def getParamOverridesAsStr(paramOverrides):
     return paramOverridesStr
 
 def writeParamOverridesInfoXML(paramOverrides, parentNode):    
+    """Writes a record, under the given parentNode, of all the 
+    parameter overrides specified in the list paramOverrides."""
     paramOversNode = etree.SubElement(parentNode, 'paramOverrides')
     for modelPath, paramVal in paramOverrides.iteritems():
         paramNode = etree.SubElement(paramOversNode, 'param')
@@ -389,16 +502,17 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
     """Run the specified modelRun, and return a 
     :class:`~uwa.modelresult.ModelResult` recording the results of the run.
 
-    If extraCmdLineOpts specified, these will be passed through to the run.
-
-    If dryRun is set as True, just print what you _would_ do, but don't
-    actually run anything.
+    :param modelRun: the :class:`.ModelRun` to be run.
+    :keyword extraCmdLineOpts: if specified, these extra cmd line opts will
+       be passed through on the command line to the run, extra to any
+       :attr:`.ModelRun.simParams` or :attr:`.ModelRun.paramOverrides`.
+    :keyword dryRun: If set to True, just print out what *would* be run,
+       but don't actually run anything.
 
     .. Note:
 
        It's planned for much of this functionality to move to a JobRunner class
-       in future, to allow things like launching PBS or grid jobs.
-    """
+       in future, to allow things like launching PBS or grid jobs."""
 
     # Check runExe found in path
 
@@ -473,13 +587,17 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
         # For now, allow runs that didn't create a freq output
         tSteps, simTime = None, None
 
-    result = uwa.modelresult.ModelResult(modelRun.name, modelRun.outputPath, simTime)
+    result = uwa.modelresult.ModelResult(modelRun.name,
+        modelRun.outputPath, simTime)
     
     return result
 
 
 def getSimInfoFromFreqOutput(outputPath):
-    """Get necessary stuff from FrequentOutput.dat"""
+    """Get necessary information to create a :class:`.SimInfo` from
+    the FrequentOutput.dat, given a particular output Path.
+    
+    .. seealso:: :mod:`uwa.io.stgfreq`."""
     freqOut = stgfreq.FreqOutput(path=outputPath)
     freqOut.populateFromFile()
     recordDict = freqOut.getRecordDictAtStep(freqOut.finalStep())
