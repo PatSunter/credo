@@ -132,8 +132,12 @@ The UWA code is written in the dynamic scripting and programming language
   architectures.
 * The increasingly stable, feature-rich and wide-ranging set of open source
   packages for mathematical and scientific analysis in Python, such as 
-  `SciPy <http://www.scipy.org/>`_, Numeric, Matplotlib, SAGE, Paraview,
-  and MayaVI. 
+  `SciPy <http://www.scipy.org/>`_,
+  `NumPy <http://numpy.scipy.org/>`_, 
+  `Matplotlib <http://matplotlib.sourceforge.net/>`_, 
+  `SAGE <http://www.sagemath.org/>`_, 
+  `Paraview <http://www.paraview.org/>`_,
+  and `MayaVI <http://mayavi.sourceforge.net/>`_. 
   
 .. seealso:: :ref:`uwa-pythonlinks`
 
