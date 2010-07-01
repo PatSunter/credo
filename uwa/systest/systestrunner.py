@@ -49,12 +49,32 @@ class SysTestRunner:
         # TODO: make the test name an input arg?
         if 'nproc' not in testOpts:
             testOpts['nproc']=self.nproc
+
+        outputPath = self._getStdOutputPath(testClass, inputFiles, testOpts)
+
+        newSysTest = testClass(inputFiles, outputPath, **testOpts)
+        self.sysTests.append(newSysTest)
+
+    def _getStdOutputPath(self, testClass, inputFiles, testOpts):
+        """Get the standard name for the test's output path. Attempts to
+        avoid naming collisions where reasonable."""
         classStr = str(testClass).split('.')[-1]
         testName, ext = os.path.splitext(inputFiles[0])
         testName += "-"+classStr[0].lower()+classStr[1:]
-        outputPath = 'output/' + testName + "-" + str(testOpts['nproc'])
-        newSysTest = testClass(inputFiles, outputPath, **testOpts)
-        self.sysTests.append(newSysTest)
+        outputPath = 'output/' + testName + "-np" + str(testOpts['nproc'])
+        # This bit to avoid param override tests overriding std ones.
+        if 'paramOverrides' in testOpts:
+            paramOs = testOpts['paramOverrides']
+            paramOsStr = ""
+            for paramName, paramVal in paramOs.iteritems():
+                # TODO: move this stuff into a library for managing Stg Command
+                # line dict format.
+                paramNameLast = paramName.split('.')[-1]
+                paramValCanon = str(paramVal).replace(".","_")
+                paramOsStr += "-%s-%s" % (paramNameLast, paramValCanon)
+            outputPath += paramOsStr    
+
+        return outputPath
 
     def runTest(self, sysTest):
         """Run a given sysTest, and return the 
