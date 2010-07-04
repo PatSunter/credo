@@ -13,7 +13,7 @@ run UWA have been set up, as detailed in :ref:`environment_setup`.
 Then check out one of the test suite files in a SysTest directory within the
 code. We'll show in this example StgFEM/SysTest/RegressionTests/testAll-new.py:
 
-.. include:: ../../../StgFEM/SysTest/RegressionTests/testAll-new.py
+.. include:: ../../../StgFEM/SysTest/RegressionTests/testAll.py
    :literal:
 
 This Python script uses UWA to run 3 system tests, and process their results. To
