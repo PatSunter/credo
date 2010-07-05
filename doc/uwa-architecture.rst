@@ -65,7 +65,7 @@ individual *modules*.
    without worrying about how Python classes work in detail. 
    However if you intend to add and develop new Analysis capabilities,
    you may wish to run through the Python tutorial's `section on Classes
-   <http://docs.python.org/tutorial/classes.html>` as a primer
+   <http://docs.python.org/tutorial/classes.html>`_ as a primer
    to get you started.
 
 These key models and packages are described and documented in the
