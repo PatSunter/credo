@@ -464,8 +464,9 @@ def writeParamList(parentNode, listName, paramVals, mt=None):
     listElt = etree.SubElement(parentNode, STG_LIST_TAG, name=listName) 
     setMergeType(listElt, mt)
     for paramVal in paramVals:
-        etree.SubElement(listElt, STG_PARAM_TAG).text = str(paramVal) 
-    return listElt    
+        pElt = etree.SubElement(listElt, STG_PARAM_TAG)
+        pElt.text = str(paramVal) 
+    return listElt
 
 def writeMergeComponent(rootNode, compName, compType):
     '''Write XML to merge a given component to the components list - and
