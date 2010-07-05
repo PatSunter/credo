@@ -336,7 +336,6 @@ class FieldComparisonList(AnalysisOperation):
 
         # create a flattened file
         ffile=stgxml.createFlattenedXML(inputFilesList)
-        # Necessary, because the parser will prefix this this to tag names
         xmlDoc = etree.parse(ffile)
         stgRoot = xmlDoc.getroot()
         # Go and grab necessary info from XML file
@@ -358,6 +357,19 @@ class FieldComparisonList(AnalysisOperation):
         # would be useful to do this in future.
 
         os.remove(ffile)
+
+    def checkStgXMLResultsEnabled(self, inputFilesList):
+        """Checks that the field comparison has the writing of comparison
+        info to file enabled (returning Bool)."""
+        ffile=stgxml.createFlattenedXML(inputFilesList)
+        xmlDoc = etree.parse(ffile)
+        stgRoot = xmlDoc.getroot()
+        fieldTestDataEl = stgxml.getStructNode(stgRoot, self.stgXMLSpecName)
+        appendNode = stgxml.getParamNode(fieldTestDataEl,
+            "appendToAnalysisFile")
+        appendBool = stgxml.strToBool(appendNode.text)
+        os.remove(ffile)
+        return appendBool
 
     def getAllResults(self, modelResult):
         """Return a list of :class:`FieldComparisonResult` based on all the

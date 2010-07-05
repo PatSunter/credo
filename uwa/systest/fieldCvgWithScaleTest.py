@@ -177,6 +177,13 @@ class FieldCvgWithScaleTest(TestComponent):
         self.fComps = fields.FieldComparisonList()
         if self.fieldsToTest == None:
             self.fComps.readFromStgXML(modelRun.modelInputFiles)
+            check = self.fComps.checkStgXMLResultsEnabled(
+                modelRun.modelInputFiles)
+            if check == False:
+                raise IOError("Error, trying to do a run where field"\
+                    " comparison info already specified in the Model XML, but"\
+                    " logging of field comparisons in the model input files"\
+                    " is not enabled.")
         else:
             for fieldName in self.fieldsToTest:
                 self.fComps.add(fields.FieldComparisonOp(fieldName))
@@ -252,6 +259,17 @@ class FieldCvgWithScaleTest(TestComponent):
         for runI, mResult in enumerate(resultsSet):
             cvgIndex = stgcvg.genConvergenceFileIndex(mResult.outputPath)
             # a bit hacky, need to redesign cvg stuff, esp len scales??
-            cvgInfo = cvgIndex[self.fComps.fields.keys()[0]]
+            try:
+                cvgInfo = cvgIndex[self.fComps.fields.keys()[0]]
+            except KeyError:
+                if len(cvgIndex) == 0:
+                    raise IOError("No field comparison check results"\
+                        " were found in output path '%s'." % mResult.outputPath)
+                else:
+                    raise IOError("Comparison info for field '%s' not found."\
+                        " Fields that had comparison info found for them"\
+                        " in results were %s."\
+                        % (self.fComps.fields.keys()[0], str(cvgIndex.keys())))
+ 
             lenScales.append(stgcvg.getRes(cvgInfo.filename))        
         return lenScales    
