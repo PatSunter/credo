@@ -202,8 +202,8 @@ class ModelRun:
         writeParamOverridesInfoXML(self.paramOverrides, root)
 
         analysisNode = etree.SubElement(root, 'analysis')
-        for toolName, analysisTool in self.analysis.iteritems():
-            analysisTool.writeInfoXML(analysisNode)
+        for opName, analysisOp in self.analysis.iteritems():
+            analysisOp.writeInfoXML(analysisNode)
         # TODO : write info on cpFields?
         # Write the file
         if not os.path.exists(outputPath):
@@ -240,14 +240,15 @@ class ModelRun:
                 mt='replace')
         if self.simParams:
             self.simParams.writeStgDataXML(root)
-        for analysisName, analysisTool in self.analysis.iteritems():
-            if not analysisTool.fromXML:
-                analysisTool.writeStgDataXML(root)
+        for analysisName, analysisOp in self.analysis.iteritems():
+            analysisOp.writeStgDataXML(root)
 
         # This is so we can checkpoint fields list: defined in FieldVariable.c
         if len(self.cpFields):
+            # Have used the Merge mergeType, because the solvers for the
+            # models in use may have a minimum set of fields to checkpoint.
             stgxml.writeParamList(root, 'FieldVariablesToCheckpoint',
-                self.cpFields, mt='replace')
+                self.cpFields, mt='merge')
 
         stgxml.writeStgDataDocToFile(xmlDoc, filename)
         self.analysisXML = filename

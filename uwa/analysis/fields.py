@@ -247,9 +247,9 @@ class FieldComparisonList(AnalysisOperation):
     stgXMLSpecRList = 'ReferenceFields'
 
     def __init__(self, fieldsList=None):
+        self.fromXML = False
         if fieldsList == None:
             self.fields = {}
-        self.fromXML = False
         self.useReference = False
         self.referencePath = None
         self.testTimestep = 0
@@ -291,42 +291,49 @@ class FieldComparisonList(AnalysisOperation):
         '''Writes the necessary StGermain XML to enable these specified
          fields to be compared.'''
 
-        assert(self.fromXML == False)
         # If there are no fields to test, no need to write StGermain XML
         if len(self.fields) == 0: return
 
-        # Append the component to component list
-        compElt = stgxml.writeMergeComponent(rootNode, self.stgXMLCompName, \
-            self.stgXMLCompType)
-        # Create the plugin data
-        pluginDataElt = etree.SubElement(rootNode, stgxml.STG_STRUCT_TAG, \
-            name=self.stgXMLSpecName, mergeType="replace")
-        xmlFieldTestsList = self.fields.keys()
-        # This is necessary due to format of this list in the FieldTest plugin:
-        # <FieldName> <# of analytic func> - both as straight params
-        ii=0
-        for index in range(1,len(self.fields)*2,2):
-            xmlFieldTestsList.insert(index, str(ii))
-            ii+=1
+        if self.fromXML:
+            # In this case, just make sure the printing of comparison info
+            #  enabled.
+            pluginDataElt = etree.SubElement(rootNode, stgxml.STG_STRUCT_TAG,
+                name=self.stgXMLSpecName, mergeType="merge")
+            stgxml.writeParam(pluginDataElt, 'appendToAnalysisFile', 'True',
+                mt="replace")
+        else:
+            # Append the component to component list
+            compElt = stgxml.writeMergeComponent(rootNode, self.stgXMLCompName,
+                self.stgXMLCompType)
+            # Create the plugin data
+            pluginDataElt = etree.SubElement(rootNode, stgxml.STG_STRUCT_TAG,
+                name=self.stgXMLSpecName, mergeType="replace")
+            xmlFieldTestsList = self.fields.keys()
+            # This is necessary due to format of this list in FieldTest plugin:
+            # <FieldName> <# of analytic func> - both as straight params
+            ii=0
+            for index in range(1,len(self.fields)*2,2):
+                xmlFieldTestsList.insert(index, str(ii))
+                ii+=1
 
-        stgxml.writeParamList(pluginDataElt, self.stgXMLSpecFList, \
-            xmlFieldTestsList)
+            stgxml.writeParamList(pluginDataElt, self.stgXMLSpecFList,
+                xmlFieldTestsList)
 
-        if self.useReference:
-            stgxml.writeParamSet(pluginDataElt, {\
-                'referenceSolutionFilePath':self.referencePath,\
-                'useReferenceSolutionFromFile':self.useReference })
-            stgxml.writeParamList(pluginDataElt, self.stgXMLSpecRList, \
-                self.fields.keys())
+            if self.useReference:
+                stgxml.writeParamSet(pluginDataElt, {
+                    'referenceSolutionFilePath':self.referencePath,
+                    'useReferenceSolutionFromFile':self.useReference })
+                stgxml.writeParamList(pluginDataElt, self.stgXMLSpecRList,
+                    self.fields.keys())
 
-        stgxml.writeParamSet(pluginDataElt, {\
-            'IntegrationSwarm':'gaussSwarm',\
-            'ConstantMesh':'constantMesh',\
-            'testTimestep':self.testTimestep,\
-            'ElementMesh':'linearMesh',\
-            'normaliseByAnalyticSolution':'True',\
-            'context':'context',\
-            'appendToAnalysisFile':'True'})
+            stgxml.writeParamSet(pluginDataElt, {
+                'IntegrationSwarm':'gaussSwarm',
+                'ConstantMesh':'constantMesh',
+                'testTimestep':self.testTimestep,
+                'ElementMesh':'linearMesh',
+                'normaliseByAnalyticSolution':'True',
+                'context':'context',
+                'appendToAnalysisFile':'True'})
     
     def readFromStgXML(self, inputFilesList):
         '''Read in the list of fields that have already been specified to 
@@ -355,7 +362,6 @@ class FieldComparisonList(AnalysisOperation):
             ii+=1
         # NB: not reading in all the other specifying stuff currently. Possibly
         # would be useful to do this in future.
-
         os.remove(ffile)
 
     def checkStgXMLResultsEnabled(self, inputFilesList):
