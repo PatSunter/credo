@@ -10,7 +10,13 @@ cvgFilePath = "./output/cvgTest"
 lenScales, fErrorData = fields.getFieldScaleCvgData_SingleCvgFile(cvgFilePath)
 overallRes = testAllCvgWithScale(lenScales, fErrorData, 
     defFieldScaleCvgCriterions)
-velResult = testCvgWithScale("VelocityField", lenScales,
-    fErrorData["VelocityField"], defFieldScaleCvgCriterions["VelocityField"])
-pResult = testCvgWithScale("PressureField", lenScales,
-    fErrorData["PressureField"], defFieldScaleCvgCriterions["PressureField"])
+
+velCvg = fields.calcFieldCvgWithScale("VelocityField", lenScales,
+     fErrorData["VelocityField"])
+pCvg = fields.calcFieldCvgWithScale("PressureField", lenScales,
+     fErrorData["PressureField"])
+
+velResult = testCvgWithScale("VelocityField", velCvg,
+    defFieldScaleCvgCriterions["VelocityField"])
+pResult = testCvgWithScale("PressureField", pCvg,
+     defFieldScaleCvgCriterions["PressureField"])

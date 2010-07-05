@@ -21,26 +21,25 @@ def testAllCvgWithScale(lenScales, fieldErrorData, fieldCvgCriterions):
     on a path containing a single cvg file."""
     overallResult = True
     for fieldName, dofErrors in fieldErrorData.iteritems():
-        result = testCvgWithScale(fieldName, lenScales, dofErrors,
+        convResult = fields.calcFieldCvgWithScale(fieldName, lenScales,
+            dofErrors)
+        meetsReq = testCvgWithScale(fieldName, convResult,
             fieldCvgCriterions[fieldName])
-        meetsReq = result[0]
         if meetsReq == False:
             overallResult = False
     return overallResult    
 
-def testCvgWithScale(fieldName, lenScales, dofErrors, fieldCvgCriterion):
-    '''Tests that for a given field, set of length scales of different runs,
-    and list of dofErrors (indexed by Dof, then run) - that they converge
-    according to the given fieldCvgCriterion.
+def testCvgWithScale(fieldName, fieldConvResults, fieldCvgCriterion):
+    '''Tests that for a given field, given a list of fieldConvResults 
+    (See :func:`uwa.analysis.fields.calcFieldCvgWithScale`)
+    - that they converge according to the given fieldCvgCriterion.
     
-    :returns: result of test (Bool), then a list indexed by dof, giving a
-      tuple of (cvgRate, correlation) of that dof.'''
+    :returns: result of test (Bool)'''
 
-    fieldConv = fields.calcFieldCvgWithScale(fieldName, lenScales, dofErrors)
     reqCvgRate, reqCorr = fieldCvgCriterion
     dofStatuses = []
 
-    for dofI, dofConv in enumerate(fieldConv):
+    for dofI, dofConv in enumerate(fieldConvResults):
         cvgRate, corr = dofConv
         print "Field %s, dof %d - cvg rate %6g, corr %6f" \
             % (fieldName, dofI, cvgRate, corr)
@@ -60,9 +59,9 @@ def testCvgWithScale(fieldName, lenScales, dofErrors, fieldCvgCriterion):
         dofStatuses.append(dofTestStatus)
     
     if False in dofStatuses:
-        return False, fieldConv
+        return False
     else: 
-        return True, fieldConv
+        return True
 
 def getNumDofs(fComp, mResult):
     '''Hacky utility function to get the number of dofs of an fComp, by
@@ -120,11 +119,16 @@ class FieldCvgWithScaleTest(TestComponent):
        :func:`uwa.analysis.fields.calcFieldCvgWithScale`, which requires 
        tuples of the form (cvg_rate, correlation).
 
-    .. attribute:: testCvgFunc
+       .. note:: if this list doesn't contain a cvg criterion for a field
+          that's tested, the behaviour is to skip the formal test of 
+          this field, but print a warning (based on previous SYS test
+          behaviour).
 
-       Function to use to test acceptable convergence of errors of a group
-       of runs - currently based on 
-       :func:`uwa.analysis.fields.calcFieldCvgWithScale`.
+    .. attribute:: calcCvgFunc
+
+       Function to use to calculate convergence of errors of a group
+       of runs - currently uses 
+       :func:`uwa.analysis.fields.calcFieldCvgWithScale` by default.
     
     .. attribute:: fComps
 
@@ -151,15 +155,15 @@ class FieldCvgWithScaleTest(TestComponent):
        Initially {}, after the test is completed will store a dictionary
        mapping each field name to a tuple containing information on
        actual convergence rate. See the return value of 
-       :func:`.testCvgWithScale` for more.
+       :func:`uwa.analysis.fields.calcFieldCvgWithScale` for more.
 
     """  
 
     def __init__(self, fieldsToTest = None,
-            testCvgFunc = testCvgWithScale,
+            calcCvgFunc = fields.calcFieldCvgWithScale,
             fieldCvgCrits = defFieldScaleCvgCriterions):
         TestComponent.__init__(self, "fieldCvgWithScaleTest")
-        self.testCvgFunc = testCvgFunc
+        self.calcCvgFunc = calcCvgFunc
         self.fieldCvgCrits = fieldCvgCrits
         self.fieldsToTest = fieldsToTest
         # TODO: would be good to check here that the fieldsToTest have
@@ -177,13 +181,6 @@ class FieldCvgWithScaleTest(TestComponent):
         self.fComps = fields.FieldComparisonList()
         if self.fieldsToTest == None:
             self.fComps.readFromStgXML(modelRun.modelInputFiles)
-            check = self.fComps.checkStgXMLResultsEnabled(
-                modelRun.modelInputFiles)
-            if check == False:
-                raise IOError("Error, trying to do a run where field"\
-                    " comparison info already specified in the Model XML, but"\
-                    " logging of field comparisons in the model input files"\
-                    " is not enabled.")
         else:
             for fieldName in self.fieldsToTest:
                 self.fComps.add(fields.FieldComparisonOp(fieldName))
@@ -203,13 +200,24 @@ class FieldCvgWithScaleTest(TestComponent):
 
         for fName, fCompOp in self.fComps.fields.iteritems():
             self.fErrorsByRun[fName] = getDofErrorsByRun(fCompOp, resultsSet)
-            fResult = self.testCvgFunc(fName, lenScales,
-                self.fErrorsByRun[fName], self.fieldCvgCrits[fName])
-            self.fCvgMeetsReq[fName] = fResult[0]
-            self.fCvgResults[fName] = fResult[1]
+            fieldConv = self.calcCvgFunc(fName, lenScales,
+                self.fErrorsByRun[fName])
+            self.fCvgResults[fName] = fieldConv
+            if fName in self.fieldCvgCrits:
+                fResult = testCvgWithScale(fName, fieldConv,
+                    self.fieldCvgCrits[fName])
+                self.fCvgMeetsReq[fName] = fResult
+            else:
+                print "Warning: Field specified for comparison, '%s',"\
+                    " doesn't have convergence criteria provided - thus"\
+                    " not checking." % fName
+                self.fCvgMeetsReq[fName] = None
 
         if False in self.fCvgResults.itervalues():
-            statusMsg = "TODO"
+            # TODO: be more specific in statusMsg
+            statusMsg = "The solution compared to the %s result didn't cvg"\
+                " as expected with increasing resolution for all fields."\
+                % (self.fComps.getCmpSrcString())
             self.tcStatus = UWA_FAIL(statusMsg)
             return False
         else:
@@ -227,22 +235,35 @@ class FieldCvgWithScaleTest(TestComponent):
         etree.SubElement(specNode, 'fromXML', value=str(self.fComps.fromXML))
         fListNode = etree.SubElement(specNode, 'fields')
         for fName in self.fComps.fields.keys():
-            fieldCvgCrit = self.fieldCvgCrits[fName]
             fNode = etree.SubElement(fListNode, 'field')
             fNode.attrib['name'] = fName
-            fNode.attrib['cvgRate'] = cvgRate=str(fieldCvgCrit[0])
-            fNode.attrib['corr'] = str(fieldCvgCrit[1])
+            try:
+                fieldCvgCrit = self.fieldCvgCrits[fName]
+            except KeyError:
+                # If the user hasn't specified cvg crit, just write N/A here.
+                fNode.attrib['cvgRate'] = "N/A"
+                fNode.attrib['corr'] = "N/A"
+            else:
+                fNode.attrib['cvgRate'] = str(fieldCvgCrit[0])
+                fNode.attrib['corr'] = str(fieldCvgCrit[1])
 
     def _writeXMLCustomResult(self, resNode, resultsSet):
         frNode = etree.SubElement(resNode, 'fieldResultDetails')
         lenScales = self._getLenScales(resultsSet)    
         for fName, fComp in self.fComps.fields.iteritems():
             fieldNode = etree.SubElement(frNode, "field", name=fName)
-            fieldNode.attrib['cvgMeetsReq'] = str(self.fCvgMeetsReq[fName])
+            meetsReq = self.fCvgMeetsReq[fName]
+            if meetsReq == None:
+                fieldNode.attrib['cvgMeetsReq'] = "N/A"
+            else:    
+                fieldNode.attrib['cvgMeetsReq'] = str(meetsReq)
+
             for dofI, dofErrorsByRun in enumerate(self.fErrorsByRun[fName]):
                 dofNode = etree.SubElement(fieldNode, "dof")
                 dofNode.attrib["num"] = str(dofI)
-                dofCvgResult = self.fCvgResults[fName][dofI]
+                fieldCvgResult = self.fCvgResults[fName]
+                assert(fieldCvgResult)
+                dofCvgResult = fieldCvgResult[dofI]
                 dofNode.attrib['cvgrate'] = "%8.6f" % dofCvgResult[0]
                 dofNode.attrib['correlation'] = "%8.6f" % dofCvgResult[1]
                 #TODO run name? and overall result?
@@ -250,9 +271,9 @@ class FieldCvgWithScaleTest(TestComponent):
                 for runI, dofError in enumerate(dofErrorsByRun):
                     dofErrorNode = etree.SubElement(runEsNode, "dofError")
                     dofErrorNode.attrib['run_number'] = str(runI+1)
-                    dofErrorNode.attrib['lenScale'] = "%8.6e" % (lenScales[runI])
+                    dofErrorNode.attrib['lenScale'] = "%8.6e"\
+                        % (lenScales[runI])
                     dofErrorNode.attrib["error"] = "%6e" % dofError
-
 
     def _getLenScales(self, resultsSet):
         lenScales = []
