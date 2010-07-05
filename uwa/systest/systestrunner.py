@@ -46,6 +46,9 @@ class SysTestRunner:
                 " not a subclass of SysTest." \
                 % (testClass))
                 
+        # If just given a single input file as a string, convert
+        #  to a list (containing that single file).
+        if isinstance(inputFiles, str): inputFiles = [inputFiles]
         # TODO: make the test name an input arg?
         if 'nproc' not in testOpts:
             testOpts['nproc']=self.nproc
