@@ -69,7 +69,10 @@ class SysTestRunner:
         if 'paramOverrides' in testOpts:
             paramOs = testOpts['paramOverrides']
             paramOsStr = ""
-            for paramName, paramVal in paramOs.iteritems():
+            paramKeys = paramOs.keys()
+            paramKeys.sort()
+            for paramName in paramKeys:
+                paramVal = paramOs[paramName]
                 # TODO: move this stuff into a library for managing Stg Command
                 # line dict format.
                 paramNameLast = paramName.split('.')[-1]
