@@ -94,11 +94,6 @@ class FieldCvgWithScaleTest(TestComponent):
     Thus similar to :class:`~uwa.systest.fieldWithinTolTest.FieldWithinTolTest`,
     except tests accuracy of solution with increasing resolution.
 
-    .. note:: Currently, only one convergence-checking algorithm,
-       that provided by :func:`uwa.analysis.fields.calcFieldCvgWithScale`,
-       can be used, but in future if required this class could be
-       generalised to allow other convergence-check algorithms to be used.
-
     This relies largely on functionality of:
 
     * :mod:`uwa.analysis.fields` to specify the comparison operations
