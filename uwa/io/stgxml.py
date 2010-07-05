@@ -292,6 +292,20 @@ def getParamValue(elNode, paramName, castFunc):
     else:
         return None
 
+def strToBool(boolStr):
+    """Converts a string (eg from a param in XML) to a Python Bool and
+    returns this, using same idiom as in StGermain.
+    
+    (See Dictionary_Entry_Value_AsBool() in Dictionary_Entry_Value.c in
+    StGermain/Base/IO)."""
+    if boolStr.lower() in ['1','true','t','yes','y','on']:
+        return True
+    elif boolStr.lower() in ['0','false','f','no','n','off']:
+        return False
+    else:
+        raise ValueError("String given, '%s', doesn't convert to a Boolean"\
+            " using StGermain idiom." % (boolStr))
+
 def _getSpecialTagNode(elNode, eltName, eltType):
     '''Checks to see if the current elNode has a child element with special tag
     equal to given eltName'''
