@@ -22,14 +22,13 @@ class RestartTest(SysTest):
          Must be a multiple of 2, so it can be restarted half-way through.
        * fieldsToTest: Which fields in the model should be compared with the
          reference solution.
+       * defFieldTol: The default tolerance to be applied when comparing fields of
+         interest between the restarted, and original solution.
+         See also the FieldWithinTolTest's
+         :attr:`~uwa.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
        * fieldTols: a dictionary of tolerances to use when testing particular
          fields, rather than the default tolerance defined by 
-         :attr:`.defaultFieldTol`.  
-
-       .. attribute:: defaultFieldTol
-
-          The default tolerance to be applied when comparing fields of
-          interest to the analytic solution.
+         the defFieldTol argument.
           
        .. attribute:: fTestName
 
@@ -41,12 +40,11 @@ class RestartTest(SysTest):
         then restarts half-way, checking the standard fields are the
         same at the end for both the original and restart run.'''
 
-    defaultFieldTol = 1e-5
     fTestName = 'Restart compared with original'
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             fieldsToTest = ['VelocityField','PressureField'], fullRunSteps=20,
-            fieldTols=None, paramOverrides=None):
+            defFieldTol=1e-5, fieldTols=None, paramOverrides=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
             paramOverrides, "Restart")
         self.initialOutputPath = os.path.join(self.outputPathBase, "initial")
@@ -57,7 +55,7 @@ class RestartTest(SysTest):
             raise ValueError("fullRunSteps parameter must be even so restart"\
                 " can occur half-way - but you provided %d." % (fullRunSteps))
         self.testComponents[self.fTestName] = FieldWithinTolTest(
-            fieldsToTest=self.fieldsToTest, defFieldTol=self.defaultFieldTol,
+            fieldsToTest=self.fieldsToTest, defFieldTol=defFieldTol,
             fieldTols=fieldTols,
             useReference=True,
             referencePath=self.initialOutputPath,
@@ -121,8 +119,6 @@ class RestartTest(SysTest):
         
     def _writeXMLCustomSpec(self, specNode):
         etree.SubElement(specNode, 'fullRunSteps').text = str(self.fullRunSteps)
-        etree.SubElement(specNode, 'defaultFieldTol').text = \
-            str(self.defaultFieldTol)
         # fieldTols
         fieldsToTestNode = etree.SubElement(specNode, 'fieldsToTest')
         for fieldName in self.fieldsToTest:

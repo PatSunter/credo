@@ -20,14 +20,13 @@ class ReferenceTest(SysTest):
        * runSteps: number of steps the reference solution should run for.
        * fieldsToTest: Which fields in the model should be compared with the
          reference solution.
+       * defFieldTol: The default tolerance to be applied when comparing fields of
+         interest to the reference solution.
+         See also the FieldWithinTolTest's
+         :attr:`~uwa.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
        * fieldTols: a dictionary of tolerances to use when testing particular
-         fields, rather than the default tolerance defined by 
-         :attr:`.defaultFieldTol`.
-       
-       .. attribute:: defaultFieldTol
-
-          The default tolerance to be applied when comparing fields of
-          interest to the analytic solution.
+         fields, rather than the default tolerance as set in the defFieldTol
+         argument.
           
        .. attribute:: fTestName
 
@@ -38,19 +37,18 @@ class ReferenceTest(SysTest):
         then checks the specified fields match a previously-generated
         reference solution.'''
 
-    defaultFieldTol = 1e-2
     fTestName = 'Reference Solution compare'
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             fieldsToTest = ['VelocityField','PressureField'], runSteps=20,
-            fieldTols=None, paramOverrides=None, expPathPrefix="expected" ):
+            defFieldTol=1e-2, fieldTols=None, paramOverrides=None, expPathPrefix="expected" ):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
             paramOverrides, "Reference")
         self.expectedSolnPath = os.path.join(expPathPrefix, self.testName)
         self.fieldsToTest = fieldsToTest
         self.runSteps = runSteps
         self.testComponents[self.fTestName] = FieldWithinTolTest(
-            fieldsToTest=self.fieldsToTest, defFieldTol=self.defaultFieldTol,
+            fieldsToTest=self.fieldsToTest, defFieldTol=defFieldTol,
             fieldTols=fieldTols,
             useReference=True,
             referencePath=self.expectedSolnPath,
@@ -123,8 +121,6 @@ class ReferenceTest(SysTest):
         
     def _writeXMLCustomSpec(self, specNode):
         etree.SubElement(specNode, 'runSteps').text = str(self.runSteps)
-        etree.SubElement(specNode, 'defaultFieldTol').text = \
-            str(self.defaultFieldTol)   
         # fieldTols
         fieldsToTestNode = etree.SubElement(specNode, 'fieldsToTest')
         for fieldName in self.fieldsToTest:
