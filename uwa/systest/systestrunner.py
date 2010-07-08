@@ -16,8 +16,14 @@ class SysTestRunner:
        to add to this list, and other methods to run and report on it.
     """
 
-    def __init__(self, sysTests=[], nproc=1):
-        self.sysTests = sysTests
+    def __init__(self, sysTests=None, nproc=1):
+        if sysTests == None:
+            self.sysTests = []
+        else:    
+            if not isinstance(sysTests, list):
+                raise TypeError("Error, if the sysTests keyword is provided"\
+                    " it must be a list of SysTests.")
+            self.sysTests = sysTests
         # Should this be over-rideable per test?
         self.nproc = nproc
     

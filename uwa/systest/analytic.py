@@ -17,14 +17,13 @@ class AnalyticTest(SysTest):
        
        Optional constructor keywords:
 
+       * defFieldTol: The default tolerance to be applied when comparing fields of
+         interest to the analytic solution.
+         See also the FieldWithinTolTest's
+         :attr:`~uwa.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
        * fieldTols: a dictionary of tolerances to use when testing particular
          fields, rather than the default tolerance defined by 
-         :attr:`.defaultFieldTol`.
-
-       .. attribute:: defaultFieldTol
-
-          The default tolerance to be applied when comparing fields of
-          interest to the analytic solution.
+         the defFieldTol argument.
           
        .. attribute:: fTestName
 
@@ -36,15 +35,14 @@ class AnalyticTest(SysTest):
         and checks the outputted fields are within a given error tolerance
         of that analytic solution.'''
 
-    defaultFieldTol = 3e-2    
     fTestName = 'Analytic Solution compare'
 
-    def __init__(self, inputFiles, outputPathBase, nproc=1, fieldTols=None,
-            paramOverrides=None):
+    def __init__(self, inputFiles, outputPathBase, nproc=1,
+            defFieldTol=3e-2, fieldTols=None, paramOverrides=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
             paramOverrides, "Analytic")
         self.testComponents[self.fTestName] = FieldWithinTolTest(
-            defFieldTol=self.defaultFieldTol, fieldTols=fieldTols)
+            defFieldTol=defFieldTol, fieldTols=fieldTols)
 
     def genSuite(self):
         """See base class :meth:`~uwa.systest.api.SysTest.genSuite`.
@@ -93,5 +91,4 @@ class AnalyticTest(SysTest):
         return testStatus
         
     def _writeXMLCustomSpec(self, specNode):
-        etree.SubElement(specNode, 'defaultFieldTol').text = \
-            str(self.defaultFieldTol)   
+        pass
