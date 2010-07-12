@@ -27,7 +27,8 @@ class SysTestRunner:
         # Should this be over-rideable per test?
         self.nproc = nproc
     
-    def addStdTest(self, testClass, inputFiles, **testOpts):
+    def addStdTest(self, testClass, inputFiles, outPathSuffix=None,
+            **testOpts):
         """Instantiate and add a "standard" system test type to the list
         of System tests to be run. (The "standard" refers to the user needing
         to have access to the module containing the system test type to be
@@ -37,6 +38,9 @@ class SysTestRunner:
           needs to be a sub-class of :class:`~uwa.systest.api.SysTest`.
         :param inputFiles: model input files to be passed through to the 
           System test when instantiated.
+        :keyword outPathSuffix: if specified, this defines the suffix that
+          will be added to the output path where the test will be saved
+          (Overriding the default one based on params used).
         :param `**testOpts`: any other keyword arguments the user wishes to
           passed through to the System test when it's instantiated.
           Can be used to customise a test."""
@@ -59,20 +63,26 @@ class SysTestRunner:
         if 'nproc' not in testOpts:
             testOpts['nproc']=self.nproc
 
-        outputPath = self._getStdOutputPath(testClass, inputFiles, testOpts)
+        outputPath = self._getStdOutputPath(testClass, inputFiles, testOpts,
+            outPathSuffix)
 
         newSysTest = testClass(inputFiles, outputPath, **testOpts)
         self.sysTests.append(newSysTest)
 
-    def _getStdOutputPath(self, testClass, inputFiles, testOpts):
+    def _getStdOutputPath(self, testClass, inputFiles, testOpts,
+            outPathSuffix=None):
         """Get the standard name for the test's output path. Attempts to
         avoid naming collisions where reasonable."""
         classStr = str(testClass).split('.')[-1]
         testName, ext = os.path.splitext(inputFiles[0])
         testName += "-"+classStr[0].lower()+classStr[1:]
         outputPath = 'output/' + testName + "-np" + str(testOpts['nproc'])
-        # This bit to avoid param override tests overriding std ones.
-        if 'paramOverrides' in testOpts:
+        if outPathSuffix is not None:
+            outputPath += "-%s" % (outPathSuffix)
+        elif 'paramOverrides' in testOpts:
+            # Otherwise, if no specific suffix to use set, then create one
+            #  based on paramOverrides, to avoid collisions where possible
+            #  between custom runs and default ones.
             paramOs = testOpts['paramOverrides']
             paramOsStr = ""
             paramKeys = paramOs.keys()
