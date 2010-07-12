@@ -107,10 +107,15 @@ class SysTest:
        :attr:`uwa.modelrun.ModelRun.paramOverrides`. Thus allow 
        customisation of the test properties.
 
+    .. attribute:: solverOpts
+
+       Solver options to be used for any models making up this test.
+       See :attr:`uwa.modelrun.ModelRun.solverOpts`
+
     '''
 
     def __init__(self, inputFiles, outputPathBase, nproc, paramOverrides,
-            testType):
+            solverOpts, testType):
         self.testType = testType
         # Be forgiving of user passing a single string rather than a list,
         # and correct for this.
@@ -130,6 +135,7 @@ class SysTest:
         self.paramOverrides = paramOverrides
         if self.paramOverrides == None:
             self.paramOverrides = {}
+        self.solverOpts = solverOpts
 
     def setup(self):
         '''For the setup phase of tests.
@@ -263,6 +269,7 @@ class SysTest:
         nProcNode.text = str(self.nproc)
 
         mrun.writeParamOverridesInfoXML(self.paramOverrides, specNode)
+        mrun.writeSolverOptsInfoXML(self.solverOpts, specNode)
         try:
             self._writeXMLCustomSpec(specNode)   
         except AttributeError, ae:

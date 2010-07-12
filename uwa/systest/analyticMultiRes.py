@@ -31,9 +31,9 @@ class AnalyticMultiResTest(SysTest):
     description = '''Runs an existing test with multiple resolutions.'''
 
     def __init__(self, inputFiles, outputPathBase, resSet, nproc=1,
-            paramOverrides=None):
+            paramOverrides=None, solverOpts=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, "AnalyticMultiResConvergence")
+            paramOverrides, solverOpts, "AnalyticMultiResConvergence")
         self.resSet = resSet
         cvgChecker = FieldCvgWithScaleTest()
         self.testComponents['fieldConvChecker'] = cvgChecker
@@ -56,7 +56,8 @@ class AnalyticMultiResTest(SysTest):
             outputPath = os.path.join(self.outputPathBase, resStr)
             modelName = self.testName+'-'+resStr
             mRun = mrun.ModelRun(modelName, self.inputFiles, outputPath,
-                nproc=self.nproc, paramOverrides=self.paramOverrides)
+                nproc=self.nproc, paramOverrides=self.paramOverrides,
+                solverOpts=self.solverOpts)
             customOpts = mrun.generateResOpts(res)
             cvgChecker.attachOps(mRun)
             mSuite.addRun(mRun, "Run the model at res "+resStr, customOpts)

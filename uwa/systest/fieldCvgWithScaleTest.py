@@ -179,7 +179,7 @@ class FieldCvgWithScaleTest(TestComponent):
         else:
             for fieldName in self.fieldsToTest:
                 self.fComps.add(fields.FieldComparisonOp(fieldName))
-        modelRun.analysis['fieldComparisons'] = self.fComps
+        modelRun.analysisOps['fieldComparisons'] = self.fComps
 
     def check(self, resultsSet):
         """Implements base class

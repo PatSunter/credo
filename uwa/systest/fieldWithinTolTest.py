@@ -88,7 +88,7 @@ class FieldWithinTolTest(TestComponent):
         else:
             for fieldName in self.fieldsToTest:
                 self.fComps.add(fields.FieldComparisonOp(fieldName))
-        modelRun.analysis['fieldComparisons'] = self.fComps
+        modelRun.analysisOps['fieldComparisons'] = self.fComps
 
     def getTolForField(self, fieldName):
         """Utility func: given fieldName, returns the tolerance to use for

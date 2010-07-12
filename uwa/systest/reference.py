@@ -41,9 +41,10 @@ class ReferenceTest(SysTest):
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             fieldsToTest = ['VelocityField','PressureField'], runSteps=20,
-            defFieldTol=1e-2, fieldTols=None, paramOverrides=None, expPathPrefix="expected" ):
+            defFieldTol=1e-2, fieldTols=None, paramOverrides=None,
+            solverOpts=None, expPathPrefix="expected" ):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, "Reference")
+            paramOverrides, solverOpts, "Reference")
         self.expectedSolnPath = os.path.join(expPathPrefix, self.testName)
         self.fieldsToTest = fieldsToTest
         self.runSteps = runSteps
@@ -62,7 +63,8 @@ class ReferenceTest(SysTest):
             (self.runSteps, self.expectedSolnPath)
         mRun = ModelRun(self.testName+"-createReference", self.inputFiles,
             self.expectedSolnPath, nproc=self.nproc,
-            paramOverrides=self.paramOverrides)
+            paramOverrides=self.paramOverrides,
+            solverOpts=self.solverOpts)
         mRun.simParams = SimParams(nsteps=self.runSteps, cpevery=self.runSteps,
             dumpevery=0)
         mRun.cpFields = self.fieldsToTest    
@@ -87,7 +89,8 @@ class ReferenceTest(SysTest):
         # Normal mode
         mRun = ModelRun(self.testName, self.inputFiles,
             self.outputPathBase, nproc=self.nproc,
-            paramOverrides=self.paramOverrides)
+            paramOverrides=self.paramOverrides,
+            solverOpts=self.solverOpts)
         mRun.simParams = SimParams(nsteps=self.runSteps,
             cpevery=0, dumpevery=0)
         fTests = self.testComponents[self.fTestName]

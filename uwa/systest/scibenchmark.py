@@ -19,9 +19,10 @@ class SciBenchmarkTest(SysTest):
 
     description = '''Runs a user-defined science benchmark.'''
 
-    def __init__(self, inputFiles, outputPathBase, nproc=1, paramOverrides=None):
+    def __init__(self, inputFiles, outputPathBase, nproc=1,
+            paramOverrides=None, solverOpts=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc, 
-            paramOverrides, "SciBenchmark")
+            paramOverrides, solverOpts, "SciBenchmark")
 
     def addTestComponent(self, testComp, testCompName):
         """Add a testComponent (:class:`~uwa.systest.api.TestComponent`)
@@ -51,7 +52,8 @@ class SciBenchmarkTest(SysTest):
         self.mSuite = mSuite
         mRun = ModelRun(self.testName, self.inputFiles,
             self.outputPathBase, nproc=self.nproc,
-            paramOverrides=self.paramOverrides)
+            paramOverrides=self.paramOverrides,
+            solverOpts=self.solverOpts)
 
         for tComp in self.testComponents.itervalues():
             tComp.attachOps(mRun)
