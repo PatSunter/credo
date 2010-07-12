@@ -169,6 +169,17 @@ class SysTest:
         properties of the systest (such as :attr:`.testName`)."""
         return 'SysTest-'+self.testName+'.xml'
 
+    def _createDefaultModelRun(self, modelName, outputPath):
+        """Create and return a :class:`uwa.modelrun.ModelRun` with the
+        default options as specified for this System Test.
+        (Thus is a useful helper function for sub-classes, so they can
+        use this and not keep up to date with changes in
+        the ModelRun interface.)"""
+        return mrun.ModelRun(modelName,
+            self.inputFiles, outputPath,
+            nproc=self.nproc, paramOverrides=self.paramOverrides,
+            solverOpts=self.solverOpts)
+
     def writePreRunXML(self, outputPath="", filename="", prettyPrint=True):
         """Write the SysTest XML with as much information before the run as
         is possible. This includes general info about the test, and detailed

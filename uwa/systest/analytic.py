@@ -2,7 +2,6 @@ import os
 from xml.etree import ElementTree as etree
 
 from uwa.modelsuite import ModelSuite
-from uwa.modelrun import ModelRun
 from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
 from uwa.systest.fieldWithinTolTest import FieldWithinTolTest
 
@@ -53,10 +52,8 @@ class AnalyticTest(SysTest):
         mSuite = ModelSuite(outputPathBase=self.outputPathBase)
         self.mSuite = mSuite
 
-        mRun = ModelRun(self.testName, self.inputFiles,
-            self.outputPathBase, nproc=self.nproc,
-            paramOverrides=self.paramOverrides,
-            solverOpts=self.solverOpts)
+        mRun = self._createDefaultModelRun(self.testName, 
+            self.outputPathBase)
         # For analytic test, read fields to analyse from the XML
         fTests = self.testComponents[self.fTestName]
         fTests.attachOps(mRun)

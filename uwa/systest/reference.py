@@ -3,7 +3,8 @@ import os
 from xml.etree import ElementTree as etree
 
 from uwa.modelsuite import ModelSuite
-from uwa.modelrun import ModelRun, SimParams
+from uwa.modelrun import SimParams
+import uwa.modelrun as modelrun
 from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
 from uwa.systest.fieldWithinTolTest import FieldWithinTolTest
 
@@ -61,14 +62,11 @@ class ReferenceTest(SysTest):
         print "Running the model to create a reference solution after %d"\
             " steps, and saving in dir '%s'" % \
             (self.runSteps, self.expectedSolnPath)
-        mRun = ModelRun(self.testName+"-createReference", self.inputFiles,
-            self.expectedSolnPath, nproc=self.nproc,
-            paramOverrides=self.paramOverrides,
-            solverOpts=self.solverOpts)
+        mRun = self._createDefaultModelRun(self.testName+"-createReference",
+            self.expectedSolnPath)
         mRun.simParams = SimParams(nsteps=self.runSteps, cpevery=self.runSteps,
             dumpevery=0)
-        mRun.cpFields = self.fieldsToTest    
-        import uwa.modelrun as modelrun
+        mRun.cpFields = self.fieldsToTest
         mRun.writeInfoXML()
         mRun.analysisXMLGen()
         result = modelrun.runModel(mRun)
@@ -87,10 +85,7 @@ class ReferenceTest(SysTest):
         mSuite = ModelSuite(outputPathBase=self.outputPathBase)
         self.mSuite = mSuite
         # Normal mode
-        mRun = ModelRun(self.testName, self.inputFiles,
-            self.outputPathBase, nproc=self.nproc,
-            paramOverrides=self.paramOverrides,
-            solverOpts=self.solverOpts)
+        mRun = self._createDefaultModelRun(self.testName, self.outputPathBase)
         mRun.simParams = SimParams(nsteps=self.runSteps,
             cpevery=0, dumpevery=0)
         fTests = self.testComponents[self.fTestName]

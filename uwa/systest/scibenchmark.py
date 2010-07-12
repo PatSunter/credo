@@ -2,7 +2,6 @@ import os
 from xml.etree import ElementTree as etree
 
 from uwa.modelsuite import ModelSuite
-from uwa.modelrun import ModelRun
 from uwa.systest.api import SysTest, TestComponent, UWA_PASS, UWA_FAIL
 
 class SciBenchmarkTest(SysTest):
@@ -50,11 +49,7 @@ class SciBenchmarkTest(SysTest):
         """
         mSuite = ModelSuite(outputPathBase=self.outputPathBase)
         self.mSuite = mSuite
-        mRun = ModelRun(self.testName, self.inputFiles,
-            self.outputPathBase, nproc=self.nproc,
-            paramOverrides=self.paramOverrides,
-            solverOpts=self.solverOpts)
-
+        mRun = self._createDefaultModelRun(self.testName, self.outputPathBase)
         for tComp in self.testComponents.itervalues():
             tComp.attachOps(mRun)
         mSuite.addRun(mRun, "Run the model needed for the benchmark.")

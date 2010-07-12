@@ -3,7 +3,7 @@ import os
 from xml.etree import ElementTree as etree
 
 from uwa.modelsuite import ModelSuite
-from uwa.modelrun import ModelRun, SimParams
+from uwa.modelrun import SimParams
 from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
 from uwa.systest.fieldWithinTolTest import FieldWithinTolTest
 
@@ -73,20 +73,16 @@ class RestartTest(SysTest):
         self.mSuite = mSuite
 
         # Initial run
-        initRun = ModelRun(self.testName+"-initial", self.inputFiles,
-            self.initialOutputPath, nproc=self.nproc,
-            paramOverrides=self.paramOverrides,
-            solverOpts=self.solverOpts)
+        initRun = self._createDefaultModelRun(self.testName+"-initial",
+            self.initialOutputPath)
         initRun.simParams = SimParams(nsteps=self.fullRunSteps,
             cpevery=self.fullRunSteps/2, dumpevery=0)
         initRun.cpFields = self.fieldsToTest
         mSuite.addRun(initRun, "Do the initial full run and checkpoint"\
             " solutions.")
         # Restart run
-        resRun = ModelRun(self.testName+"-restart", self.inputFiles,
-            self.restartOutputPath, nproc=self.nproc,
-            paramOverrides=self.paramOverrides,
-            solverOpts=self.solverOpts)
+        resRun = self._createDefaultModelRun(self.testName+"-restart",
+            self.restartOutputPath)
         resRun.simParams = SimParams(nsteps=self.fullRunSteps/2,
             cpevery=0, dumpevery=0, restartstep=self.fullRunSteps/2)
         resRun.cpReadPath = self.initialOutputPath    
