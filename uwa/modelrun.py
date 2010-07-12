@@ -88,22 +88,22 @@ class ModelRun:
     .. attribute:: solverOpts
 
        The name of the file storing options passed through to the 
-       `PETSc http://www.mcs.anl.gov/petsc`
+       `PETSc <http://www.mcs.anl.gov/petsc>`_
        numerical solver framework. Depending on the Model being solver,
        these can have
        an important role determining the performance and numerical
        approach taken. See the 'System Routines' section of
-       `PETSc Changes log 
-       http://www.mcs.anl.gov/petsc/petsc-2/documentation/changes/2016.html`_.
+       `PETSc 2.0.16 Changes log 
+       <http://www.mcs.anl.gov/petsc/petsc-2/documentation/changes/2016.html>`_.
        This option file is separate to the :attr:`~paramOverrides` attribute,
        although the options passed through to PETSc may be used to further
        customise matrices specified as part of StGermain components.
 
        A file recording the options used for a modelRun will be saved in
        the output path, with name specified in
-       `:var:.SOLVER_OPTS_USED_FILENAME`.
+       :const:`uwa.modelrun.SOLVER_OPTS_RECORD_FILENAME`.
 
-       .. note: the interface here has been kept as specifying a filename with
+       .. note:: the interface here has been kept as specifying a filename with
           the options rather than using a Python list, as the solver options
           can run into the hundreds, and generally several of these files are
           available and maintained by the developers for different solvers.
