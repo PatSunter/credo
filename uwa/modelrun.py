@@ -143,7 +143,7 @@ class ModelRun:
 
     solverOptsRecordFilename = "solverOptsUsed.opt"
 
-    def __init__(self, name, modelInputFiles, outputPath, logPath="./log",
+    def __init__(self, name, modelInputFiles, outputPath, logPath="log",
       cpReadPath=None, nproc=1, simParams=None,
       paramOverrides=None, solverOpts=None, xmlExtras=None):
         self.name = name
@@ -203,19 +203,28 @@ class ModelRun:
         record filename."""
         return 'ModelRun-'+self.name+'.xml'
 
-    def writeInfoXML(self, outputPath="", filename="", update=False,
+    def prepareOutputLogDirs(self):
+        """Prepare the output and log dirs - usually in preparation
+        for running a :class:`uwa.modelrun.ModelRun`."""
+        if not os.path.exists(self.outputPath):
+            os.makedirs(outputPath)
+
+        if not os.path.exists(self.logPath):
+            os.makedirs(self.logPath)
+
+    def writeInfoXML(self, writePath="", filename="", update=False,
             prettyPrint=True):
         """Writes an XML recording the key details of this ModelRun, in UWA
         format - useful for benchmarking etc.
         
-        "outputPath" and "filename" can be specified, if not they will use
+        `writePath` and `filename` can be specified, if not they will use
         default values (the outputPath of the model, and the value returned by
         :attr:`defaultModelRunFilename()`, respectively)."""    
         if filename == "":
             filename = self.defaultModelRunFilename()
-        if outputPath == "":
-            outputPath=self.outputPath
-        outputPath+=os.sep
+        if writePath == "":
+            writePath=self.outputPath
+        writePath+=os.sep
 
         # create XML document
         root = etree.Element('StgModelRun')
@@ -253,12 +262,12 @@ class ModelRun:
             analysisOp.writeInfoXML(analysisNode)
         # TODO : write info on cpFields?
         # Write the file
-        if not os.path.exists(outputPath):
-            os.makedirs(outputPath)
-        outFile = open(outputPath+filename, 'w')
+        if not os.path.exists(writePath):
+            os.makedirs(writePath)
+        outFile = open(writePath+filename, 'w')
         writeXMLDoc(xmlDoc, outFile, prettyPrint)
         outFile.close()
-        return outputPath+filename
+        return writePath+filename
 
     def analysisXMLGen(self, filename=UWA_ANALYSIS_RECORD_FILENAME):
         """Generates an XML file, in StGermainData XML format, to over-ride
@@ -579,6 +588,9 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
     if modelRun.solverOpts:
         modelRun.checkSolverOptsFile()
 
+    # Do necessary pathing preparation
+    modelRun.prepareOutputLogDirs()
+
     # Construct StGermain run command
     runExe=uwa.io.stgpath.getVerifyStgExePath("StGermain")
     stgRunStr = "%s " % (runExe)
@@ -596,9 +608,12 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
 
     # BEGIN JOBRUNNER PART
     # Construct run line
-    logFilename = "logFile.txt"
+    stdOutFilename = os.path.join(modelRun.logPath, "%s.stdout" % modelRun.name)
+    stdErrFilename = os.path.join(modelRun.logPath, "%s.stderr" % modelRun.name)
+    stdOutFile = open(stdOutFilename, "w+")
+    stdErrFile = open(stdErrFilename, "w+")
     mpiPart = "%s -np %d " % (mpiCommand, modelRun.jobParams.nproc)
-    runCommand = mpiPart + stgRunStr + " > " + logFilename
+    runCommand = mpiPart + stgRunStr
 
     # Run the run command, sending stdout and stderr to defined log paths
     print "Running model '%s' with command '%s' ..."\
@@ -608,25 +623,33 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
 
     # If we're only doing a dry run, return here.
     if dryRun == True: return None
-
-    p = subprocess.Popen(runCommand,shell=True,stderr=subprocess.PIPE)
+    # Do the actual run
+    #TODO: handle stdout properly as well
+    p = subprocess.Popen(runCommand, shell=True, stdout=stdOutFile,
+        stderr=stdErrFile)
     retcode = p.wait()
+
     # Check status of run (eg error status)
     if retcode != 0:
-        logFile = open(logFilename,"r")
+        stdOutFile.seek(0)
+        stdErrFile.seek(0)
+        stdErrMsg = stdErrFile.read()
         # TODO: this is a bit inefficient and could be done with proper
         # tail function using seek etc.
         tailLen = 20
-        logFileLines = logFile.readlines()
-        total = len(logFileLines)
+        stdOutFileLines = stdOutFile.readlines()
+        total = len(stdOutFileLines)
         start = 0
         if total > tailLen: start = total - tailLen
-        logFileTail = logFileLines[start:]
+        stdOutFileTail = stdOutFileLines[start:]
         raise OSError("Failed to run model '%s', ret code was %s\nStd error"\
             " msg was:\n%s\nLast %d lines of std out msg was:\n%s"
-            % (modelRun.name, retcode, p.stderr.read(), tailLen,
-                "".join(logFileTail)))
+            % (modelRun.name, retcode, stdErrMsg, tailLen,
+                "".join(stdOutFileTail)))
     else: print "Model ran successfully."
+
+    stdOutFile.close()
+    stdErrFile.close()
     # END JOBRUNNER PART
 
     # Construct a modelResult

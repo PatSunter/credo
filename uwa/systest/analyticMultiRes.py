@@ -30,9 +30,10 @@ class AnalyticMultiResTest(SysTest):
     description = '''Runs an existing test with multiple resolutions.'''
 
     def __init__(self, inputFiles, outputPathBase, resSet, nproc=1,
-            paramOverrides=None, solverOpts=None):
+            paramOverrides=None, solverOpts=None, nameSuffix=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, solverOpts, "AnalyticMultiResConvergence")
+            paramOverrides, solverOpts, "AnalyticMultiResConvergence",
+            nameSuffix)
         self.resSet = resSet
         cvgChecker = FieldCvgWithScaleTest()
         self.testComponents['fieldConvChecker'] = cvgChecker

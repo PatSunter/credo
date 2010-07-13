@@ -27,8 +27,7 @@ class SysTestRunner:
         # Should this be over-rideable per test?
         self.nproc = nproc
     
-    def addStdTest(self, testClass, inputFiles, outPathSuffix=None,
-            **testOpts):
+    def addStdTest(self, testClass, inputFiles, **testOpts):
         """Instantiate and add a "standard" system test type to the list
         of System tests to be run. (The "standard" refers to the user needing
         to have access to the module containing the system test type to be
@@ -38,9 +37,7 @@ class SysTestRunner:
           needs to be a sub-class of :class:`~uwa.systest.api.SysTest`.
         :param inputFiles: model input files to be passed through to the 
           System test when instantiated.
-        :keyword outPathSuffix: if specified, this defines the suffix that
-          will be added to the output path where the test will be saved
-          (Overriding the default one based on params used).
+
         :param `**testOpts`: any other keyword arguments the user wishes to
           passed through to the System test when it's instantiated.
           Can be used to customise a test."""
@@ -59,43 +56,35 @@ class SysTestRunner:
         # If just given a single input file as a string, convert
         #  to a list (containing that single file).
         if isinstance(inputFiles, str): inputFiles = [inputFiles]
-        # TODO: make the test name an input arg?
+
         if 'nproc' not in testOpts:
             testOpts['nproc']=self.nproc
 
-        outputPath = self._getStdOutputPath(testClass, inputFiles, testOpts,
-            outPathSuffix)
+        outputPath = self._getStdOutputPath(testClass, inputFiles, testOpts)
 
         newSysTest = testClass(inputFiles, outputPath, **testOpts)
         self.sysTests.append(newSysTest)
 
-    def _getStdOutputPath(self, testClass, inputFiles, testOpts,
-            outPathSuffix=None):
+    def _getStdOutputPath(self, testClass, inputFiles, testOpts):
         """Get the standard name for the test's output path. Attempts to
         avoid naming collisions where reasonable."""
-        classStr = str(testClass).split('.')[-1]
-        testName, ext = os.path.splitext(inputFiles[0])
-        testName += "-"+classStr[0].lower()+classStr[1:]
-        outputPath = 'output/' + testName + "-np" + str(testOpts['nproc'])
-        if outPathSuffix is not None:
-            outputPath += "-%s" % (outPathSuffix)
-        elif 'paramOverrides' in testOpts:
-            # Otherwise, if no specific suffix to use set, then create one
-            #  based on paramOverrides, to avoid collisions where possible
-            #  between custom runs and default ones.
-            paramOs = testOpts['paramOverrides']
-            paramOsStr = ""
-            paramKeys = paramOs.keys()
-            paramKeys.sort()
-            for paramName in paramKeys:
-                paramVal = paramOs[paramName]
-                # TODO: move this stuff into a library for managing Stg Command
-                # line dict format.
-                paramNameLast = paramName.split('.')[-1]
-                paramValCanon = str(paramVal).replace(".","_")
-                paramOsStr += "-%s-%s" % (paramNameLast, paramValCanon)
-            outputPath += paramOsStr    
 
+        classStr = str(testClass).split('.')[-1]
+        #TODO: resolve fact this already likely has "test" at end, unlike test
+        # type string.
+
+        # Grab any custom options we need
+        nproc = testOpts['nproc']
+        nameSuffix = testOpts['nameSuffix'] if 'nameSuffix' in testOpts\
+            else None
+        paramOverrides = testOpts['paramOverrides']\
+            if 'paramOverrides' in testOpts else None
+        solverOpts = testOpts['solverOpts'] if 'solverOpts' in testOpts\
+            else None
+
+        testName = getStdTestName(classStr, inputFiles, nproc, 
+            paramOverrides, solverOpts, nameSuffix)
+        outputPath = os.path.join('output', testName)
         return outputPath
 
     def runTest(self, sysTest):

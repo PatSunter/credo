@@ -5,7 +5,7 @@ from xml.etree import ElementTree as etree
 from uwa.modelsuite import ModelSuite
 from uwa.modelrun import SimParams
 import uwa.modelrun as modelrun
-from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
+from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL, getStdTestNameBasic
 from uwa.systest.fieldWithinTolTest import FieldWithinTolTest
 
 class ReferenceTest(SysTest):
@@ -43,10 +43,11 @@ class ReferenceTest(SysTest):
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             fieldsToTest = ['VelocityField','PressureField'], runSteps=20,
             defFieldTol=1e-2, fieldTols=None, paramOverrides=None,
-            solverOpts=None, expPathPrefix="expected" ):
+            solverOpts=None, expPathPrefix="expected", nameSuffix=None ):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, solverOpts, "Reference")
-        self.expectedSolnPath = os.path.join(expPathPrefix, self.testName)
+            paramOverrides, solverOpts, "Reference", nameSuffix)
+        testNameBasic = getStdTestNameBasic(self.testType+"Test", inputFiles)
+        self.expectedSolnPath = os.path.join(expPathPrefix, testNameBasic)
         self.fieldsToTest = fieldsToTest
         self.runSteps = runSteps
         self.testComponents[self.fTestName] = FieldWithinTolTest(

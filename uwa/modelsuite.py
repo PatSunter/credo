@@ -243,7 +243,7 @@ class ModelSuite:
     def writeAllModelRunXMLs(self):
         """Save an XML record of each ModelRun currently in :attr:`.runs`."""
         for runI, modelRun in enumerate(self.runs):
-            modelRun.writeInfoXML(outputPath=modelRun.outputPath)
+            modelRun.writeInfoXML(writePath=modelRun.outputPath)
 
     def writeAllModelResultXMLs(self):
         """Save an XML record of each ModelResult currently in

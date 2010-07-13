@@ -19,9 +19,9 @@ class SciBenchmarkTest(SysTest):
     description = '''Runs a user-defined science benchmark.'''
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
-            paramOverrides=None, solverOpts=None):
+            paramOverrides=None, solverOpts=None, nameSuffix=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc, 
-            paramOverrides, solverOpts, "SciBenchmark")
+            paramOverrides, solverOpts, "SciBenchmark", nameSuffix)
 
     def addTestComponent(self, testComp, testCompName):
         """Add a testComponent (:class:`~uwa.systest.api.TestComponent`)

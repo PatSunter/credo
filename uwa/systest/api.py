@@ -54,6 +54,40 @@ class UWA_ERROR(SysTestResult):
         assert type(errorMsg) == str
         self.detailMsg = errorMsg
 
+def getStdTestNameBasic(testTypeStr, inputFiles):
+    """Basic part of the test name. Useful for restart runs etc."""
+    testNameBasic, ext = os.path.splitext(inputFiles[0])
+    testNameBasic += "-%s" % (testTypeStr[0].lower()+testTypeStr[1:])
+    return testNameBasic
+
+def getStdTestName(testTypeStr, inputFiles, nproc, paramOverrides,
+        solverOpts, nameSuffix):
+    """Utility function, to get a standard name for system tests given
+    key parameters of the tests. If nameSuffix is given a string, it will
+    be used as the suffix after processor number, instead of one based on
+    any parameter over-rides used."""
+    testName = getStdTestNameBasic(testTypeStr, inputFiles)
+    testName += "-np%s" % nproc
+    if nameSuffix is not None:
+        testName += "-%s" % (nameSuffix)
+    elif paramOverrides is not None:
+        # Otherwise, if no specific suffix to use set, then create one
+        #  based on paramOverrides, to avoid collisions where possible
+        #  between custom runs and default ones.
+        # TODO: move this stuff into a library for managing Stg Command
+        # line dict format.
+        paramOs = paramOverrides
+        paramOsStr = ""
+        paramKeys = paramOverrides.keys()
+        paramKeys.sort()
+        for paramName in paramKeys:
+            paramVal = paramOverrides[paramName]
+            paramNameLast = paramName.split('.')[-1]
+            paramValCanon = str(paramVal).replace(".","_")
+            paramOsStr += "-%s-%s" % (paramNameLast, paramValCanon)
+        testName += paramOsStr 
+    return testName
+
 
 class SysTest:
     '''A class for managing SysTests in UWA. This is an abstract base
@@ -66,6 +100,13 @@ class SysTest:
     the results pass an expected metric:- generally by applying one or more
     :class:`~uwa.systest.api.TestComponent` classes.
     
+    Constructor keywords not in member attribute list:
+    
+    * nameSuffix: if specified, this defines the suffix that
+      will be added to the test's name, output path, 
+      and log path (where the test's result and stderr/out will be saved
+      respectively) - Overriding the default one based on params used.
+
     .. attribute:: testType
 
        records the "type" of the system test, as a string (e.g. "Analytic",
@@ -114,9 +155,11 @@ class SysTest:
 
     '''
 
-    def __init__(self, inputFiles, outputPathBase, nproc, paramOverrides,
-            solverOpts, testType):
+    def __init__(self, inputFiles, outputPathBase,
+            nproc, paramOverrides, solverOpts, testType, nameSuffix=None):
         self.testType = testType
+        self.testName = getStdTestName(testType+"Test", inputFiles,
+            nproc, paramOverrides, solverOpts, nameSuffix)
         # Be forgiving of user passing a single string rather than a list,
         # and correct for this.
         if isinstance(inputFiles, str):
@@ -126,8 +169,6 @@ class SysTest:
             if not os.path.exists(iFile):
                 raise IOError("One of the given input files, '%s',"
                     " doesn't exist." % (iFile))
-        self.testName, ext = os.path.splitext(inputFiles[0])
-        self.testName += "-%sTest" % (testType[0].lower()+testType[1:])
         self.outputPathBase = outputPathBase
         self.testStatus = None
         self.testComponents = {}
