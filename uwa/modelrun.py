@@ -145,7 +145,7 @@ class ModelRun:
 
     def __init__(self, name, modelInputFiles, outputPath, logPath="./log",
       cpReadPath=None, nproc=1, simParams=None,
-      paramOverrides=None, solverOpts=None):
+      paramOverrides=None, solverOpts=None, xmlExtras=None):
         self.name = name
         # Be forgiving if the user passes a single string input file, rather
         # than list
@@ -580,7 +580,7 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
         modelRun.checkSolverOptsFile()
 
     # Construct StGermain run command
-    runExe=uwa.getVerifyStgExePath("StGermain")
+    runExe=uwa.io.stgpath.getVerifyStgExePath("StGermain")
     stgRunStr = "%s " % (runExe)
     for inputFile in modelRun.modelInputFiles:    
         stgRunStr += inputFile+" "

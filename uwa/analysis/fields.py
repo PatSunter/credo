@@ -19,7 +19,7 @@ import os
 import math
 from xml.etree import ElementTree as etree
 
-import uwa.utils
+import uwa.io.stgpath
 from uwa.analysis import AnalysisOperation
 from uwa.io import stgxml, stgcvg
 import uwa.analysis.stats as stats
@@ -269,7 +269,7 @@ class FieldComparisonList(AnalysisOperation):
     def postRun(self, modelRun, runPath):
         """Implements :meth:`AnalysisOperation.postRun`. In this case, moves
         all CVG files created to output path."""
-        uwa.utils.moveAllToOutputPath(runPath, modelRun.outputPath,
+        uwa.io.stgpath.moveAllToTargetPath(runPath, modelRun.outputPath,
             stgcvg.CVG_EXT)
     
     def writeInfoXML(self, parentNode):

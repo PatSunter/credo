@@ -517,7 +517,7 @@ def writeStgDataDocToFile(xmlDoc, filename):
 def createFlattenedXML(inputFiles, cmdLineOverrides=""):
     '''Flatten a list of provided XML files and optionally also
     cmdLineOverrides (string), using the StGermain FlattenXML tool'''
-    flattenExe=uwa.getVerifyStgExePath('FlattenXML')
+    flattenExe=uwa.io.stgpath.getVerifyStgExePath('FlattenXML')
 
     try:
         p = Popen([flattenExe]+inputFiles+cmdLineOverrides.split(), stdout=PIPE, stderr=PIPE)
