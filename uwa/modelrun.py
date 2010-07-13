@@ -211,6 +211,16 @@ class ModelRun:
 
         if not os.path.exists(self.logPath):
             os.makedirs(self.logPath)
+    
+    def getStdOutFilename(self):
+        """Get the name of the file this Model's stdout needs to/has been
+        saved to."""
+        return os.path.join(self.logPath, "%s.stdout" % self.name)
+
+    def getStdErrFilename(self):
+        """Get the name of the file this Model's stderr needs to/has been
+        saved to."""
+        return os.path.join(self.logPath, "%s.stderr" % self.name)
 
     def writeInfoXML(self, writePath="", filename="", update=False,
             prettyPrint=True):
@@ -608,8 +618,8 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
 
     # BEGIN JOBRUNNER PART
     # Construct run line
-    stdOutFilename = os.path.join(modelRun.logPath, "%s.stdout" % modelRun.name)
-    stdErrFilename = os.path.join(modelRun.logPath, "%s.stderr" % modelRun.name)
+    stdOutFilename = modelRun.getStdOutFilename()
+    stdErrFilename = modelRun.getStdErrFilename()
     stdOutFile = open(stdOutFilename, "w+")
     stdErrFile = open(stdErrFilename, "w+")
     mpiPart = "%s -np %d " % (mpiCommand, modelRun.jobParams.nproc)

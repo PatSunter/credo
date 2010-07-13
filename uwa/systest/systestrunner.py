@@ -95,6 +95,7 @@ class SysTestRunner:
         and ModelResult in the suite that made up the test."""
         mSuite = sysTest.genSuite()
         mSuite.cleanAllOutputPaths()
+        mSuite.cleanAllLogFiles()
         print "Writing pre-test info to XML"
         sysTest.writePreRunXML()
         mSuite.writeAllModelRunXMLs()
