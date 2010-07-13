@@ -642,11 +642,15 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
         start = 0
         if total > tailLen: start = total - tailLen
         stdOutFileTail = stdOutFileLines[start:]
-        raise OSError("Failed to run model '%s', ret code was %s\nStd error"\
-            " msg was:\n%s\nLast %d lines of std out msg was:\n%s"
-            % (modelRun.name, retcode, stdErrMsg, tailLen,
+        raise OSError("Failed to run model '%s', ret code was %s\n"\
+            "Std out and error logs saved to files %s and %s, "\
+            "Std error msg was:\n%s\nLast %d lines of std out msg was:\n%s"\
+            % (modelRun.name, retcode,
+                stdOutFilename, stdErrFilename, stdErrMsg, tailLen,
                 "".join(stdOutFileTail)))
-    else: print "Model ran successfully."
+    else:
+        print "Model ran successfully (output saved to path %s, std out"\
+            " & std error to %s." % (modelRun.outputPath, modelRun.logPath)
 
     stdOutFile.close()
     stdErrFile.close()
