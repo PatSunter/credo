@@ -7,7 +7,13 @@ import glob
 import shutil
 import inspect
 
+STG_BASEDIRKEY = 'STG_BASEDIR'
 STG_BINDIRKEY = 'STG_BINDIR'
+STG_XMLDIRKEY = 'STG_XMLDIR'
+STG_BLD_SUBDIR = "build"
+STG_BIN_SUBDIR = os.path.join(STG_BLD_SUBDIR, "bin")
+STG_LIB_SUBDIR = os.path.join(STG_BLD_SUBDIR, "lib")
+STG_XML_SUBDIR = os.path.join(STG_LIB_SUBDIR, "StGermain")
 
 def getVerifyStgExePath(exeName):
     """For a given executable name (eg "StGermain"), return the full path
@@ -22,33 +28,78 @@ def getVerifyStgExePath(exeName):
 
     return fullExePath    
 
-def getStgBinPath():
-    """Get the path of StGermain binaries (given by env variable STG_BINDIR)."""
-    try:
-        stgBinPath=os.environ[STG_BINDIRKEY]
-    except KeyError, keyE:
-        raise EnvironmentError("Error in %s(): since this script needs to"\
-            " use StGermain" \
-            " executables, please set the %s environment variable for use" \
-            " within UWA.\n" \
-            % (inspect.stack()[0][3], STG_BINDIRKEY))
+def _getStgPath(pathDescription, pathEnviroVarKey, keySubDir=None,
+        testFile=None):
+    """Utility function: given a particular path environment variable key,
+    and description, checks to see if that path exists and is valid.
+    Will use :const:`STG_BASEDIRKEY` as a fallback if keySubDir is given."""
+    fromKey = None
+    if pathEnviroVarKey in os.environ:
+        foundPath=os.environ[pathEnviroVarKey]
+        fromKey = pathEnviroVarKey
+    elif keySubDir is not None and STG_BASEDIRKEY in os.environ:   
+        stgBasePath = os.environ[STG_BASEDIRKEY]
+        foundPath = os.path.join(stgBasePath, keySubDir)
+        fromKey = STG_BASEDIRKEY
+    else:
+        if keySubDir:
+            varsToUse = "either the %s or %s environment variable"\
+                    % (pathEnviroVarKey, STG_BASEDIRKEY)
+        else:            
+            varsToUse = "the %s environment variable"\
+                    % (pathEnviroVarKey)
 
-    if not os.path.exists(stgBinPath):
+        errorMsg = "Error in %s(): since this script needs to"\
+            " use %s, please set %s for use within UWA.\n" \
+            % (inspect.stack()[0][3], pathDescription, varsToUse)
+        raise EnvironmentError(errorMsg)
+
+    if not os.path.exists(foundPath):
         raise EnvironmentError("Error, in %s(): needed env variable %s is"\
             " set, but path it's" \
             " set to (%s) doesn't exist/not valid.\n" \
-            % (inspect.stack()[0][3], STG_BINDIRKEY, stgBinPath))
-    elif not os.path.exists(os.path.join(stgBinPath, 'StGermain')):
-        raise EnvironmentError("Error, in %s(): needed env variable %s is"\
-            " set, path it's set" \
-            " to (%s) is valid, but doesn't contain a StGermain executable.\n"\
-            % (inspect.stack()[0][3], STG_BINDIRKEY, stgBinPath))
+            % (inspect.stack()[0][3], fromKey, foundPath))
+    if testFile is not None:
+        if not os.path.exists(os.path.join(foundPath, testFile)):
+            raise EnvironmentError("Error, in %s(): needed env variable %s is"\
+                " set, path it's set" \
+                " to (%s) is valid, but doesn't contain the '%s' file.\n"\
+                % (inspect.stack()[0][3], fromKey, foundPath, testFile))
+    return foundPath
 
-    return stgBinPath    
+def getStgBinPath():
+    """Get the path of StGermain binaries (given by env variable STG_BINDIR)."""
+    return _getStgPath("StGermain executables", STG_BINDIRKEY, 
+        keySubDir=STG_BIN_SUBDIR, testFile="StGermain") 
 
-# TODO
-# getStgStandardXMLPath
-# SearchInStandardXMLPath (or is this in XML)
+def getStgStandardXMLPath():
+    """Returns the path that StGermain standard XML files are stored in
+    once installed (and is automatically searched within by StGermain
+    when input files are specified on either the command line, or in
+    include statements)."""
+    return _getStgPath("StGermain standard XMLs", STG_XMLDIRKEY,
+        keySubDir=STG_XML_SUBDIR)
+
+def checkAllXMLInputFilesExist(inputFilesList):        
+    """Checks a whole set of XML input files exist, and raises an IOError if
+    one of them doesn't. See :func:`.checkXMLInputFileExists`."""
+    for iFile in inputFilesList:
+        checkXMLInputFileExists(iFile)
+    return    
+
+def checkXMLInputFileExists(inputFile):
+    """Check if an XML input file exists in either the standard
+    XML path, or relative to the current directory. Raises an IOError
+    if not."""
+    if not os.path.exists(inputFile):
+        stgStdXMLPath = getStgStandardXMLPath()
+        fileInStgPath = os.path.join(stgStdXMLPath, inputFile) 
+        if not os.path.exists(fileInStgPath):
+            raise IOError("One of the given input files, '%s',"\
+                " doesn't exist in either the local directory,"\
+                " or the StGermain standard path %s"\
+                % (inputFile, stgStdXMLPath))
+    return
 
 def moveAllToTargetPath(startPath, targetPath, fileExt):
     """Move all files with extension `fileExt` from `startPath` to

@@ -9,6 +9,7 @@ import os
 from xml.etree import ElementTree as etree
 import uwa.modelrun as mrun
 from uwa.io.stgxml import writeXMLDoc
+import uwa.io.stgpath
 
 class SysTestResult:
     """Class to represent an UWA system test result.
@@ -165,10 +166,7 @@ class SysTest:
         if isinstance(inputFiles, str):
             inputFiles = [inputFiles]
         self.inputFiles = inputFiles
-        for iFile in self.inputFiles:
-            if not os.path.exists(iFile):
-                raise IOError("One of the given input files, '%s',"
-                    " doesn't exist." % (iFile))
+        uwa.io.stgpath.checkAllXMLInputFilesExist(self.inputFiles)
         self.outputPathBase = outputPathBase
         self.testStatus = None
         self.testComponents = {}

@@ -588,7 +588,7 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
        It's planned for much of this functionality to move to a JobRunner class
        in future, to allow things like launching PBS or grid jobs."""
 
-    # Check runExe found in path
+    uwa.io.stgpath.checkAllXMLInputFilesExist(modelRun.modelInputFiles)
 
     # Pre-run checks for validity - e.g. at least one input file,
     # nproc is sensible value
