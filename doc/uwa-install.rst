@@ -164,8 +164,17 @@ PATH        needs to be extended with a reference to the uwa/scripts directory
             in your checkout.
 PYTHONPATH  needs to be extended to reference the main tree of UWA python
             code (uwa/uwa)
+STG_BASEDIR specifies the base directory that StGermain has been checked out
+            to. Optional, can individually specify the variables below 
+            instead if necessary.
 STG_BINDIR  needs to specify the path that StGermain executables have been
-            compiled and installed to.
+            compiled and installed to. 
+            For a default installation, you can just use STG_BASEDIR instead
+            and UWA will work out the binaries location within that.
+STG_XMLDIR  needs to specify the path that StGermain standard XMLs are stored
+            in when the code is compiled. 
+            For a default installation, you can just use STG_BASEDIR instead
+            and UWA will work out the XMLs location within that.
 =========== ==================================================================
 
 The sections below will advise you how to set these up correctly.
