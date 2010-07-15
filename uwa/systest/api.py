@@ -159,13 +159,13 @@ class SysTest:
     def __init__(self, inputFiles, outputPathBase,
             nproc, paramOverrides, solverOpts, testType, nameSuffix=None):
         self.testType = testType
-        self.testName = getStdTestName(testType+"Test", inputFiles,
-            nproc, paramOverrides, solverOpts, nameSuffix)
         # Be forgiving of user passing a single string rather than a list,
         # and correct for this.
         if isinstance(inputFiles, str):
             inputFiles = [inputFiles]
         self.inputFiles = inputFiles
+        self.testName = getStdTestName(testType+"Test", inputFiles,
+            nproc, paramOverrides, solverOpts, nameSuffix)
         uwa.io.stgpath.checkAllXMLInputFilesExist(self.inputFiles)
         self.outputPathBase = outputPathBase
         self.testStatus = None
