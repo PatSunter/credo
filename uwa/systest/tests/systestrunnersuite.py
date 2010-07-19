@@ -4,22 +4,24 @@ import shutil
 import tempfile
 import unittest
 
-from uwa.systest import *
+from uwa.systest import SysTestRunner, UWA_PASS, UWA_FAIL, UWA_ERROR
+from skeletonSysTest import SkeletonSysTest
 
 class SysTestRunnerTestCase(unittest.TestCase):
 
     def setUp(self):
         self.basedir = os.path.realpath(tempfile.mkdtemp())
-        self.stRunner = SysTestRunner(nproc=1)
+        self.stRunner = SysTestRunner()
+        self.inputFiles = [os.path.join("input","TempDiffusion.xml")]
 
     def tearDown(self):
         shutil.rmtree(self.basedir)
 
     def test_printResultsSummary(self):
-        sysTests = [RestartTest(["Multigrid.xml"],"./output"),
-            RestartTest("Multigrid2.xml","./output"),
-            RestartTest("Multigrid3.xml","./output"),
-            RestartTest("Multigrid4.xml","./output") ]
+        sysTests = [SkeletonSysTest(self.inputFiles[0],"./output"),
+            SkeletonSysTest(self.inputFiles[0],"./output"),
+            SkeletonSysTest(self.inputFiles[0],"./output"),
+            SkeletonSysTest(self.inputFiles[0],"./output") ]
         results = [UWA_PASS("Good"), 
             UWA_PASS("Excellent test"),
             UWA_FAIL("Fields outside tolerance"),
