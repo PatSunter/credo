@@ -1,5 +1,6 @@
 
 from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
+from uwa.modelsuite import ModelSuite
 
 class SkeletonSysTest(SysTest):
     """A Skeleton system test class, used for testing."""
@@ -11,9 +12,10 @@ class SkeletonSysTest(SysTest):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
             paramOverrides, solverOpts, "Skeleton", nameSuffix)        
     
-    def getSuite(self):
+    def genSuite(self):
+        # an empty suite
         self.mSuite = ModelSuite(outputPathBase=self.outputPathBase)
-        return mSuite
+        return self.mSuite
     
     def checkResultValid(self, resultsSet):
         pass
