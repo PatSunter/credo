@@ -61,7 +61,7 @@ def getStdTestNameBasic(testTypeStr, inputFiles):
         raise TypeError("Function requires the inputFiles argument to be "
             " a list of strings - not a %s." % type(inputFiles))
 
-    testNameBasic, ext = os.path.splitext(inputFiles[0])
+    testNameBasic, ext = os.path.splitext(os.path.basename(inputFiles[0]))
     testNameBasic += "-%s" % (testTypeStr[0].lower()+testTypeStr[1:])
     return testNameBasic
 
