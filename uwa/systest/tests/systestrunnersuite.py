@@ -17,6 +17,22 @@ class SysTestRunnerTestCase(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.basedir)
 
+    def test_addStdTest(self):
+        self.stRunner.addStdTest(SkeletonSysTest, self.inputFiles, nproc=1)
+        sysTestsList = self.stRunner.sysTests
+        self.assertEqual(len(self.stRunner.sysTests), 1)
+        addedTest = sysTestsList[0]
+        self.assertTrue(isinstance(addedTest, SkeletonSysTest))
+        self.assertEqual(addedTest.testType, "Skeleton")
+        self.assertEqual(addedTest.inputFiles, self.inputFiles)
+        self.assertEqual(addedTest.testStatus, None)
+    
+    def test_runTest(self):
+        skelTest = SkeletonSysTest(self.inputFiles, "output/SkeletonTest",
+            nproc=1)
+        testResult = self.stRunner.runTest(skelTest)
+        self.assertEqual(testResult.statusStr, UWA_PASS.statusStr)
+
     def test_printResultsSummary(self):
         sysTests = [SkeletonSysTest(self.inputFiles[0],"./output"),
             SkeletonSysTest(self.inputFiles[0],"./output"),
@@ -26,7 +42,7 @@ class SysTestRunnerTestCase(unittest.TestCase):
             UWA_PASS("Excellent test"),
             UWA_FAIL("Fields outside tolerance"),
             UWA_ERROR("Job failed to run")]
-        self.stRunner.printResultsSummary(sysTests, results)
+        #self.stRunner.printResultsSummary(sysTests, results)
 
 def suite():
     suite = unittest.TestSuite()
