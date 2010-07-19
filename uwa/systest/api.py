@@ -36,27 +36,31 @@ class SysTestResult:
 
 class UWA_PASS(SysTestResult):
     '''Simple class to represent an UWA pass'''
+    statusStr = 'Pass'
     def __init__(self, passMsg):
         assert type(passMsg) == str
-        self.statusStr = 'Pass'
         self.detailMsg = passMsg
 
 class UWA_FAIL(SysTestResult):
     '''Simple class to represent an UWA failure'''
+    statusStr = 'Fail'
     def __init__(self, failMsg):
         assert type(failMsg) == str
-        self.statusStr = 'Fail'
         self.detailMsg = failMsg
         
 class UWA_ERROR(SysTestResult):
     '''Simple class to represent an UWA error'''
+    statusStr = 'Error'
     def __init__(self, errorMsg):
-        self.statusStr = 'Error'
         assert type(errorMsg) == str
         self.detailMsg = errorMsg
 
 def getStdTestNameBasic(testTypeStr, inputFiles):
     """Basic part of the test name. Useful for restart runs etc."""
+    if type(inputFiles) != list:
+        raise TypeError("Function requires the inputFiles argument to be "
+            " a list of strings - not a %s." % type(inputFiles))
+
     testNameBasic, ext = os.path.splitext(inputFiles[0])
     testNameBasic += "-%s" % (testTypeStr[0].lower()+testTypeStr[1:])
     return testNameBasic
