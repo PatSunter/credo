@@ -32,6 +32,10 @@ class SysTestNamesHandling(unittest.TestCase):
             nproc=1, paramOverrides=None, solverOpts=None, nameSuffix=None)
         self.assertEqual(testNameSingle,
             "Multigrid-analyticTest-np1")    
+        testNameSubdir = getStdTestName("AnalyticTest", ["input/Multigrid.xml"],
+            nproc=1, paramOverrides=None, solverOpts=None, nameSuffix=None)
+        self.assertEqual(testNameSubdir,
+            "Multigrid-analyticTest-np1")    
         testNameMulti = getStdTestName("AnalyticTest", 
             ["Multigrid.xml", "Blah.xml"],
             nproc=1, paramOverrides=None, solverOpts=None, nameSuffix=None)
