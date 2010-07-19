@@ -113,11 +113,13 @@ class SysTestRunner:
         Will also save all appropriate XMLs (as discussed in :meth:`.runTest`)
         and print a summary of results."""
         results = []
+        testTotal = len(self.sysTests)
         for testI, sysTest in enumerate(self.sysTests):
-            print "Running System test %d, with name '%s':" \
-                % (testI, sysTest.testName)
+            print "Running System test %d/%d, with name '%s':" \
+                % (testI+1, testTotal, sysTest.testName)
             results.append(self.runTest(sysTest))
         self.printResultsSummary(self.sysTests, results)
+        return results
     
     def printResultsSummary(self, sysTests, results):
         """Print a textual summary of the results of running a set of sys
