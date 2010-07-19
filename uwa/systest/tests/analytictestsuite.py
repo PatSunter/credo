@@ -11,8 +11,9 @@ class AnalyticTestTestCase(unittest.TestCase):
     def setUp(self):
         self.basedir = os.path.realpath(tempfile.mkdtemp())
         #os.makedirs(os.path.join(self.basedir,self.results_dir,'StGermain'))
-            #self.results_xml = open(os.path.join(self.basedir, self.results_dir, 'StGermain', 'TEST-FooSuite.xml'), 'w')
-        self.sysTest = AnalyticTest("TestModel.xml", "./output/analyticTest")    
+            #self.results_xml = open(os.path.join(self.basedir,
+                #self.results_dir, 'StGermain', 'TEST-FooSuite.xml'), 'w')
+        self.sysTest = AnalyticTest("TestModel.xml", "./output/analyticTest")
 
     def tearDown(self):
         shutil.rmtree(self.basedir)
