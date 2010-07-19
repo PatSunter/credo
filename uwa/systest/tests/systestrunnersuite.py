@@ -15,10 +15,12 @@ class SysTestRunnerTestCase(unittest.TestCase):
         self.inputFiles = [os.path.join("input","TempDiffusion.xml")]
 
     def tearDown(self):
+        self.stRunner = None
         shutil.rmtree(self.basedir)
 
     def test_addStdTest(self):
-        self.stRunner.addStdTest(SkeletonSysTest, self.inputFiles, nproc=1)
+        self.stRunner.addStdTest(SkeletonSysTest, self.inputFiles, 
+            statusToReturn=UWA_PASS("testPass"), nproc=1)
         sysTestsList = self.stRunner.sysTests
         self.assertEqual(len(self.stRunner.sysTests), 1)
         addedTest = sysTestsList[0]
@@ -28,21 +30,26 @@ class SysTestRunnerTestCase(unittest.TestCase):
         self.assertEqual(addedTest.testStatus, None)
     
     def test_runTest(self):
-        skelTest = SkeletonSysTest(self.inputFiles, "output/SkeletonTest",
-            nproc=1)
+        skelTest = SkeletonSysTest(self.inputFiles, "output/SkeletonTest1",
+            statusToReturn=UWA_PASS("testPass"), nproc=1)
         testResult = self.stRunner.runTest(skelTest)
         self.assertEqual(testResult.statusStr, UWA_PASS.statusStr)
+        skelTest = SkeletonSysTest(self.inputFiles, "output/SkeletonTest2",
+            statusToReturn=UWA_FAIL("testFail"), nproc=1)
+        testResult = self.stRunner.runTest(skelTest)
+        self.assertEqual(testResult.statusStr, UWA_FAIL.statusStr)
+    
+    def test_runAll(self):
+        skelTest1 = SkeletonSysTest(self.inputFiles, "output/SkeletonTest1",
+            statusToReturn=UWA_PASS("testPass"), nproc=1)
+        skelTest2 = SkeletonSysTest(self.inputFiles, "output/SkeletonTest2",
+            statusToReturn=UWA_FAIL("testFail"), nproc=1)
+        self.stRunner.sysTests = [skelTest1, skelTest2]
+        testResults = self.stRunner.runAll()
+        self.assertEqual(len(testResults), 2)
+        self.assertEqual(testResults[0].statusStr, UWA_PASS.statusStr)
+        self.assertEqual(testResults[1].statusStr, UWA_FAIL.statusStr)
 
-    def test_printResultsSummary(self):
-        sysTests = [SkeletonSysTest(self.inputFiles[0],"./output"),
-            SkeletonSysTest(self.inputFiles[0],"./output"),
-            SkeletonSysTest(self.inputFiles[0],"./output"),
-            SkeletonSysTest(self.inputFiles[0],"./output") ]
-        results = [UWA_PASS("Good"), 
-            UWA_PASS("Excellent test"),
-            UWA_FAIL("Fields outside tolerance"),
-            UWA_ERROR("Job failed to run")]
-        #self.stRunner.printResultsSummary(sysTests, results)
 
 def suite():
     suite = unittest.TestSuite()

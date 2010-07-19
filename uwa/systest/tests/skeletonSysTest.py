@@ -7,10 +7,12 @@ class SkeletonSysTest(SysTest):
 
     description = "Skeleton system test."
 
-    def __init__(self, inputFiles, outputPathBase, nproc=1,
+    def __init__(self, inputFiles, outputPathBase,
+            statusToReturn, nproc=1,
             paramOverrides=None, solverOpts=None, nameSuffix=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
             paramOverrides, solverOpts, "Skeleton", nameSuffix)        
+        self.statusToReturn = statusToReturn    
     
     def genSuite(self):
         # an empty suite
@@ -21,9 +23,8 @@ class SkeletonSysTest(SysTest):
         pass
 
     def getStatus(self, resultsSet):
-        testStatus = UWA_PASS("Skeleton test always passes.")
-        self.testStatus = testStatus
-        return testStatus
+        self.testStatus = self.statusToReturn
+        return self.testStatus
     
     def _writeXMLCustomSpec(self, specNode):
         pass
