@@ -429,9 +429,13 @@ class SysTestSuite:
                 " a subclass of the UWA SysTest type. Type passed in, '%s',"\
                 " not a subclass of SysTest." \
                 % (testClass))
+        callingFile = inspect.stack()[1][1]
+        callingPath = os.path.dirname(callingFile)
         # If just given a single input file as a string, convert
         #  to a list (containing that single file).
         if isinstance(inputFiles, str): inputFiles = [inputFiles]
+        uwa.io.stgpath.convertLocalXMLFilesToAbsPaths(inputFiles, callingPath)
+        uwa.io.stgpath.checkAllXMLInputFilesExist(inputFiles)
         if 'nproc' not in testOpts:
             testOpts['nproc']=self.nproc
         outputPath = self._getStdOutputPath(testClass, inputFiles, testOpts)
