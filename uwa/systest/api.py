@@ -6,6 +6,7 @@ or Test components need to inherit.
 """
 
 import os
+import inspect
 from xml.etree import ElementTree as etree
 import uwa.modelrun as mrun
 from uwa.io.stgxml import writeXMLDoc
@@ -363,6 +364,88 @@ class SysTest:
         statusMsgNode = etree.SubElement(resNode, 'statusMsg')
         statusMsgNode.text = self.testStatus.detailMsg
 
+
+class SysTestSuite:
+    """Class that aggregates  a set of :class:`~uwa.systest.api.SysTest`.
+
+    For examples of how to use, see the UWA documentation, especially
+    :ref:`uwa-examples-run-systest`.
+
+    TODO: document projectName and suiteName and nproc
+
+    .. attribute:: sysTests
+
+       List of system tests that should be run and reported upon. Generally
+       shouldn't be accessed directly, recommend using :meth:`.addStdTest`
+       to add to this list, and other methods to run and report on it."""
+
+    def __init__(self, projectName, suiteName, sysTests=None, nproc=1):
+        self.projectName = projectName
+        self.suiteName = suiteName
+        if sysTests == None:
+            self.sysTests = []
+        else:    
+            if not isinstance(sysTests, list):
+                raise TypeError("Error, if the sysTests keyword is"
+                    " provided it must be a list of SysTests.")
+            self.sysTests = sysTests
+        self.nproc = nproc    
+    
+    def addStdTest(self, testClass, inputFiles, **testOpts):
+        """Instantiate and add a "standard" system test type to the list
+        of System tests to be run. (The "standard" refers to the user needing
+        to have access to the module containing the system test type to be
+        added, usually from a `from uwa.systest import *` statement.
+
+        :param testClass: Python class of the System test to be added. This
+          needs to be a sub-class of :class:`~uwa.systest.api.SysTest`.
+        :param inputFiles: model input files to be passed through to the 
+          System test when instantiated.
+        :param `**testOpts`: any other keyword arguments the user wishes to
+          passed through to the System test when it's instantiated.
+          Can be used to customise a test."""
+
+        if not inspect.isclass(testClass):
+            raise TypeError("The testClass argument must be a type that's"\
+                " a subclass of the UWA SysTest type. Arg passed in, '%s',"\
+                " of type '%s', is not a Python Class." \
+                % (testClass, type(testClass)))
+        if not issubclass(testClass, SysTest):
+            raise TypeError("The testClass argument must be a type that's"\
+                " a subclass of the UWA SysTest type. Type passed in, '%s',"\
+                " not a subclass of SysTest." \
+                % (testClass))
+        # If just given a single input file as a string, convert
+        #  to a list (containing that single file).
+        if isinstance(inputFiles, str): inputFiles = [inputFiles]
+        if 'nproc' not in testOpts:
+            testOpts['nproc']=self.nproc
+        outputPath = self._getStdOutputPath(testClass, inputFiles, testOpts)
+        newSysTest = testClass(inputFiles, outputPath, **testOpts)
+        self.sysTests.append(newSysTest)
+
+    def _getStdOutputPath(self, testClass, inputFiles, testOpts):
+        """Get the standard name for the test's output path. Attempts to
+        avoid naming collisions where reasonable."""
+
+        classStr = str(testClass).split('.')[-1]
+        #TODO: resolve fact this already likely has "test" at end, unlike test
+        # type string.
+
+        # Grab any custom options we need
+        nproc = testOpts['nproc']
+        nameSuffix = testOpts['nameSuffix'] if 'nameSuffix' in testOpts\
+            else None
+        paramOverrides = testOpts['paramOverrides']\
+            if 'paramOverrides' in testOpts else None
+        solverOpts = testOpts['solverOpts'] if 'solverOpts' in testOpts\
+            else None
+
+        testName = getStdTestName(classStr, inputFiles, nproc, 
+            paramOverrides, solverOpts, nameSuffix)
+        outputPath = os.path.join('output', testName)
+        return outputPath
+        
 
 class TestComponent:
     '''A class for TestComponents that make up an UWA System test/benchmark.
