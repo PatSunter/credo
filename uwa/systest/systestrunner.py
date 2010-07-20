@@ -52,6 +52,8 @@ class SysTestRunner:
     def runSuite(self, suite, runSubSuites=True, subSuiteMode=False):
         """Runs a suite of system tests, and prints results.
         The suite may contain sub-suites, which will also be run by default.
+
+        :returns: a list of all results of the suite, and its sub-suites
         
         .. note:: Currently, just returns a flat list of results, containing
            results of all tests and all sub-suites. Won't change this into
@@ -82,7 +84,11 @@ class SysTestRunner:
         return results
     
     def runSuites(self, testSuites):
-        """Runs a list of suites, and prints a big summary at the end."""
+        """Runs a list of suites, and prints a big summary at the end.
+        
+        :returns: a list containing lists of results for each suite (results
+          list in the same order as testSuites input argument).
+        """
         print "Running the following system test suites:"
         for suite in testSuites:
             print " Project '%s', suite '%s'" % (suite.projectName,
@@ -98,6 +104,9 @@ class SysTestRunner:
         return resultsLists
 
     def printSuiteResultsByProject(self, testSuites, resultsLists):
+        """Utility function to print a set of suite results out, 
+        categorised by project, in the order that the projects first
+        appear in the results."""
         projOrder, projIndices = self._buildResultsProjectIndex(testSuites)
         suitesResults = zip(testSuites, resultsLists)
         print "-"*80
@@ -111,18 +120,20 @@ class SysTestRunner:
                 print " Suite '%s':" % suite.suiteName,
                 suiteResults = resultsLists[suiteI]
                 sumsDict = self.getResultsTotals(suiteResults)[0]
-                self.printResultsLineShort(sumsDict)
+                self._printResultsLineShort(sumsDict)
                 for kw, sumVal in sumsDict.iteritems():
                     projSumsDict[kw] += sumVal
-            self.printResultsLineShort(projSumsDict)
+            self._printResultsLineShort(projSumsDict)
             print "------"
             for kw, sumVal in projSumsDict.iteritems():
                 totalSumsDict[kw] += sumVal
         print "ALL Projects Total: ",
-        self.printResultsLineShort(totalSumsDict)
+        self._printResultsLineShort(totalSumsDict)
         print "-"*80
 
     def printSuiteResultsOrderFound(self, testSuites, resultsLists):
+        """Utility function to print a set of results in the order they
+        were entered (not sub-categorised by project)."""
         print "-"*80
         print "UWA System Tests summary for all project suites ran:"
         totalSumsDict = {"Pass":0, "Fail":0, "Error":0}
@@ -131,12 +142,12 @@ class SysTestRunner:
             suiteResults = resultsLists[ii]
             sumsDict = self.getResultsTotals(suiteResults)[0]
             totalResults = sum(sumsDict.values())
-            self.printResultsLineShort(sumsDict)
+            self._printResultsLineShort(sumsDict)
             for kw, sumVal in sumsDict.iteritems():
                 totalSumsDict[kw] += sumVal
         print "------"
         print "TOTAL: ",
-        self.printResultsLineShort(totalSumsDict)
+        self._printResultsLineShort(totalSumsDict)
         print "-"*80
 
     def _buildResultsProjectIndex(self, testSuites):
@@ -162,14 +173,14 @@ class SysTestRunner:
         print "UWA System Tests total for '%s' suite '%s' and sub-suites:"\
             % (projName, suiteName)
         sumsDict, failIndices, errorIndices = self.getResultsTotals(results)
-        self.printResultsLine(sumsDict)
+        self._printResultsLine(sumsDict)
         print "-"*80
 
     def printResultsSummary(self, sysTests, results, 
             projName=None, suiteName=None):
         """Print a textual summary of the results of running a set of sys
         tests."""
-        self.checkResultsSysTestsLength(sysTests, results)
+        self._checkResultsSysTestsLength(sysTests, results)
         print "-"*80
         headerDetail = ""
         if projName is not None:
@@ -181,8 +192,9 @@ class SysTestRunner:
         print "-"*80
 
     def printResultsDetails(self, sysTests, results):    
+        """Prints details of which tests failed in a sub-suite."""
         sumsDict, failIndices, errorIndices = self.getResultsTotals(results)
-        self.printResultsLine(sumsDict)
+        self._printResultsLine(sumsDict)
 
         if len(failIndices) > 0:
             print "Failures were:"
@@ -197,6 +209,8 @@ class SysTestRunner:
                     results[eI].detailMsg)
 
     def getResultsTotals(self, results):
+        """Gets the totals of a set of results, and returns, including
+        indices of which results failed, and which were errors."""
         sums = {"Pass":0, "Fail":0, "Error":0}
         failIndices = []
         errorIndices = []
@@ -206,19 +220,19 @@ class SysTestRunner:
             if isinstance(result, UWA_ERROR): errorIndices.append(resI)
         return sums, failIndices, errorIndices    
 
-    def printResultsLine(self, sumsDict):
+    def _printResultsLine(self, sumsDict):
         totalResults = sum(sumsDict.values())
         print "Ran %d system tests," % (totalResults),
         print "with %d passes, %d fails, and %d errors" \
             % (sumsDict["Pass"], sumsDict["Fail"], sumsDict["Error"])
 
-    def printResultsLineShort(self, sumsDict):
+    def _printResultsLineShort(self, sumsDict):
         totalResults = sum(sumsDict.values())
         print "%d tests, %d/%d/%d passes/fails/errors" \
             % (totalResults, sumsDict["Pass"], sumsDict["Fail"],
                 sumsDict["Error"])
 
-    def checkResultsSysTestsLength(self, sysTests, results):
+    def _checkResultsSysTestsLength(self, sysTests, results):
         if len(sysTests) != len(results):
             raise ValueError("The sysTests and results args must be"\
                 " same length, but sysTests of len %d vs results of"\
