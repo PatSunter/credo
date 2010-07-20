@@ -449,6 +449,13 @@ class SysTestSuite:
         """Adds a set of sub-suites to the list of sub-suites."""
         for subSuite in subSuites:
             self.addSubSuite(subSuite)
+    
+    def newSubSuite(self, *subSuiteRegArgs, **subSuiteKWArgs):
+        """Shortcut to create a new sub-suite, add it to the existing suite,
+        and return reference to the newly created sub-suite."""
+        subSuite = SysTestSuite(*subSuiteRegArgs, **subSuiteKWArgs)
+        self.addSubSuite(subSuite)
+        return subSuite
 
     def _getStdOutputPath(self, testClass, inputFiles, testOpts):
         """Get the standard name for the test's output path. Attempts to

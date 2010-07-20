@@ -48,6 +48,15 @@ class SysTestSuiteTestCase(unittest.TestCase):
         self.assertRaises(TypeError, self.stSuite.addSubSuite,
             [subSuite1, subSuite2])
 
+    def test_newSubSuite(self):
+        subSuite1 = self.stSuite.newSubSuite("StgFEM", "RegressionTests-sub1")
+        subSuite2 = self.stSuite.newSubSuite("StgFEM", "RegressionTests-sub2")
+        self.assertEqual(len(self.stSuite.subSuites), 2)
+        self.assertEqual(self.stSuite.subSuites[0], subSuite1)
+        self.assertEqual(self.stSuite.subSuites[1], subSuite2)
+        self.assertTrue(isinstance(self.stSuite.subSuites[0], SysTestSuite))
+        self.assertTrue(isinstance(self.stSuite.subSuites[1], SysTestSuite))
+
     def test_addSubSuites(self):
         subSuite1 = SysTestSuite("StgFEM", "RegressionTests-sub1")
         subSuite2 = SysTestSuite("StgFEM", "RegressionTests-sub2")
