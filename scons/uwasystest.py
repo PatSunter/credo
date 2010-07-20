@@ -11,8 +11,6 @@ SCons.Warnings.enableWarningClass(ToolUWASysTestWarning)
 def generate(env, **kw):
     #Extend the Python path so uwa can be used.
     # TODO: update this when UWA is installed properly.
-    import pdb
-    pdb.set_trace()
     # We need to update actual environment variables, not the SCons env,
     # so test scripts which are sub-programs can be executed.
     uwaPath = os.path.abspath('uwa')
@@ -46,8 +44,6 @@ def generate(env, **kw):
         script = os.path.basename(script)
         args = source[0].split()[1:]
 
-        import pdb
-        pdb.set_trace()
         runner = env.Action('-./' + script + ' ' + ' '.join(args), chdir=script_dir)
         env.Alias(env["LOWRES_TARGET"], [], runner)
         env.AlwaysBuild(env["LOWRES_TARGET"])
