@@ -5,7 +5,7 @@ import unittest
 
 def suite():
     #testMods = [fName.rstrip(".py") for fName in glob.glob("*suite.py")]
-    testMods = ['systestapisuite', 'systestrunnersuite']
+    testMods = ['systestapisuite', 'systestsuitesuite', 'systestrunnersuite']
     # TODO: others need fixing
     alltests = unittest.TestSuite()
     for module in map(__import__, testMods):

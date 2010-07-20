@@ -377,9 +377,16 @@ class SysTestSuite:
 
        List of system tests that should be run and reported upon. Generally
        shouldn't be accessed directly, recommend using :meth:`.addStdTest`
-       to add to this list, and other methods to run and report on it."""
+       to add to this list, and other methods to run and report on it.
+    
+    .. attribute:: subSuites
 
-    def __init__(self, projectName, suiteName, sysTests=None, nproc=1):
+       List of subSuites (defaults to none) associated with this suite.
+       Associating sub-suites allows a nested hierarchy of system tests.
+    """
+
+    def __init__(self, projectName, suiteName, sysTests=None,
+            subSuites=None, nproc=1):
         self.projectName = projectName
         self.suiteName = suiteName
         if sysTests == None:
@@ -387,8 +394,15 @@ class SysTestSuite:
         else:    
             if not isinstance(sysTests, list):
                 raise TypeError("Error, if the sysTests keyword is"
-                    " provided it must be a list of SysTests.")
+                    " provided it must be a list of SysTest.")
             self.sysTests = sysTests
+        if subSuites == None:
+            self.subSuites = []
+        else:    
+            if not isinstance(subSuites, list):
+                raise TypeError("Error, if the subSuites keyword is"
+                    " provided it must be a list of SysTestSuites.")
+            self.subSuites = subSuites
         self.nproc = nproc    
     
     def addStdTest(self, testClass, inputFiles, **testOpts):
@@ -423,6 +437,18 @@ class SysTestSuite:
         outputPath = self._getStdOutputPath(testClass, inputFiles, testOpts)
         newSysTest = testClass(inputFiles, outputPath, **testOpts)
         self.sysTests.append(newSysTest)
+
+    def addSubSuite(self, subSuite):
+        """Adds a single sub-suite to the list of sub-suites."""
+        if not isinstance(subSuite, SysTestSuite):
+            raise TypeError("subSuite must be an instance of type"\
+                " SysTestSuite.")
+        self.subSuites.append(subSuite)
+    
+    def addSubSuites(self, subSuites):
+        """Adds a set of sub-suites to the list of sub-suites."""
+        for subSuite in subSuites:
+            self.addSubSuite(subSuite)
 
     def _getStdOutputPath(self, testClass, inputFiles, testOpts):
         """Get the standard name for the test's output path. Attempts to

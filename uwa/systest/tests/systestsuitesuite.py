@@ -27,8 +27,42 @@ class SysTestSuiteTestCase(unittest.TestCase):
         self.assertEqual(addedTest.testType, "Skeleton")
         self.assertEqual(addedTest.inputFiles, self.inputFiles)
         self.assertEqual(addedTest.testStatus, None)
-        # TODO: add another test to suite
+        self.stSuite.addStdTest(SkeletonSysTest, self.inputFiles, 
+            statusToReturn=UWA_FAIL("testFail"), nproc=1)
+        self.assertEqual(len(self.stSuite.sysTests), 2)
+        secondTest = sysTestsList[1]
+        self.assertTrue(isinstance(addedTest, SkeletonSysTest))
+        self.assertEqual(addedTest.testType, "Skeleton")
+        self.assertEqual(addedTest.inputFiles, self.inputFiles)
+        self.assertEqual(addedTest.testStatus, None)
+    
+    def test_addSubSuite(self):
+        subSuite1 = SysTestSuite("StgFEM", "RegressionTests-sub1")
+        subSuite2 = SysTestSuite("StgFEM", "RegressionTests-sub2")
+        self.stSuite.addSubSuite(subSuite1)
+        self.stSuite.addSubSuite(subSuite2)
+        self.assertEqual(len(self.stSuite.subSuites), 2)
+        self.assertEqual(self.stSuite.subSuites[0], subSuite1)
+        self.assertEqual(self.stSuite.subSuites[1], subSuite2)
+        #Make sure don't get list confused etc
+        self.assertRaises(TypeError, self.stSuite.addSubSuite,
+            [subSuite1, subSuite2])
 
+    def test_addSubSuites(self):
+        subSuite1 = SysTestSuite("StgFEM", "RegressionTests-sub1")
+        subSuite2 = SysTestSuite("StgFEM", "RegressionTests-sub2")
+        self.stSuite.addSubSuites([subSuite1, subSuite2])
+        self.assertEqual(len(self.stSuite.subSuites), 2)
+        self.assertEqual(self.stSuite.subSuites[0], subSuite1)
+        self.assertEqual(self.stSuite.subSuites[1], subSuite2)
+        # Now try add some tests to these suites
+        self.stSuite.addStdTest(SkeletonSysTest, self.inputFiles, 
+            statusToReturn=UWA_FAIL("testFail"), nproc=1)
+        subSuite2.addStdTest(SkeletonSysTest, self.inputFiles, 
+            statusToReturn=UWA_PASS("testPass"), nproc=1)
+        self.assertEqual(len(self.stSuite.sysTests), 1)
+        self.assertEqual(len(self.stSuite.subSuites[0].sysTests), 0)
+        self.assertEqual(len(self.stSuite.subSuites[1].sysTests), 1)
 
 def suite():
     suite = unittest.TestSuite()
