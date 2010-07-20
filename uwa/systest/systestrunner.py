@@ -80,6 +80,81 @@ class SysTestRunner:
             self.printSuiteTotalsShortSummary(results, suite.projectName,
                 suite.suiteName)
         return results
+    
+    def runSuites(self, testSuites):
+        """Runs a list of suites, and prints a big summary at the end."""
+        print "Running the following system test suites:"
+        for suite in testSuites:
+            print " Project '%s', suite '%s'" % (suite.projectName,
+                suite.suiteName)
+        print "-"*80
+
+        resultsLists = []
+        for suite in testSuites:
+            suiteResults = self.runSuite(suite)
+            resultsLists.append(suiteResults)
+
+        self.printSuiteResultsByProject(testSuites, resultsLists)
+        return resultsLists
+
+    def printSuiteResultsByProject(self, testSuites, resultsLists):
+        projOrder, projIndices = self._buildResultsProjectIndex(testSuites)
+        suitesResults = zip(testSuites, resultsLists)
+        print "-"*80
+        print "UWA System Tests summary for all project suites ran:"
+        totalSumsDict = {"Pass":0, "Fail":0, "Error":0}
+        for projName in projOrder:
+            print "Project '%s':" % projName
+            projSumsDict = {"Pass":0, "Fail":0, "Error":0}
+            for suiteI in projIndices[projName]:
+                suite = testSuites[suiteI]
+                print " Suite '%s':" % suite.suiteName,
+                suiteResults = resultsLists[suiteI]
+                sumsDict = self.getResultsTotals(suiteResults)[0]
+                self.printResultsLineShort(sumsDict)
+                for kw, sumVal in sumsDict.iteritems():
+                    projSumsDict[kw] += sumVal
+            self.printResultsLineShort(projSumsDict)
+            print "------"
+            for kw, sumVal in projSumsDict.iteritems():
+                totalSumsDict[kw] += sumVal
+        print "ALL Projects Total: ",
+        self.printResultsLineShort(totalSumsDict)
+        print "-"*80
+
+    def printSuiteResultsOrderFound(self, testSuites, resultsLists):
+        print "-"*80
+        print "UWA System Tests summary for all project suites ran:"
+        totalSumsDict = {"Pass":0, "Fail":0, "Error":0}
+        for ii, suite in enumerate(testSuites):
+            print "'%s', '%s': " % (suite.projectName, suite.suiteName),
+            suiteResults = resultsLists[ii]
+            sumsDict = self.getResultsTotals(suiteResults)[0]
+            totalResults = sum(sumsDict.values())
+            self.printResultsLineShort(sumsDict)
+            for kw, sumVal in sumsDict.iteritems():
+                totalSumsDict[kw] += sumVal
+        print "------"
+        print "TOTAL: ",
+        self.printResultsLineShort(totalSumsDict)
+        print "-"*80
+
+    def _buildResultsProjectIndex(self, testSuites):
+        """Build index of projects and their indices into testSuites.
+       :returns: dictionary where keys are project names, values are lists
+       of indices into the testSuites list of results of that project."""
+        projectsOrder = []
+        projectIndices = {}
+        for suiteI, suite in enumerate(testSuites):
+            projName = suite.projectName    
+            if projName not in projectsOrder: projectsOrder.append(projName)
+
+            if projName not in projectIndices:
+                projectIndices[projName] = [suiteI]
+            else:
+                projectIndices[projName].append(suiteI)
+
+        return projectsOrder, projectIndices
 
     def printSuiteTotalsShortSummary(self, results, projName, suiteName):
         """Prints a short summary, useful for suites with sub-suites."""
@@ -136,6 +211,12 @@ class SysTestRunner:
         print "Ran %d system tests," % (totalResults),
         print "with %d passes, %d fails, and %d errors" \
             % (sumsDict["Pass"], sumsDict["Fail"], sumsDict["Error"])
+
+    def printResultsLineShort(self, sumsDict):
+        totalResults = sum(sumsDict.values())
+        print "%d tests, %d/%d/%d passes/fails/errors" \
+            % (totalResults, sumsDict["Pass"], sumsDict["Fail"],
+                sumsDict["Error"])
 
     def checkResultsSysTestsLength(self, sysTests, results):
         if len(sysTests) != len(results):

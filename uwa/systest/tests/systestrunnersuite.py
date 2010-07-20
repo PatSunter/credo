@@ -21,7 +21,10 @@ class SysTestRunnerTestCase(unittest.TestCase):
             statusToReturn=UWA_FAIL("testFail"), nproc=1)
         self.skelTest3 = SkeletonSysTest(self.inputFiles,
             "output/SkeletonTestSub",
-            statusToReturn=UWA_ERROR("testFail"), nproc=1)
+            statusToReturn=UWA_ERROR("testError"), nproc=1)
+        self.skelTest4 = SkeletonSysTest(self.inputFiles,
+            "output/SkeletonTestSub",
+            statusToReturn=UWA_PASS("testPass2"), nproc=1)
 
     def tearDown(self):
         self.stRunner = None
@@ -79,13 +82,21 @@ class SysTestRunnerTestCase(unittest.TestCase):
         self.assertEqual(testResults[1].statusStr, UWA_FAIL.statusStr)
     
     def test_runSuites(self):
-        pass
-        # TODO
-
+        suite1 = SysTestSuite("StgFEM", "RegressionTests", 
+            sysTests=[self.skelTest1, self.skelTest2])
+        subSuite = SysTestSuite("StgFEM", "RegressionTests-sub")
+        suite1.addSubSuite(subSuite)
+        subSuite.sysTests.append(self.skelTest3)
+        suite2 = SysTestSuite("StgFEM", "PerformanceTests",
+            sysTests=[self.skelTest4])
+        suite3 = SysTestSuite("PICellerator", "RegressionTests",
+            sysTests=[self.skelTest2, self.skelTest4])
+        testResults = self.stRunner.runSuites([suite1, suite2, suite3])
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(SysTestRunnerTestCase, 'test'))
+    #suite.addTest(unittest.makeSuite(SysTestRunnerTestCase, 'test'))
+    suite.addTest(SysTestRunnerTestCase("test_runSuites"))
     return suite
 
 if __name__ == '__main__':
