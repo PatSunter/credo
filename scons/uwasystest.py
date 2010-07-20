@@ -15,8 +15,8 @@ def generate(env, **kw):
     # TODO: update this when UWA is installed properly.
     uwaPath = os.path.abspath('uwa')
     env['ENV']['STG_BASEDIR'] = os.path.abspath('.')
-    env['ENV']['PATH'] += os.path.join(uwaPath, "scripts")
-    env['ENV']['PYTHONPATH'] += ":%s" % uwaPath
+    env.PrependENVPath('PATH', os.path.join(uwaPath, "scripts"))
+    env.PrependENVPath('PYTHONPATH', "%s" % uwaPath)
     env.SetDefault(INTEGRATION_TARGET="check-integration")
     env.SetDefault(CONVERGENCE_TARGET="check-convergence")
     env.SetDefault(LOWRES_TARGET="check-lowres")
