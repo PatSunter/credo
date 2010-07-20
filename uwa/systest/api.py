@@ -180,6 +180,10 @@ class SysTest:
         if self.paramOverrides == None:
             self.paramOverrides = {}
         self.solverOpts = solverOpts
+        # TODO: a bit of a hack currently ... need to think about the best
+        # way to handle relative paths for sysTests and ModelRuns
+        # -- PatrickSunter, 20 Jul 2010
+        self.runPath = None
 
     def setup(self):
         '''For the setup phase of tests.
@@ -440,6 +444,8 @@ class SysTestSuite:
             testOpts['nproc']=self.nproc
         outputPath = self._getStdOutputPath(testClass, inputFiles, testOpts)
         newSysTest = testClass(inputFiles, outputPath, **testOpts)
+        # TODO: line below needs updating, see SysTest constructor comment
+        newSysTest.runPath = callingPath
         self.sysTests.append(newSysTest)
 
     def addSubSuite(self, subSuite):

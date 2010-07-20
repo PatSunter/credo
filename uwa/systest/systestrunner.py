@@ -19,6 +19,8 @@ class SysTestRunner:
         :class:`uwa.systest.api.SysTestResult` it produces.
         Will also write an XML record of the System test, and each ModelRun
         and ModelResult in the suite that made up the test."""
+        # TODO A little hacky on the chdir - see api.py:183 comment
+        os.chdir(sysTest.runPath)
         mSuite = sysTest.genSuite()
         mSuite.cleanAllOutputPaths()
         mSuite.cleanAllLogFiles()
