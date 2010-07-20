@@ -80,6 +80,18 @@ def getStgStandardXMLPath():
     return _getStgPath("StGermain standard XMLs", STG_XMLDIRKEY,
         keySubDir=STG_XML_SUBDIR)
 
+def convertLocalXMLFilesToAbsPaths(inputFilesList, callingPath):
+    """Check through the given input file list, and for any that aren't found
+    relative to either the local directory or the StGermain standard path,
+    convert them to be relative to the given `callingPath`"""
+    for ii, iFile in enumerate(inputFilesList[:]):
+        if os.path.exists(iFile): continue
+        elif xmlExistsInStdXMLPath(iFile): continue
+        else:
+            inputFilesList[ii] = os.path.join(callingPath, iFile)
+
+    return inputFilesList
+
 def checkAllXMLInputFilesExist(inputFilesList):        
     """Checks a whole set of XML input files exist, and raises an IOError if
     one of them doesn't. See :func:`.checkXMLInputFileExists`."""
@@ -92,14 +104,18 @@ def checkXMLInputFileExists(inputFile):
     XML path, or relative to the current directory. Raises an IOError
     if not."""
     if not os.path.exists(inputFile):
-        stgStdXMLPath = getStgStandardXMLPath()
-        fileInStgPath = os.path.join(stgStdXMLPath, inputFile) 
-        if not os.path.exists(fileInStgPath):
+        if not xmlExistsInStdXMLPath(inputFile):
+            stgStdXMLPath = getStgStandardXMLPath()
             raise IOError("One of the given input files, '%s',"\
                 " doesn't exist in either the local directory,"\
                 " or the StGermain standard path %s"\
                 % (inputFile, stgStdXMLPath))
     return
+
+def xmlExistsInStdXMLPath(inputFile):
+    stgStdXMLPath = getStgStandardXMLPath()
+    fileInStgPath = os.path.join(stgStdXMLPath, inputFile) 
+    return os.path.exists(fileInStgPath)
 
 def moveAllToTargetPath(startPath, targetPath, fileExt):
     """Move all files with extension `fileExt` from `startPath` to
