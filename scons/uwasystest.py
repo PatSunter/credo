@@ -9,16 +9,14 @@ class ToolUWASysTestWarning(SCons.Warnings.Warning):
 SCons.Warnings.enableWarningClass(ToolUWASysTestWarning)
 
 def generate(env, **kw):
-    #Extend the Python path so uwa can be used.
-    # TODO: update this when UWA is installed properly.
+    # Extend the Python path, actual path, and Stg Vars, so uwa can be used.
     # We need to update actual environment variables, not the SCons env,
     # so test scripts which are sub-programs can be executed.
+    # TODO: update this when UWA is installed properly.
     uwaPath = os.path.abspath('uwa')
-    os.environ['STG_BASEDIR'] = os.path.abspath('.')
-    os.environ['PATH'] = os.environ['PATH'] + ":%s" \
-        % os.path.join(uwaPath, "scripts")
-    os.environ['PYTHONPATH'] = os.environ['PYTHONPATH'] + ":%s" % uwaPath
-
+    env['ENV']['STG_BASEDIR'] = os.path.abspath('.')
+    env['ENV']['PATH'] += os.path.join(uwaPath, "scripts")
+    env['ENV']['PYTHONPATH'] += ":%s" % uwaPath
     env.SetDefault(INTEGRATION_TARGET="check-integration")
     env.SetDefault(CONVERGENCE_TARGET="check-convergence")
     env.SetDefault(LOWRES_TARGET="check-lowres")
