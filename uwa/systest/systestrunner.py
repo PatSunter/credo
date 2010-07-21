@@ -113,6 +113,7 @@ class SysTestRunner:
         suitesResults = zip(testSuites, resultsLists)
         print "-"*80
         print "UWA System Tests summary for all project suites ran:"
+        print "------"
         totalSumsDict = {"Pass":0, "Fail":0, "Error":0}
         for projName in projOrder:
             print "Project '%s':" % projName
