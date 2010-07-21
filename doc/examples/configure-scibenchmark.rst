@@ -15,7 +15,7 @@ Setup
 The one example benchmark so far is testing a Rayleigh Taylor model can perform
 as required by the Van Keken benchmark:
 
-.. include:: ../../../Underworld/InputFiles/uwa-rayTayBenchmark.py
+.. include:: ../../../Underworld/SysTest/ScienceBenchmarks/uwa-rayTayBenchmark.py
    :literal:
 
 As the code shows, once you set up a SciBenchmarkTest, you need to then add

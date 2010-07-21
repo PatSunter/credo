@@ -31,3 +31,11 @@ UWA IO (Input Output functions) API
    :members:
    :undoc-members:
    :show-inheritance:
+
+:mod:`uwa.io.stgpath`
+==========================
+
+.. automodule:: uwa.io.stgpath
+   :members:
+   :undoc-members:
+   :show-inheritance:

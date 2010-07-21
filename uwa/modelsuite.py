@@ -164,6 +164,16 @@ class ModelSuite:
                 if os.path.isfile(filePath):
                     os.unlink(filePath)
 
+    def cleanAllLogFiles(self):
+        """Remove all stdout and stderr files from each ModelRun's designated
+        output and log paths."""
+        for modelRun in self.runs:
+            logFiles = [modelRun.getStdOutFilename(),
+                modelRun.getStdErrFilename()]
+            for fname in logFiles:
+                if os.path.isfile(fname):
+                    os.unlink(fname)
+
     def addVariant(self, name, modelVariant):
         """Add a :class:`.StgXMLVariant` to the list to be applied to a
         template run. See :attr:`.modelVariants`."""
@@ -243,7 +253,7 @@ class ModelSuite:
     def writeAllModelRunXMLs(self):
         """Save an XML record of each ModelRun currently in :attr:`.runs`."""
         for runI, modelRun in enumerate(self.runs):
-            modelRun.writeInfoXML(outputPath=modelRun.outputPath)
+            modelRun.writeInfoXML(writePath=modelRun.outputPath)
 
     def writeAllModelResultXMLs(self):
         """Save an XML record of each ModelResult currently in

@@ -3,7 +3,7 @@ import os
 from xml.etree import ElementTree as etree
 
 from uwa.modelsuite import ModelSuite
-from uwa.modelrun import ModelRun, SimParams
+from uwa.modelrun import SimParams
 from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
 from uwa.systest.fieldWithinTolTest import FieldWithinTolTest
 
@@ -22,14 +22,13 @@ class RestartTest(SysTest):
          Must be a multiple of 2, so it can be restarted half-way through.
        * fieldsToTest: Which fields in the model should be compared with the
          reference solution.
+       * defFieldTol: The default tolerance to be applied when comparing fields of
+         interest between the restarted, and original solution.
+         See also the FieldWithinTolTest's
+         :attr:`~uwa.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
        * fieldTols: a dictionary of tolerances to use when testing particular
          fields, rather than the default tolerance defined by 
-         :attr:`.defaultFieldTol`.  
-
-       .. attribute:: defaultFieldTol
-
-          The default tolerance to be applied when comparing fields of
-          interest to the analytic solution.
+         the defFieldTol argument.
           
        .. attribute:: fTestName
 
@@ -41,14 +40,14 @@ class RestartTest(SysTest):
         then restarts half-way, checking the standard fields are the
         same at the end for both the original and restart run.'''
 
-    defaultFieldTol = 1e-5
     fTestName = 'Restart compared with original'
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             fieldsToTest = ['VelocityField','PressureField'], fullRunSteps=20,
-            fieldTols=None, paramOverrides=None):
+            defFieldTol=1e-5, fieldTols=None, 
+            paramOverrides=None, solverOpts=None, nameSuffix=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, "Restart")
+            paramOverrides, solverOpts, "Restart", nameSuffix)
         self.initialOutputPath = os.path.join(self.outputPathBase, "initial")
         self.restartOutputPath = os.path.join(self.outputPathBase, "restart")
         self.fieldsToTest = fieldsToTest
@@ -57,7 +56,7 @@ class RestartTest(SysTest):
             raise ValueError("fullRunSteps parameter must be even so restart"\
                 " can occur half-way - but you provided %d." % (fullRunSteps))
         self.testComponents[self.fTestName] = FieldWithinTolTest(
-            fieldsToTest=self.fieldsToTest, defFieldTol=self.defaultFieldTol,
+            fieldsToTest=self.fieldsToTest, defFieldTol=defFieldTol,
             fieldTols=fieldTols,
             useReference=True,
             referencePath=self.initialOutputPath,
@@ -74,18 +73,16 @@ class RestartTest(SysTest):
         self.mSuite = mSuite
 
         # Initial run
-        initRun = ModelRun(self.testName+"-initial", self.inputFiles,
-            self.initialOutputPath, nproc=self.nproc,
-            paramOverrides=self.paramOverrides)
+        initRun = self._createDefaultModelRun(self.testName+"-initial",
+            self.initialOutputPath)
         initRun.simParams = SimParams(nsteps=self.fullRunSteps,
             cpevery=self.fullRunSteps/2, dumpevery=0)
         initRun.cpFields = self.fieldsToTest
         mSuite.addRun(initRun, "Do the initial full run and checkpoint"\
             " solutions.")
         # Restart run
-        resRun = ModelRun(self.testName+"-restart", self.inputFiles,
-            self.restartOutputPath, nproc=self.nproc,
-            paramOverrides=self.paramOverrides)
+        resRun = self._createDefaultModelRun(self.testName+"-restart",
+            self.restartOutputPath)
         resRun.simParams = SimParams(nsteps=self.fullRunSteps/2,
             cpevery=0, dumpevery=0, restartstep=self.fullRunSteps/2)
         resRun.cpReadPath = self.initialOutputPath    
@@ -121,8 +118,6 @@ class RestartTest(SysTest):
         
     def _writeXMLCustomSpec(self, specNode):
         etree.SubElement(specNode, 'fullRunSteps').text = str(self.fullRunSteps)
-        etree.SubElement(specNode, 'defaultFieldTol').text = \
-            str(self.defaultFieldTol)
         # fieldTols
         fieldsToTestNode = etree.SubElement(specNode, 'fieldsToTest')
         for fieldName in self.fieldsToTest:

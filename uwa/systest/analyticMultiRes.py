@@ -2,7 +2,6 @@ import os
 from xml.etree import ElementTree as etree
 
 from uwa.modelsuite import ModelSuite
-from uwa.modelrun import ModelRun
 import uwa.modelrun as mrun
 from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
 from uwa.systest.fieldCvgWithScaleTest import FieldCvgWithScaleTest
@@ -31,9 +30,10 @@ class AnalyticMultiResTest(SysTest):
     description = '''Runs an existing test with multiple resolutions.'''
 
     def __init__(self, inputFiles, outputPathBase, resSet, nproc=1,
-            paramOverrides=None):
+            paramOverrides=None, solverOpts=None, nameSuffix=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, "AnalyticMultiResConvergence")
+            paramOverrides, solverOpts, "AnalyticMultiResConvergence",
+            nameSuffix)
         self.resSet = resSet
         cvgChecker = FieldCvgWithScaleTest()
         self.testComponents['fieldConvChecker'] = cvgChecker
@@ -53,10 +53,9 @@ class AnalyticMultiResTest(SysTest):
 
         for res in self.resSet:
             resStr = mrun.strRes(res)
-            outputPath = os.path.join(self.outputPathBase, resStr)
             modelName = self.testName+'-'+resStr
-            mRun = mrun.ModelRun(modelName, self.inputFiles, outputPath,
-                nproc=self.nproc, paramOverrides=self.paramOverrides)
+            mRun = self._createDefaultModelRun(modelName,
+                os.path.join(self.outputPathBase, resStr))
             customOpts = mrun.generateResOpts(res)
             cvgChecker.attachOps(mRun)
             mSuite.addRun(mRun, "Run the model at res "+resStr, customOpts)

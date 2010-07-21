@@ -6,9 +6,11 @@ or Test components need to inherit.
 """
 
 import os
+import inspect
 from xml.etree import ElementTree as etree
 import uwa.modelrun as mrun
 from uwa.io.stgxml import writeXMLDoc
+import uwa.io.stgpath
 
 class SysTestResult:
     """Class to represent an UWA system test result.
@@ -35,24 +37,62 @@ class SysTestResult:
 
 class UWA_PASS(SysTestResult):
     '''Simple class to represent an UWA pass'''
+    statusStr = 'Pass'
     def __init__(self, passMsg):
         assert type(passMsg) == str
-        self.statusStr = 'Pass'
         self.detailMsg = passMsg
 
 class UWA_FAIL(SysTestResult):
     '''Simple class to represent an UWA failure'''
+    statusStr = 'Fail'
     def __init__(self, failMsg):
         assert type(failMsg) == str
-        self.statusStr = 'Fail'
         self.detailMsg = failMsg
         
 class UWA_ERROR(SysTestResult):
     '''Simple class to represent an UWA error'''
+    statusStr = 'Error'
     def __init__(self, errorMsg):
-        self.statusStr = 'Error'
         assert type(errorMsg) == str
         self.detailMsg = errorMsg
+
+def getStdTestNameBasic(testTypeStr, inputFiles):
+    """Basic part of the test name. Useful for restart runs etc."""
+    if type(inputFiles) != list:
+        raise TypeError("Function requires the inputFiles argument to be "
+            " a list of strings - not a %s." % type(inputFiles))
+
+    testNameBasic, ext = os.path.splitext(os.path.basename(inputFiles[0]))
+    testNameBasic += "-%s" % (testTypeStr[0].lower()+testTypeStr[1:])
+    return testNameBasic
+
+def getStdTestName(testTypeStr, inputFiles, nproc, paramOverrides,
+        solverOpts, nameSuffix):
+    """Utility function, to get a standard name for system tests given
+    key parameters of the tests. If nameSuffix is given a string, it will
+    be used as the suffix after processor number, instead of one based on
+    any parameter over-rides used."""
+    testName = getStdTestNameBasic(testTypeStr, inputFiles)
+    testName += "-np%s" % nproc
+    if nameSuffix is not None:
+        testName += "-%s" % (nameSuffix)
+    elif paramOverrides is not None:
+        # Otherwise, if no specific suffix to use set, then create one
+        #  based on paramOverrides, to avoid collisions where possible
+        #  between custom runs and default ones.
+        # TODO: move this stuff into a library for managing Stg Command
+        # line dict format.
+        paramOs = paramOverrides
+        paramOsStr = ""
+        paramKeys = paramOverrides.keys()
+        paramKeys.sort()
+        for paramName in paramKeys:
+            paramVal = paramOverrides[paramName]
+            paramNameLast = paramName.split('.')[-1]
+            paramValCanon = str(paramVal).replace(".","_")
+            paramOsStr += "-%s-%s" % (paramNameLast, paramValCanon)
+        testName += paramOsStr 
+    return testName
 
 
 class SysTest:
@@ -66,6 +106,13 @@ class SysTest:
     the results pass an expected metric:- generally by applying one or more
     :class:`~uwa.systest.api.TestComponent` classes.
     
+    Constructor keywords not in member attribute list:
+    
+    * nameSuffix: if specified, this defines the suffix that
+      will be added to the test's name, output path, 
+      and log path (where the test's result and stderr/out will be saved
+      respectively) - Overriding the default one based on params used.
+
     .. attribute:: testType
 
        records the "type" of the system test, as a string (e.g. "Analytic",
@@ -107,22 +154,24 @@ class SysTest:
        :attr:`uwa.modelrun.ModelRun.paramOverrides`. Thus allow 
        customisation of the test properties.
 
+    .. attribute:: solverOpts
+
+       Solver options to be used for any models making up this test.
+       See :attr:`uwa.modelrun.ModelRun.solverOpts`
+
     '''
 
-    def __init__(self, inputFiles, outputPathBase, nproc, paramOverrides,
-            testType):
+    def __init__(self, inputFiles, outputPathBase,
+            nproc, paramOverrides, solverOpts, testType, nameSuffix=None):
         self.testType = testType
         # Be forgiving of user passing a single string rather than a list,
         # and correct for this.
         if isinstance(inputFiles, str):
             inputFiles = [inputFiles]
         self.inputFiles = inputFiles
-        for iFile in self.inputFiles:
-            if not os.path.exists(iFile):
-                raise IOError("One of the given input files, '%s',"
-                    " doesn't exist." % (iFile))
-        self.testName, ext = os.path.splitext(inputFiles[0])
-        self.testName += "-%sTest" % (testType[0].lower()+testType[1:])
+        self.testName = getStdTestName(testType+"Test", inputFiles,
+            nproc, paramOverrides, solverOpts, nameSuffix)
+        uwa.io.stgpath.checkAllXMLInputFilesExist(self.inputFiles)
         self.outputPathBase = outputPathBase
         self.testStatus = None
         self.testComponents = {}
@@ -130,6 +179,11 @@ class SysTest:
         self.paramOverrides = paramOverrides
         if self.paramOverrides == None:
             self.paramOverrides = {}
+        self.solverOpts = solverOpts
+        # TODO: a bit of a hack currently ... need to think about the best
+        # way to handle relative paths for sysTests and ModelRuns
+        # -- PatrickSunter, 20 Jul 2010
+        self.runPath = None
 
     def setup(self):
         '''For the setup phase of tests.
@@ -162,6 +216,17 @@ class SysTest:
         """Return the default system test XML record filename, based on
         properties of the systest (such as :attr:`.testName`)."""
         return 'SysTest-'+self.testName+'.xml'
+
+    def _createDefaultModelRun(self, modelName, outputPath):
+        """Create and return a :class:`uwa.modelrun.ModelRun` with the
+        default options as specified for this System Test.
+        (Thus is a useful helper function for sub-classes, so they can
+        use this and not keep up to date with changes in
+        the ModelRun interface.)"""
+        return mrun.ModelRun(modelName,
+            self.inputFiles, outputPath,
+            nproc=self.nproc, paramOverrides=self.paramOverrides,
+            solverOpts=self.solverOpts)
 
     def writePreRunXML(self, outputPath="", filename="", prettyPrint=True):
         """Write the SysTest XML with as much information before the run as
@@ -263,6 +328,7 @@ class SysTest:
         nProcNode.text = str(self.nproc)
 
         mrun.writeParamOverridesInfoXML(self.paramOverrides, specNode)
+        mrun.writeSolverOptsInfoXML(self.solverOpts, specNode)
         try:
             self._writeXMLCustomSpec(specNode)   
         except AttributeError, ae:
@@ -302,6 +368,127 @@ class SysTest:
         statusMsgNode = etree.SubElement(resNode, 'statusMsg')
         statusMsgNode.text = self.testStatus.detailMsg
 
+
+class SysTestSuite:
+    """Class that aggregates  a set of :class:`~uwa.systest.api.SysTest`.
+
+    For examples of how to use, see the UWA documentation, especially
+    :ref:`uwa-examples-run-systest`.
+
+    TODO: document projectName and suiteName and nproc
+
+    .. attribute:: sysTests
+
+       List of system tests that should be run and reported upon. Generally
+       shouldn't be accessed directly, recommend using :meth:`.addStdTest`
+       to add to this list, and other methods to run and report on it.
+    
+    .. attribute:: subSuites
+
+       List of subSuites (defaults to none) associated with this suite.
+       Associating sub-suites allows a nested hierarchy of system tests.
+    """
+
+    def __init__(self, projectName, suiteName, sysTests=None,
+            subSuites=None, nproc=1):
+        self.projectName = projectName
+        self.suiteName = suiteName
+        if sysTests == None:
+            self.sysTests = []
+        else:    
+            if not isinstance(sysTests, list):
+                raise TypeError("Error, if the sysTests keyword is"
+                    " provided it must be a list of SysTest.")
+            self.sysTests = sysTests
+        if subSuites == None:
+            self.subSuites = []
+        else:    
+            if not isinstance(subSuites, list):
+                raise TypeError("Error, if the subSuites keyword is"
+                    " provided it must be a list of SysTestSuites.")
+            self.subSuites = subSuites
+        self.nproc = nproc    
+    
+    def addStdTest(self, testClass, inputFiles, **testOpts):
+        """Instantiate and add a "standard" system test type to the list
+        of System tests to be run. (The "standard" refers to the user needing
+        to have access to the module containing the system test type to be
+        added, usually from a `from uwa.systest import *` statement.
+
+        :param testClass: Python class of the System test to be added. This
+          needs to be a sub-class of :class:`~uwa.systest.api.SysTest`.
+        :param inputFiles: model input files to be passed through to the 
+          System test when instantiated.
+        :param `**testOpts`: any other keyword arguments the user wishes to
+          passed through to the System test when it's instantiated.
+          Can be used to customise a test."""
+
+        if not inspect.isclass(testClass):
+            raise TypeError("The testClass argument must be a type that's"\
+                " a subclass of the UWA SysTest type. Arg passed in, '%s',"\
+                " of type '%s', is not a Python Class." \
+                % (testClass, type(testClass)))
+        if not issubclass(testClass, SysTest):
+            raise TypeError("The testClass argument must be a type that's"\
+                " a subclass of the UWA SysTest type. Type passed in, '%s',"\
+                " not a subclass of SysTest." \
+                % (testClass))
+        callingFile = inspect.stack()[1][1]
+        callingPath = os.path.dirname(callingFile)
+        # If just given a single input file as a string, convert
+        #  to a list (containing that single file).
+        if isinstance(inputFiles, str): inputFiles = [inputFiles]
+        uwa.io.stgpath.convertLocalXMLFilesToAbsPaths(inputFiles, callingPath)
+        uwa.io.stgpath.checkAllXMLInputFilesExist(inputFiles)
+        if 'nproc' not in testOpts:
+            testOpts['nproc']=self.nproc
+        outputPath = self._getStdOutputPath(testClass, inputFiles, testOpts)
+        newSysTest = testClass(inputFiles, outputPath, **testOpts)
+        # TODO: line below needs updating, see SysTest constructor comment
+        newSysTest.runPath = callingPath
+        self.sysTests.append(newSysTest)
+
+    def addSubSuite(self, subSuite):
+        """Adds a single sub-suite to the list of sub-suites."""
+        if not isinstance(subSuite, SysTestSuite):
+            raise TypeError("subSuite must be an instance of type"\
+                " SysTestSuite.")
+        self.subSuites.append(subSuite)
+    
+    def addSubSuites(self, subSuites):
+        """Adds a set of sub-suites to the list of sub-suites."""
+        for subSuite in subSuites:
+            self.addSubSuite(subSuite)
+    
+    def newSubSuite(self, *subSuiteRegArgs, **subSuiteKWArgs):
+        """Shortcut to create a new sub-suite, add it to the existing suite,
+        and return reference to the newly created sub-suite."""
+        subSuite = SysTestSuite(*subSuiteRegArgs, **subSuiteKWArgs)
+        self.addSubSuite(subSuite)
+        return subSuite
+
+    def _getStdOutputPath(self, testClass, inputFiles, testOpts):
+        """Get the standard name for the test's output path. Attempts to
+        avoid naming collisions where reasonable."""
+
+        classStr = str(testClass).split('.')[-1]
+        #TODO: resolve fact this already likely has "test" at end, unlike test
+        # type string.
+
+        # Grab any custom options we need
+        nproc = testOpts['nproc']
+        nameSuffix = testOpts['nameSuffix'] if 'nameSuffix' in testOpts\
+            else None
+        paramOverrides = testOpts['paramOverrides']\
+            if 'paramOverrides' in testOpts else None
+        solverOpts = testOpts['solverOpts'] if 'solverOpts' in testOpts\
+            else None
+
+        testName = getStdTestName(classStr, inputFiles, nproc, 
+            paramOverrides, solverOpts, nameSuffix)
+        outputPath = os.path.join('output', testName)
+        return outputPath
+        
 
 class TestComponent:
     '''A class for TestComponents that make up an UWA System test/benchmark.

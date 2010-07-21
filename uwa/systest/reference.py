@@ -3,8 +3,9 @@ import os
 from xml.etree import ElementTree as etree
 
 from uwa.modelsuite import ModelSuite
-from uwa.modelrun import ModelRun, SimParams
-from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
+from uwa.modelrun import SimParams
+import uwa.modelrun as modelrun
+from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL, getStdTestNameBasic
 from uwa.systest.fieldWithinTolTest import FieldWithinTolTest
 
 class ReferenceTest(SysTest):
@@ -20,14 +21,13 @@ class ReferenceTest(SysTest):
        * runSteps: number of steps the reference solution should run for.
        * fieldsToTest: Which fields in the model should be compared with the
          reference solution.
+       * defFieldTol: The default tolerance to be applied when comparing fields of
+         interest to the reference solution.
+         See also the FieldWithinTolTest's
+         :attr:`~uwa.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
        * fieldTols: a dictionary of tolerances to use when testing particular
-         fields, rather than the default tolerance defined by 
-         :attr:`.defaultFieldTol`.
-       
-       .. attribute:: defaultFieldTol
-
-          The default tolerance to be applied when comparing fields of
-          interest to the analytic solution.
+         fields, rather than the default tolerance as set in the defFieldTol
+         argument.
           
        .. attribute:: fTestName
 
@@ -38,19 +38,20 @@ class ReferenceTest(SysTest):
         then checks the specified fields match a previously-generated
         reference solution.'''
 
-    defaultFieldTol = 1e-2
     fTestName = 'Reference Solution compare'
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             fieldsToTest = ['VelocityField','PressureField'], runSteps=20,
-            fieldTols=None, paramOverrides=None, expPathPrefix="expected" ):
+            defFieldTol=1e-2, fieldTols=None, paramOverrides=None,
+            solverOpts=None, expPathPrefix="expected", nameSuffix=None ):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, "Reference")
-        self.expectedSolnPath = os.path.join(expPathPrefix, self.testName)
+            paramOverrides, solverOpts, "Reference", nameSuffix)
+        testNameBasic = getStdTestNameBasic(self.testType+"Test", inputFiles)
+        self.expectedSolnPath = os.path.join(expPathPrefix, testNameBasic)
         self.fieldsToTest = fieldsToTest
         self.runSteps = runSteps
         self.testComponents[self.fTestName] = FieldWithinTolTest(
-            fieldsToTest=self.fieldsToTest, defFieldTol=self.defaultFieldTol,
+            fieldsToTest=self.fieldsToTest, defFieldTol=defFieldTol,
             fieldTols=fieldTols,
             useReference=True,
             referencePath=self.expectedSolnPath,
@@ -62,13 +63,11 @@ class ReferenceTest(SysTest):
         print "Running the model to create a reference solution after %d"\
             " steps, and saving in dir '%s'" % \
             (self.runSteps, self.expectedSolnPath)
-        mRun = ModelRun(self.testName+"-createReference", self.inputFiles,
-            self.expectedSolnPath, nproc=self.nproc,
-            paramOverrides=self.paramOverrides)
+        mRun = self._createDefaultModelRun(self.testName+"-createReference",
+            self.expectedSolnPath)
         mRun.simParams = SimParams(nsteps=self.runSteps, cpevery=self.runSteps,
             dumpevery=0)
-        mRun.cpFields = self.fieldsToTest    
-        import uwa.modelrun as modelrun
+        mRun.cpFields = self.fieldsToTest
         mRun.writeInfoXML()
         mRun.analysisXMLGen()
         result = modelrun.runModel(mRun)
@@ -87,9 +86,7 @@ class ReferenceTest(SysTest):
         mSuite = ModelSuite(outputPathBase=self.outputPathBase)
         self.mSuite = mSuite
         # Normal mode
-        mRun = ModelRun(self.testName, self.inputFiles,
-            self.outputPathBase, nproc=self.nproc,
-            paramOverrides=self.paramOverrides)
+        mRun = self._createDefaultModelRun(self.testName, self.outputPathBase)
         mRun.simParams = SimParams(nsteps=self.runSteps,
             cpevery=0, dumpevery=0)
         fTests = self.testComponents[self.fTestName]
@@ -123,8 +120,6 @@ class ReferenceTest(SysTest):
         
     def _writeXMLCustomSpec(self, specNode):
         etree.SubElement(specNode, 'runSteps').text = str(self.runSteps)
-        etree.SubElement(specNode, 'defaultFieldTol').text = \
-            str(self.defaultFieldTol)   
         # fieldTols
         fieldsToTestNode = etree.SubElement(specNode, 'fieldsToTest')
         for fieldName in self.fieldsToTest:
