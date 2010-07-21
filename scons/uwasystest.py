@@ -21,6 +21,17 @@ def generate(env, **kw):
     env.SetDefault(CONVERGENCE_TARGET="check-convergence")
     env.SetDefault(LOWRES_TARGET="check-lowres")
 
+    # This will append to the standard help with testing help.
+    Help("""
+SCons-Check Options:
+    Type: './scons.py check' to run the stgUnderworld unit and low-res integration tests only,
+          './scons.py check-complete' to run the stgUnderworld unit, convergence, low-res and normal-res integration tests,
+          './scons.py check-unit' to run the stgUnderworld unit tests only,
+          './scons.py check-convergence' to run the stgUnderworld convergence tests only,
+          './scons.py check-integration' to run the normal-res integration tests,
+          './scons.py check-lowres' to run the low-res integration tests.
+""" )
+
     # Several of the tests also refer to targets defined initially in
     #  PCU testing, in pcutest.py
     def IntegrationTest(env, target, source, **kw):
