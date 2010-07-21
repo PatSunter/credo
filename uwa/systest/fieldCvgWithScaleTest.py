@@ -8,7 +8,11 @@ import uwa.analysis.fields as fields
 defFieldScaleCvgCriterions = {
     'VelocityField':(1.6,0.99),
     'PressureField':(0.9,0.99),
-    'StrainRateField':(0.85,0.99) }
+    'StrainRateField':(0.85,0.99),
+    'recoveredSigmaField':(1.6,0.99),
+    'recoveredPressureField':(1.6,0.99),
+    'recoveredTauField':(1.6,0.99),
+    'recoveredEpsDotField':(1.6,0.99) }
 
 def testAllCvgWithScale(lenScales, fieldErrorData, fieldCvgCriterions):    
     """Given a lists of length scales, field error data (a dictionary 
