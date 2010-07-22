@@ -1,4 +1,5 @@
 import os
+import sys
 import inspect
 
 from uwa.systest.api import *
@@ -243,3 +244,16 @@ class SysTestRunner:
                 " same length, but sysTests of len %d vs results of"\
                 " len %d" % (len(sysTests), len(results)))
 
+
+def runSuitesFromModules(suiteModNames, xmlOutputFilename):
+    """Runs a set of System test suites, where suiteModNames is a list of 
+    suites to import and run."""
+    suites = []
+    for modName in suiteModNames:
+        print "Importing suite for %s:" % modName
+        imp = __import__(modName)
+        mod = sys.modules[modName]
+        suites.append(mod.suite())
+    testRunner = SysTestRunner()
+    # TODO: pass in xmlOutputFilename to save record of this stuff
+    testRunner.runSuites(suites)
