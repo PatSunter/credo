@@ -1,7 +1,7 @@
 import os
 import sys
 from SCons.Script import *
-#from SCons.Builder import Builder
+
 
 class ToolUWASysTestWarning(SCons.Warnings.Warning):
     pass
@@ -12,14 +12,34 @@ def generate(env, **kw):
     # Extend the Python path, actual path, and Stg Vars, so uwa can be used.
     # We need to update actual environment variables, not the SCons env,
     # so test scripts which are sub-programs can be executed.
-    # TODO: update this when UWA is installed properly.
+    # TODO: update this to be a build dir thing when UWA is installed properly.
+    # Set up paths etc for functions below
+    stgBaseDir = os.path.abspath('.')
     uwaPath = os.path.abspath('uwa')
-    env['ENV']['STG_BASEDIR'] = os.path.abspath('.')
+    sys.path.insert(0, uwaPath)
+    import uwa.systest.systestrunner
+    os.environ['STG_BASEDIR'] = stgBaseDir
+    # Set up the environment for sub-scripts
+    env['ENV']['STG_BASEDIR'] = stgBaseDir
     env.PrependENVPath('PATH', os.path.join(uwaPath, "scripts"))
     env.PrependENVPath('PYTHONPATH', "%s" % uwaPath)
-    env.SetDefault(INTEGRATION_TARGET="check-integration")
-    env.SetDefault(CONVERGENCE_TARGET="check-convergence")
-    env.SetDefault(LOWRES_TARGET="check-lowres")
+
+    testOutput = "./testLogs"
+    Execute(Mkdir(testOutput))
+    env['TEST_OUTPUT_PATH'] = os.path.abspath(testOutput)
+
+    env.SetDefault(CHECK_INTEGRATION_TARGET="check-integration")
+    env.SetDefault(CHECK_CONVERGENCE_TARGET="check-convergence")
+    env.SetDefault(CHECK_LOWRES_TARGET="check-lowres")
+
+    LOWRES_SUITES = []
+    INTEGRATION_SUITES = []
+    CONVERGENCE_SUITES = []
+    # Need to use Export rather than saving on env object, since we clone
+    #  the env for each sub-project
+    Export('LOWRES_SUITES')
+    Export('INTEGRATION_SUITES')
+    Export('CONVERGENCE_SUITES')
 
     # This will append to the standard help with testing help.
     Help("""
@@ -32,49 +52,99 @@ SCons-Check Options:
           './scons.py check-lowres' to run the low-res integration tests.
 """ )
 
-    # Several of the tests also refer to targets defined initially in
-    #  PCU testing, in pcutest.py
-    def IntegrationTest(env, target, source, **kw):
-        script = File(source[0].split()[0]).srcnode().abspath
-        script_dir = os.path.dirname(script)
-        script = os.path.basename(script)
-        args = source[0].split()[1:]
-
-        runner = env.Action('-./' + script + ' ' + ' '.join(args), chdir=script_dir)
-        env.Alias(env["INTEGRATION_TARGET"], [], runner)
-        env.AlwaysBuild(env["INTEGRATION_TARGET"])
-        env.Alias(env['PCUALL_TARGET'], env['INTEGRATION_TARGET'])
+    def pathToPyModuleName(relPath):
+        """Convert a relative path of a suite to a Python module
+        name to import. E.g.:
+        StgFEM/SysTest/PerformanceTests/testAll.py becomes
+        StgFEM.SysTest.PerformanceTests.testAll"""
+        newPath = relPath.rstrip(".py")
+        modName = newPath.replace(os.sep, '.')
+        return modName
+    
+    # This is the core Builder for running a set of system tests
+    def runSuites(env, target, source, **kw):
+        """SCons builder function for running suites. The `source`
+        argument must be a list of test scripts relative to
+        the base of a project.
+        
+        .. note:: currently `source` argument is a list of suite file names,
+           as SCons File objects. Ideally would like some smarter target
+           checking, perhaps if these were .pyc files that depended on 
+           both the .py file, and the relevant project executable."""
+        xmlOutputFilename = str(target[0])
+        suiteFiles = map(str, source)
+        suiteModNames = map(pathToPyModuleName, suiteFiles)
+        uwa.systest.systestrunner.runSuitesFromModules(suiteModNames,
+            xmlOutputFilename)
+        # TODO: temporary for now, this file should be created by uwa function
+        Execute(Touch(str(xmlOutputFilename)))
         return None
 
-
-    def LowResTest(env, target, source, **kw):
-        script = File(source[0].split()[0]).srcnode().abspath
-        script_dir = os.path.dirname(script)
-        script = os.path.basename(script)
-        args = source[0].split()[1:]
-
-        runner = env.Action('-./' + script + ' ' + ' '.join(args), chdir=script_dir)
-        env.Alias(env["LOWRES_TARGET"], [], runner)
-        env.AlwaysBuild(env["LOWRES_TARGET"])
-        env.Alias(env['PCUALL_TARGET'], env['LOWRES_TARGET'])
-        env.Alias(env['REGTEST_TARGET'], env['LOWRES_TARGET'])
+    # Define a builder for a cvg suite: should be dependent on a project
+    def sysTestSuite(env, target, source, **kw):
+        # TODO: Compile the Pyc as target?
         return None
 
-    def ConvergenceTest(env, target, source, **kw):
-        script = File(source[0].split()[0]).srcnode().abspath
-        script_dir = os.path.dirname(script)
-        script = os.path.basename(script)
-        args = source[0].split()[1:]
-
-        runner = env.Action('-./' + script + ' ' + ' '.join(args), chdir=script_dir)
-        env.Alias(env["CONVERGENCE_TARGET"], [], runner)
-        env.AlwaysBuild(env["CONVERGENCE_TARGET"])
-        env.Alias(env['PCUALL_TARGET'], env['CONVERGENCE_TARGET'])
+    def addSysTestSuite(env, suiteFilename, suiteList):
+        # TODO: perhaps here is where to update the CURR_PROJECT as a
+        # Dependency of the existing file.
+        projectName = env['CURR_PROJECT']
+        cvgTest = env.SysTestSuite(suiteFilename.rstrip(".py"))
+        subImport = pathToPyModuleName(suiteFilename)
+        testImportName = "%s.%s" % (projectName, subImport)
+        # This will append this test's info to the check-cvg alias,
+        # not redefine it.
+        #env.Alias("check-cvg", cvgTest)
+        # SuiteListName is now an actual variable
+        suiteList.append(os.path.join(projectName, suiteFilename))
+        # Or append the target? suiteList.append(cvgTest)
+        # Alias for running just this particular test
+        testResultXML = os.path.join(env['TEST_OUTPUT_PATH'],
+            testImportName + ".xml")
+        singleTestRunner = env.RunSuites(testResultXML, suiteFilename)
+        env.Alias(testImportName, singleTestRunner) 
+        env.AlwaysBuild(singleTestRunner)
+        # TODO: It would also be cool to update a list of suites based
+        #  on the project, e.g. build a "check-Underworld" target to
+        #  run all suites added to Underworld project.
         return None
 
-    env.Append(BUILDERS={"LowResTest":LowResTest, 
-        "IntegrationTest":IntegrationTest,
-        "ConvergenceTest":ConvergenceTest})
+    def addLowResTestSuite(env, suiteFilename):
+        # The Import and Export are 'magic' SCons features, see:
+        # see http://www.scons.org/doc/HTML/scons-user/x3255.html
+        Import('LOWRES_SUITES')
+        retVal = addSysTestSuite(env, suiteFilename, LOWRES_SUITES)
+        Export('LOWRES_SUITES')
+        return retVal
+
+    def addIntegrationTestSuite(env, suiteFilename):
+        Import('INTEGRATION_SUITES')
+        retVal = addSysTestSuite(env, suiteFilename, INTEGRATION_SUITES)
+        Export('INTEGRATION_SUITES')
+        return retVal
+
+    def addConvergenceTestSuite(env, suiteFilename):
+        Import('CONVERGENCE_SUITES')
+        retVal = addSysTestSuite(env, suiteFilename, CONVERGENCE_SUITES)
+        Export('CONVERGENCE_SUITES')
+        return retVal
+
+    # Define the runSuites function as a proper builder
+    # (NB Luke says may be simpler to just use the Python function
+    # as builder directly, could check this out).
+    runSuitesBuilder = Builder(action=runSuites)
+    sysTestSuiteBuilder = Builder(action=sysTestSuite, suffix=".pyc",
+        src_suffix=".py")
+    # Add all the builders we've defined
+    env.Append(BUILDERS={
+        "RunSuites":runSuitesBuilder,
+        "SysTestSuite":sysTestSuiteBuilder})
+    # This adds our pseudo-builders for various test suites
+    #  See http://www.scons.org/doc/HTML/scons-user/c3805.html
+    env.AddMethod(addLowResTestSuite, "AddLowResTestSuite")
+    env.AddMethod(addIntegrationTestSuite, "AddIntegrationTestSuite")
+    env.AddMethod(addConvergenceTestSuite, "AddConvergenceTestSuite")
+
 
 def exists(env):
     # Should probably have this search for the uwa
