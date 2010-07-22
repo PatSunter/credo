@@ -1,7 +1,7 @@
 import os
 import sys
+import py_compile
 from SCons.Script import *
-
 
 class ToolUWASysTestWarning(SCons.Warnings.Warning):
     pass
@@ -61,6 +61,17 @@ SCons-Check Options:
         modName = newPath.replace(os.sep, '.')
         return modName
     
+    def addStGermainTarget(env, target, source):
+        """Adds StGermain executable as a dependency - useful for an
+        emitter for test run suites.""" 
+        env.Depends(target[0], 
+            File(os.path.join(env['build_dir'], 'bin/StGermain')))
+        # TODO: would be kind of good to allow dependency to be specified
+        #  on all other libraries and plugins:- that probably involves
+        #  scanning XMLs, a bit over the top for now.
+        return target, source
+
+
     # This is the core Builder for running a set of system tests
     def runSuites(env, target, source, **kw):
         """SCons builder function for running suites. The `source`
@@ -82,12 +93,11 @@ SCons-Check Options:
 
     # Define a builder for a cvg suite: should be dependent on a project
     def sysTestSuite(env, target, source, **kw):
-        # TODO: Compile the Pyc as target?
+        py_compile.compile(source[0].get_abspath(),
+            cfile=target[0].get_abspath())
         return None
 
     def addSysTestSuite(env, suiteFilename, suiteList):
-        # TODO: perhaps here is where to update the CURR_PROJECT as a
-        # Dependency of the existing file.
         projectName = env['CURR_PROJECT']
         cvgTest = env.SysTestSuite(suiteFilename.rstrip(".py"))
         subImport = pathToPyModuleName(suiteFilename)
@@ -101,6 +111,8 @@ SCons-Check Options:
         # Alias for running just this particular test
         testResultXML = os.path.join(env['TEST_OUTPUT_PATH'],
             testImportName + ".xml")
+        # TODO: perhaps here is where to update the CURR_PROJECT as a
+        # Dependency of the suite, so it builds Underworld first
         singleTestRunner = env.RunSuites(testResultXML, suiteFilename)
         env.Alias(testImportName, singleTestRunner) 
         env.AlwaysBuild(singleTestRunner)
@@ -130,9 +142,8 @@ SCons-Check Options:
         return retVal
 
     # Define the runSuites function as a proper builder
-    # (NB Luke says may be simpler to just use the Python function
-    # as builder directly, could check this out).
-    runSuitesBuilder = Builder(action=runSuites)
+    # The emitter adds StGermain binary as a required target.
+    runSuitesBuilder = Builder(action=runSuites, emitter=addStGermainTarget)
     sysTestSuiteBuilder = Builder(action=sysTestSuite, suffix=".pyc",
         src_suffix=".py")
     # Add all the builders we've defined
