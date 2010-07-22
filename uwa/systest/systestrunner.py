@@ -20,6 +20,7 @@ class SysTestRunner:
         Will also write an XML record of the System test, and each ModelRun
         and ModelResult in the suite that made up the test."""
         # TODO A little hacky on the chdir - see api.py:183 comment
+        startDir = os.getcwd()
         os.chdir(sysTest.runPath)
         mSuite = sysTest.genSuite()
         mSuite.cleanAllOutputPaths()
@@ -34,6 +35,7 @@ class SysTestRunner:
         print "Test result was %s" % testResult
         outFilePath = sysTest.updateXMLWithResult(suiteResults)
         print "Saved test result to %s" % (outFilePath)
+        os.chdir(startDir)
         return testResult
 
     def runTests(self, sysTests, projName=None, suiteName=None,
@@ -113,6 +115,7 @@ class SysTestRunner:
         suitesResults = zip(testSuites, resultsLists)
         print "-"*80
         print "UWA System Tests summary for all project suites ran:"
+        print "------"
         totalSumsDict = {"Pass":0, "Fail":0, "Error":0}
         for projName in projOrder:
             print "Project '%s':" % projName
