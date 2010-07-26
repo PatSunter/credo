@@ -33,6 +33,12 @@ def testAllCvgWithScale(lenScales, fieldErrorData, fieldCvgCriterions):
             overallResult = False
     return overallResult    
 
+def printCvgResult(fieldName, fieldConvResults):
+    for dofI, dofConv in enumerate(fieldConvResults):
+        cvgRate, corr = dofConv
+        print "Field %s, dof %d - cvg rate %6g, corr %6f" \
+            % (fieldName, dofI, cvgRate, corr)
+
 def testCvgWithScale(fieldName, fieldConvResults, fieldCvgCriterion):
     '''Tests that for a given field, given a list of fieldConvResults 
     (See :func:`uwa.analysis.fields.calcFieldCvgWithScale`)
@@ -207,7 +213,8 @@ class FieldCvgWithScaleTest(TestComponent):
                     self.fieldCvgCrits[fName])
                 self.fCvgMeetsReq[fName] = fResult
             else:
-                print "Warning: Field specified for comparison, '%s',"\
+                printCvgResult(fName, fieldConv)
+                print "  -Warning: Field specified for comparison, '%s',"\
                     " doesn't have convergence criteria provided - thus"\
                     " not checking." % fName
                 self.fCvgMeetsReq[fName] = None
