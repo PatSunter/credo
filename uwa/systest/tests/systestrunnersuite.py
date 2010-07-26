@@ -25,6 +25,9 @@ class SysTestRunnerTestCase(unittest.TestCase):
         self.skelTest4 = SkeletonSysTest(self.inputFiles,
             "output/SkeletonTestSub",
             statusToReturn=UWA_PASS("testPass2"), nproc=1)
+        for skelTest in [self.skelTest1, self.skelTest2, self.skelTest3,
+                self.skelTest4]:
+            skelTest.runPath = os.path.abspath(os.getcwd())
 
     def tearDown(self):
         self.stRunner = None
