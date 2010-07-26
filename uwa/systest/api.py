@@ -9,7 +9,7 @@ import os
 import inspect
 from xml.etree import ElementTree as etree
 import uwa.modelrun as mrun
-from uwa.io.stgxml import writeXMLDoc
+import uwa.io.stgxml
 import uwa.io.stgpath
 
 class SysTestResult:
@@ -22,10 +22,15 @@ class SysTestResult:
     .. attribute:: statusStr
 
        One-word status string summarising test result (eg 'Pass').
+    
+    .. attribute:: _absRecordFile
+
+       The absolute path of where the system test was saved to.
     """   
 
     detailMsg = None
     statusStr = None
+    _absRecordFile = None
 
     def __str__(self):
         return self.statusStr
@@ -33,6 +38,13 @@ class SysTestResult:
     def printDetailMsg(self):
         if self.detailMsg:
             print self.detailMsg
+
+    def setRecordFile(self, recordFile):
+        """Save the record file: as an absolute path."""
+        self._absRecordFile = os.path.abspath(recordFile)
+    
+    def getRecordFile(self):
+        return self._absRecordFile
 
 
 class UWA_PASS(SysTestResult):
@@ -289,7 +301,7 @@ class SysTest:
             os.makedirs(outputPath)
         outFilePath = os.path.join(outputPath, filename)
         outFile = open(outFilePath, 'w')
-        writeXMLDoc(xmlDoc, outFile, prettyPrint)
+        uwa.io.stgxml.writeXMLDoc(xmlDoc, outFile, prettyPrint)
         outFile.close()
         return outFilePath
 

@@ -1,7 +1,9 @@
 import os
 import sys
 import inspect
+from xml.etree import ElementTree as etree
 
+import uwa.io.stgxml
 from uwa.systest.api import *
 
 class SysTestRunner:
@@ -35,6 +37,7 @@ class SysTestRunner:
         mSuite.writeAllModelResultXMLs()
         print "Test result was %s" % testResult
         outFilePath = sysTest.updateXMLWithResult(suiteResults)
+        testResult.setRecordFile(outFilePath)
         print "Saved test result to %s" % (outFilePath)
         os.chdir(startDir)
         return testResult
@@ -88,9 +91,12 @@ class SysTestRunner:
                 suite.suiteName)
         return results
     
-    def runSuites(self, testSuites):
+    def runSuites(self, testSuites,
+            outputSummaryXML="output/uwa-suite-summary.xml"):
         """Runs a list of suites, and prints a big summary at the end.
-        
+        :param testSuites: list of test suites to run.
+        :keyword outputSummaryXML: name of filename to save a summary of tests
+        to.
         :returns: a list containing lists of results for each suite (results
           list in the same order as testSuites input argument).
         """
@@ -100,13 +106,64 @@ class SysTestRunner:
                 suite.suiteName)
         print "-"*80
 
+        summaryNode = self._createSuiteSummaryBaseNode()
         resultsLists = []
         for suite in testSuites:
             suiteResults = self.runSuite(suite)
             resultsLists.append(suiteResults)
+            self._addSuiteResultToSuitesSummary(summaryNode, suite, 
+                suiteResults)
 
+        outPath = os.path.dirname(outputSummaryXML)
+        outFile = os.path.basename(outputSummaryXML)
+        xmlDoc = etree.ElementTree(summaryNode)
+        self._writeXMLDocToFile(xmlDoc, outPath, outFile)
         self.printSuiteResultsByProject(testSuites, resultsLists)
         return resultsLists
+
+    def _createSuiteSummaryBaseNode(self):    
+        baseNode = etree.Element('UWA_SuiteResultSummary')
+        return baseNode
+
+    def _writeXMLDocToFile(self, xmlDoc, outputPath, filename,
+            prettyPrint=True):
+        """Write the information in xmlDoc (in xml.etree format) to the filename
+        given by outputPath and filename."""
+        if not os.path.exists(outputPath):
+            os.makedirs(outputPath)
+        outFilePath = os.path.join(outputPath, filename)
+        outFile = open(outFilePath, 'w')
+        uwa.io.stgxml.writeXMLDoc(xmlDoc, outFile, prettyPrint)
+        outFile.close()
+        return outFilePath
+
+    def _addSuiteResultToSuitesSummary(self, summaryNode, suite, suiteResults):
+        #TODO: below is parked here for now, likely it should be a Listener
+        #  for writing out system test info, or something similar
+        self._addSuiteInfo(summaryNode, suite, suiteResults)
+
+    def _addSuiteInfo(self, suiteNode, suite, suiteResults):
+        suiteNode = self._createSuiteNode(suiteNode, suite, suiteResults)
+        for testI, sysTest in enumerate(suite.sysTests):
+            self._addSysTestInfo(suiteNode, sysTest, suiteResults[testI])
+    
+    def _createSuiteNode(self, parentNode, suite, suiteResults):
+        suiteNode = etree.SubElement(parentNode, 'testsuite')
+        suiteNode.attrib['name'] = suite.suiteName
+        suiteNode.attrib['project'] = suite.projectName
+        sumsDict, failIs, errorIs = self.getResultsTotals(suiteResults)
+        totalResults = sum(sumsDict.values())
+        suiteNode.attrib['tests'] = str(totalResults)
+        suiteNode.attrib['failures'] = str(sumsDict['Fail'])
+        suiteNode.attrib['errors'] = str(sumsDict['Error'])
+        return suiteNode
+
+    def _addSysTestInfo(self, parentNode, sysTest, sysTestResult):
+        sysTestNode = etree.SubElement(parentNode, 'systest')
+        sysTestNode.attrib['name'] = sysTest.testName
+        sysTestNode.attrib['type'] = sysTest.testType
+        sysTestNode.attrib['status'] = sysTestResult.statusStr
+        sysTestNode.attrib['recordfile'] = sysTestResult.getRecordFile()
 
     def printSuiteResultsByProject(self, testSuites, resultsLists):
         """Utility function to print a set of suite results out, 
@@ -256,4 +313,4 @@ def runSuitesFromModules(suiteModNames, xmlOutputFilename):
         suites.append(mod.suite())
     testRunner = SysTestRunner()
     # TODO: pass in xmlOutputFilename to save record of this stuff
-    testRunner.runSuites(suites)
+    testRunner.runSuites(suites, xmlOutputFilename)
