@@ -35,7 +35,8 @@ Using UWA for System Testing of StGermain-based codes such as Underworld
 
 .. toctree::
 
-   examples/run-systest.rst
+   examples/run-systest-scons.rst
+   examples/run-modify-systest-direct.rst
 
 .. _uwa-examples-analysis:
 

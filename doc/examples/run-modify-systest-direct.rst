@@ -1,7 +1,7 @@
-.. _uwa-examples-run-systest:
+.. _uwa-examples-run-systest-direct:
 
-Running one or more standard system tests in the repository
------------------------------------------------------------
+Running UWA system test suites directly, and how to modify them
+---------------------------------------------------------------
 
 This is a fairly simple use-case, for those who are used to already running
 system tests in stgUnderworld. UWA provides a similar top-level interface to the
