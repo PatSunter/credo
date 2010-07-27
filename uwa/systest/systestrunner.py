@@ -11,7 +11,7 @@ class SysTestRunner:
     collected into :class:`~uwa.systest.api.SysTestSuite` collections.
 
     For examples of how to use, see the UWA documentation, especially
-    :ref:`uwa-examples-run-systest`.
+    :ref:`uwa-examples-run-systest-direct`.
     """
 
     def __init__(self):

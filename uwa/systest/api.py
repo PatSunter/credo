@@ -385,7 +385,7 @@ class SysTestSuite:
     """Class that aggregates  a set of :class:`~uwa.systest.api.SysTest`.
 
     For examples of how to use, see the UWA documentation, especially
-    :ref:`uwa-examples-run-systest`.
+    :ref:`uwa-examples-run-systest-direct`.
 
     TODO: document projectName and suiteName and nproc
 
