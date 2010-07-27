@@ -80,17 +80,17 @@ Setting up UWA - Temporary instructions for beta users
 ======================================================
 
 The instructions below are for setting up to use the current beta release of
-UWA, 0.1.0 . In future the process will become more streamlined as part of
+UWA, |release|. In future the process will become more streamlined as part of
 the normal process of configuring, building and installing stgUnderworld, but
 for now follow these instructions to try out the beta version.
 
 obtaining the UWA-dev branch
 ----------------------------
 
-The 0.1.0 version of UWA is currently being developed on a branch of the main
-stgUnderworld framework, called *uwa-dev*. This is so it doesn't interfere with
-the main-line of the stgUnderworld framework until ready for a first production
-release.
+The |release| release of UWA is currently being developed on a branch of the
+main stgUnderworld framework, called *uwa-dev*. This is so it doesn't
+interfere with the main-line of the stgUnderworld framework until ready
+for a first production release.
 
 To obtain this branch of the code for experimentation:
 
@@ -148,12 +148,14 @@ codebase installed.
 Setting up your environment to use UWA
 --------------------------------------
 
-Currently in UWA version 0.1.0, UWA is not integrated with the `SCons
-<http://www.scons.org/>`_ build system used by the rest of stgUnderworld.
+ .. note:: If you only intend to run UWA System tests via SCons commands like
+    `scons check` (see :ref:`uwa-examples-run-systest-scons`),
+    then you don't need to read the section below, as UWA is
+    now integrated with SCons. However, the environment variables are needed
+    if you want to run UWA tests directly.
 
-So to run any of the examples, you need to modify a couple of shell environment
-variables directly, to use the UWA code directly from its source directory in
-uwa.
+To run any UWA scripts directly, you need to modify a couple of shell
+environment variables.
 
 These variables are:
 
