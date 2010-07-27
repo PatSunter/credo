@@ -87,8 +87,6 @@ SCons-Check Options:
         suiteModNames = map(pathToPyModuleName, suiteFiles)
         uwa.systest.systestrunner.runSuitesFromModules(suiteModNames,
             xmlOutputFilename)
-        # TODO: temporary for now, this file should be created by uwa function
-        Execute(Touch(str(xmlOutputFilename)))
         return None
 
     # Define a builder for a cvg suite: should be dependent on a project
