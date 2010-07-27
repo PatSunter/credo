@@ -3,9 +3,8 @@
 Running UWA system test suites directly, and how to modify them
 ---------------------------------------------------------------
 
-This is a fairly simple use-case, for those who are used to already running
-system tests in stgUnderworld. UWA provides a similar top-level interface to the
-previous SYS scripts system.
+UWA provides the ability to run suites of system tests directly via the command
+line, similar to the interface of the previous SYS scripts system.
 
 To start off with, make sure the necessary environment variables necessary to
 run UWA have been set up, as detailed in :ref:`environment_setup`.
@@ -156,6 +155,13 @@ system tests that've been associated with it::
 
 Which is what will actually trigger the running of the tests, and produce a
 report of what happened both to the terminal, and in XML files.
+
+.. _uwa-examples-run-systest-direct-importingReqs:
+
+Requirements for importing test suites: Dual-mode, and the suite() function
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+TODO.
 
 Alternative: Running a single test from the command-line
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

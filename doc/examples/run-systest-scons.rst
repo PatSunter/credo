@@ -6,6 +6,10 @@ Running a test target, or test suite, via the SCons build system
 UWA is now integrated with the SCons build system, so for project such as
 Underworld it is now possible to run UWA System tests via SCons.
 
+For this to work, it requires test maintainers to follow the directions in
+:ref:`uwa-examples-run-systest-direct-importingReqs`, but you can follow
+the instructions below without knowing the internal contents of suites.
+
 Running a project-defined multi-suite test target
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -136,3 +140,6 @@ will cause that suite to be run, printing output as follows:
 ..and an XML log of the suite results will also be created in the `testLogs`
 directory: in this case called
 `testLogs/PICellerator.SysTest.PerformanceTests.testAll.xml`.
+
+.. TODO: would be good to have a section here about how to add System tests to a
+   project, via SCons. Or perhaps in the appendix.
