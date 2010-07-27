@@ -15,29 +15,25 @@ code. We'll show in this example StgFEM/SysTest/RegressionTests/testAll-new.py:
 .. include:: ../../../StgFEM/SysTest/RegressionTests/testAll.py
    :literal:
 
-This Python script uses UWA to run 3 system tests, and process their results. To
-see it in practice, cd to that directory and then run the script (since it's set
-as executable, you don't need to invoke Python explicitly). You should see
-output starting with::
+This Python script uses UWA to run several system tests, and process their
+results. To see it in practice, cd to that directory and then run the script
+(since it's set as executable, you don't need to invoke Python explicitly).
+You should see output starting with::
 
-  psunter@auscope-02:~/AuScopeCodes/stgUnderworldE-uwaDev-work/StgFEM/SysTest/RegressionTests$ ./testAll-new.py 
-  Running System test 0, with name 'Multigrid-restartTest':
+  Running System Test Suite for Project 'StgFEM', named 'RegressionTests', containing 33 direct tests and 0 sub-suites:
+  Running System test 1/33, with name 'CosineHillRotateBC-analyticTest-np1':
   Writing pre-test info to XML
-  Running the 2 modelRuns specified in the suite
-  Doing run 1/2 (index 0), of name 'Multigrid-restartTest-initial':
-  ModelRun description: "Do the initial full run and checkpoint solutions."
+  Running the 1 modelRuns specified in the suite
+  Doing run 1/1 (index 0), of name 'CosineHillRotateBC-analyticTest-np1':
+  ModelRun description: "Run the model and generate analytic soln."
   Generating analysis XML:
 
 and finishing with::
 
   --------------------------------------------------------------------------------
-  UWA System Tests results summary:
-  Ran 3 system tests, with 2 passes, 1 fails, and 0 errors
-  Failures were:
-   CosineHillRotateBC-analyticTest: At least one Field not within tolerance of analytic soln.
+  UWA System Tests results summary, project 'StgFEM', suite 'RegressionTests':
+  Ran 33 system tests, with 33 passes, 0 fails, and 0 errors
   --------------------------------------------------------------------------------
-
-(Note that the failure is deliberate in the testing stages).
 
 The following sections will explain how the file is set up, and show what the different sections do.
 
@@ -48,9 +44,10 @@ Importing UWA and creating a testRunner object
 To explain the first few lines of the script, as shown below::
 
   #!/usr/bin/env python
+
   from uwa.systest import *
 
-  testRunner = SysTestRunner()
+  testSuite = SysTestSuite("StgFEM", "RegressionTests")
 
 The first denotes the file as an executable script, using Python.
 
@@ -59,31 +56,37 @@ the rest of the Python script - this is a convenience since all the objects
 we'll need for the rest of the script, such as various types of System
 test classes, are contained here.
 
-The next line creates a SysTestRunner object to use for managing a test suite,
-and assigns it to the name 'testRunner'.
+The next line creates a SysTestSuite object to use for managing a test suite,
+and assigns it to the name 'testSuite'. The 2 arguments when creating the
+SysTestSuite are for recording the project the suite belongs to, and a textual
+name of the suite.
 
-Note that the SysTestRunner object definition was one of those we imported
-with the preceding *import* statement. Currently the SysTestRunner takes no
-options, in future versions we
-expect you'll be able to set paramaters or configure in more detail how the
-tests should be run.  
+Note that the SysTestSuite object definition was one of those we imported
+with the preceding *import* statement.
 
-.. seealso:: The :class:`uwa.systest.systestrunner.SysTestRunner` class.
+.. seealso:: The :class:`uwa.systest.api.SysTestSuite` class in the
+   API documentation.
 
 Adding system tests to the suite, and configuring them
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Let's look at the next few lines, which declare what tests to run, and add them
-to the test suite::
+Let's look at the next few lines, which declare a set of test models to run,
+and add them to the test suite::
 
-  testRunner.addStdTest(RestartTest, ["Multigrid.xml"],
-      paramOverrides={"maxZ":2.5})
-  testRunner.addStdTest(ReferenceTest, ["Multigrid.xml"])
-  testRunner.addStdTest(AnalyticTest, ["CosineHillRotateBC.xml"],
-      fieldTols={'TemperatureField':1e-8})
+  analyticModels = ["CosineHillRotateBC.xml", "CosineHillRotateBC-DualMesh.xml",
+      "HomogeneousNaturalBCs.xml", "HomogeneousNaturalBCs-DualMesh.xml",
+      "SteadyState1D-x.xml", "SteadyState1D-y.xml",
+      "AnalyticSimpleShear.xml"]
 
-Each line is invoking the *addStdTest* method of the SysTestRunner object, to
-add a system test of a particular type to the suite.
+  for modelXML in analyticModels:
+      for nproc in [1, 2, 4]:
+          testSuite.addStdTest(AnalyticTest, modelXML, nproc=nproc)
+
+The analyticModels has been created as a `Python List
+<http://docs.python.org/tutorial/introduction.html#lists>`_. This list can then
+be used inside the `for` loop below it to add each particular model as an
+AnalyticTest using the `addStdTest` method of the testSuite object we created
+above.
 
 The addStdTest method uses a special shorthand to add tests to the suite, to
 save some of the work from the users in this high-level interface.
@@ -97,45 +100,32 @@ Its arguments are:
   string instead of a list is ok.
 * Any over-riding options you wish to pass to the test.
 
-So looking at the simplest case first, we can see the 2nd test added to the
-suite of our example::
-
-  testRunner.addStdTest(ReferenceTest, ["Multigrid.xml"])
-
-... means that a ReferenceTest (test against a reference solution) is being
-added, for the model contained in Multigrid.xml, with no special options.
-
 In the case of over-riding parameters to the tests, there are 2 main categories:
 
 #. Passing parameters that customise the model itself (paramOverrides)
 #. Passing parameters that modify the nature of the test.
 
-Let's look at an example of the first of these categories::
+We can see an example of the first of these in the next section of the test
+script::
 
-  testRunner.addStdTest(RestartTest, ["Multigrid.xml"],
-      paramOverrides={"maxZ":2.5})
+  ss0_5Opts = {"defaultDiffusivity":0.5, "A":0.1}
+  for nproc in [1, 2, 4]:
+      testSuite.addStdTest(AnalyticTest, ["SteadyState1D-x.xml"],
+          nproc=nproc, paramOverrides=ss0_5Opts)
 
-... this line means that a RestartTest on the Multigrid.xml model is being added
-to the suite, with the model being modified by over-riding the "maxZ" parameter
-from whatever is specified in the XML file, to 2.5 .
+... this section means that an AnalyticTest on the `SteadyState1D-x.xml` model
+is being added to the suite, with the model being modified by over-riding the
+"defaultDiffusivity" and "A" parameters from the values specified in the 
+Model XML file, to 0.5 and 0.1 respectively. The `paramOverrides` option is 
+a `Python Dictionary <http://docs.python.org/tutorial/datastructures.html#dictionaries>`_.
 
 Here, the paramOverrides option is a dictionary of overrides to perform exactly
 the same as described in the section for running a single analysis model through
 UWA below.
 
-Let's now look at a case where parameters that over-ride default properties of
-how the test is applied are specified::
-
-  testRunner.addStdTest(AnalyticTest, ["CosineHillRotateBC.xml"],
-      fieldTols={'TemperatureField':1e-8})
-
-Here, we're creating an AnalyticTest (compare against analytic solution), for
-the CosineHillRotateBC.xml model. Additionally, this test is instructed to use a
-tolerance of 1e-8 when testing the TemperatureField generated by the model
-against the analytic solution, rather than the default value.
-
-There are several other options you can use to over-ride the default behaviour
-of system tests, please refer to the API section on System Tests for more. The
+With regard to the second option type, there are several options you can use to
+over-ride the default behaviour of system tests. 
+Please refer to the API section on System Tests for more. The
 principle is the same for all of these regarding SysTestRunner suites though:
 just specify the options as you would to the constructor of an individual
 SystemTest, and they will be passed through by the SysTestRunner.
@@ -145,23 +135,54 @@ SystemTest, and they will be passed through by the SysTestRunner.
    :class:`~uwa.systest.reference.ReferenceTest`, and
    :class:`~uwa.systest.analyticMultiRes.AnalyticMultiResTest` classes.
 
-Getting the testRunner to run all tests
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creating a SysTestRunner to run all tests
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Finally, in the test script we need to call the SysTestRunner to run all the
-system tests that've been associated with it::
+To actually run tests, in the test script we need to call a SysTestRunner
+to run a group of system tests, usually packaged together in one or more
+Suites. The basic code to do this is::
 
-  testRunner.runAll()
+  testRunner = SysTestRunner()
+  testRunner.runSuite(testSuite)
 
-Which is what will actually trigger the running of the tests, and produce a
+This will actually trigger the running of the tests, and produce a
 report of what happened both to the terminal, and in XML files.
+
+.. seealso:: The  :class:`~uwa.systest.systestrunner.SysTestRunner` class
+   documentation.
 
 .. _uwa-examples-run-systest-direct-importingReqs:
 
 Requirements for importing test suites: Dual-mode, and the suite() function
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-TODO.
+You'll notice in the example test script from StgFEM, we don't simply create a
+testRunner at the end and run the tests. As a reminder, the actual code is::
+
+  def suite():
+      return testSuite
+
+  if __name__ == "__main__":
+      testRunner = SysTestRunner()
+      testRunner.runSuite(testSuite)
+
+The reason for this approach is so that the test can be run directly from the
+command line to run the suite and report the results, *or* imported from another
+Python file when running and analysing a whole set of suites. This is known as a
+"dual-mode" script in Python, and is needed so that UWA test scripts can be run
+via SCons, as discussed in :ref:`uwa-examples-run-systest-scons`.
+
+Generally those working on these scripts can just follow this pattern. 
+The 2 key aspects to keep in mind are:
+
+#. The `suite()` function must be defined if you expect to be able to use this
+   script in SCons from other directories.
+#. The `__name__ == "__main__"` section will only be executed if the script is
+   running directly from the terminal - meaning that the testRunner will only be
+   created and run in this case. This means that when importing this script,
+   you can control how and when to run the suite from the importing program.
+
+.. seealso:: http://docs.python.org/tutorial/modules.html#executing-modules-as-scripts
 
 Alternative: Running a single test from the command-line
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
