@@ -8,6 +8,7 @@ doc/_build/*
 doc/temp
 sampledoc_tut*
 uwa/io/tests/output
+uwa/systest/tests/output
 
 # switch to regexp syntax.
 syntax: regexp
