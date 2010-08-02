@@ -1,3 +1,6 @@
+"""Package for manipulation of a suite of system tests. Analogous to the role
+of the Pythun unittest TestRunner."""
+
 import os
 import sys
 import inspect
@@ -5,6 +8,25 @@ from xml.etree import ElementTree as etree
 
 import uwa.io.stgxml
 from uwa.systest.api import *
+
+# Relevant to the XML Results. Designed to be compatible with the tags used
+#  by the Python unittest-xml-reporting package
+#  (http://pypi.python.org/pypi/unittest-xml-reporting), which are very 
+#  similar to those used by Java's Ant.
+XML_RESULT_TAG_BASENODE = 'UWA_SuiteResultSummary'
+XML_RESULT_TAG_SUITE = 'testsuite'
+XML_RESULT_TAG_TESTCASE = 'testcase'
+
+XML_SUITE_ATTR_NAME = 'name'
+XML_SUITE_ATTR_PROJECT = 'project'
+XML_SUITE_ATTR_TESTS = 'tests'
+XML_SUITE_ATTR_FAILURES = 'failures'
+XML_SUITE_ATTR_ERRORS = 'errors'
+
+XML_TESTCASE_ATTR_NAME = 'name'
+XML_TESTCASE_ATTR_TYPE = 'type'
+XML_TESTCASE_ATTR_STATUS = 'status'
+XML_TESTCASE_ATTR_RECORDFILE = 'recordfile'
 
 class SysTestRunner:
     """Class that runs a set of :class:`~uwa.systest.api.SysTest`, usually
@@ -119,10 +141,11 @@ class SysTestRunner:
         xmlDoc = etree.ElementTree(summaryNode)
         self._writeXMLDocToFile(xmlDoc, outPath, outFile)
         self.printSuiteResultsByProject(testSuites, resultsLists)
+        self._printXMLFileInfo(outputSummaryXML)
         return resultsLists
 
     def _createSuiteSummaryBaseNode(self):    
-        baseNode = etree.Element('UWA_SuiteResultSummary')
+        baseNode = etree.Element(XML_RESULT_TAG_BASENODE)
         return baseNode
 
     def _writeXMLDocToFile(self, xmlDoc, outputPath, filename,
@@ -148,22 +171,22 @@ class SysTestRunner:
             self._addSysTestInfo(suiteNode, sysTest, suiteResults[testI])
     
     def _createSuiteNode(self, parentNode, suite, suiteResults):
-        suiteNode = etree.SubElement(parentNode, 'testsuite')
-        suiteNode.attrib['name'] = suite.suiteName
-        suiteNode.attrib['project'] = suite.projectName
+        suiteNode = etree.SubElement(parentNode, XML_RESULT_TAG_SUITE)
+        suiteNode.attrib[XML_SUITE_ATTR_NAME] = suite.suiteName
+        suiteNode.attrib[XML_SUITE_ATTR_PROJECT] = suite.projectName
         sumsDict, failIs, errorIs = self.getResultsTotals(suiteResults)
         totalResults = sum(sumsDict.values())
-        suiteNode.attrib['tests'] = str(totalResults)
-        suiteNode.attrib['failures'] = str(sumsDict['Fail'])
-        suiteNode.attrib['errors'] = str(sumsDict['Error'])
+        suiteNode.attrib[XML_SUITE_ATTR_TESTS] = str(totalResults)
+        suiteNode.attrib[XML_SUITE_ATTR_FAILURES] = str(sumsDict['Fail'])
+        suiteNode.attrib[XML_SUITE_ATTR_ERRORS] = str(sumsDict['Error'])
         return suiteNode
 
     def _addSysTestInfo(self, parentNode, sysTest, sysTestResult):
-        sysTestNode = etree.SubElement(parentNode, 'systest')
-        sysTestNode.attrib['name'] = sysTest.testName
-        sysTestNode.attrib['type'] = sysTest.testType
-        sysTestNode.attrib['status'] = sysTestResult.statusStr
-        sysTestNode.attrib['recordfile'] = sysTestResult.getRecordFile()
+        sysTestNode = etree.SubElement(parentNode, XML_RESULT_TAG_TESTCASE)
+        sysTestNode.attrib[XML_TESTCASE_ATTR_NAME] = sysTest.testName
+        sysTestNode.attrib[XML_TESTCASE_ATTR_TYPE] = sysTest.testType
+        sysTestNode.attrib[XML_TESTCASE_ATTR_STATUS] = sysTestResult.statusStr
+        sysTestNode.attrib[XML_TESTCASE_ATTR_RECORDFILE] = sysTestResult.getRecordFile()
 
     def printSuiteResultsByProject(self, testSuites, resultsLists):
         """Utility function to print a set of suite results out, 
@@ -301,6 +324,9 @@ class SysTestRunner:
                 " same length, but sysTests of len %d vs results of"\
                 " len %d" % (len(sysTests), len(results)))
 
+    def _printXMLFileInfo(self, outputSummaryXML):
+        print "XML summary file saved to '%s'." % outputSummaryXML
+
 
 def runSuitesFromModules(suiteModNames, xmlOutputFilename):
     """Runs a set of System test suites, where suiteModNames is a list of 
@@ -308,6 +334,7 @@ def runSuitesFromModules(suiteModNames, xmlOutputFilename):
     suites = []
     for modName in suiteModNames:
         print "Importing suite for %s:" % modName
+        # 2-stage process is needed, see Python docs on imp module
         imp = __import__(modName)
         mod = sys.modules[modName]
         suites.append(mod.suite())
