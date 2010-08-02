@@ -82,11 +82,11 @@ SCons-Check Options:
            as SCons File objects. Ideally would like some smarter target
            checking, perhaps if these were .pyc files that depended on 
            both the .py file, and the relevant project executable."""
-        xmlOutputFilename = str(target[0])
+        xmlOutputDir = str(target[0])
         suiteFiles = map(str, source)
         suiteModNames = map(pathToPyModuleName, suiteFiles)
         uwa.systest.systestrunner.runSuitesFromModules(suiteModNames,
-            xmlOutputFilename)
+            xmlOutputDir)
         return None
 
     # Define a builder for a cvg suite: should be dependent on a project
@@ -107,11 +107,11 @@ SCons-Check Options:
         suiteList.append(os.path.join(projectName, suiteFilename))
         # Or append the target? suiteList.append(cvgTest)
         # Alias for running just this particular test
-        testResultXML = os.path.join(env['TEST_OUTPUT_PATH'],
-            testImportName + ".xml")
+        testResultDir = os.path.join(env['TEST_OUTPUT_PATH'], 
+            testImportName)
         # TODO: perhaps here is where to update the CURR_PROJECT as a
         # Dependency of the suite, so it builds Underworld first
-        singleTestRunner = env.RunSuites(testResultXML, suiteFilename)
+        singleTestRunner = env.RunSuites(Dir(testResultDir), suiteFilename)
         env.Alias(testImportName, singleTestRunner) 
         env.AlwaysBuild(singleTestRunner)
         # TODO: It would also be cool to update a list of suites based

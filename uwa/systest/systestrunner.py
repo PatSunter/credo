@@ -79,7 +79,8 @@ class SysTestRunner:
             self.printResultsSummary(sysTests, results, projName, suiteName)
         return results
     
-    def runSuite(self, suite, runSubSuites=True, subSuiteMode=False):
+    def runSuite(self, suite, runSubSuites=True, subSuiteMode=False,
+        outputSummaryDir="testLogs"):
         """Runs a suite of system tests, and prints results.
         The suite may contain sub-suites, which will also be run by default.
 
@@ -97,15 +98,27 @@ class SysTestRunner:
             " containing %d direct tests and %d sub-suites:"\
             % (subText, suite.projectName, suite.suiteName, testTotal,
              subSuitesTotal)
-        # TODO: start Suite summary XML
+
+        summaryNode = self._createSuiteSummaryBaseNode()
         if testTotal > 0:
             results += self.runTests(suite.sysTests, suite.projectName,
                 suite.suiteName)
-            # TODO: update XML with results
+            self._addSuiteResultToSuitesSummary(summaryNode, suite, 
+                results)
+
+        if not os.path.exists(outputSummaryDir):
+            os.makedirs(outputSummaryDir)
+
+        outFile = self.getSuiteResultsFilename(suite)
+        xmlDoc = etree.ElementTree(summaryNode)
+        self._writeXMLDocToFile(xmlDoc, outputSummaryDir, outFile)
+        self._printXMLFileInfo(os.path.join(outputSummaryDir, outFile))
+
         if runSubSuites and subSuitesTotal > 0:
             subSuiteResults = []
             for subSuite in suite.subSuites:
-                subResults = self.runSuite(subSuite, subSuiteMode=True)
+                subResults = self.runSuite(subSuite, subSuiteMode=True,
+                    outputSummaryDir=outputSummaryDir)
                 subSuiteResults.append(subResults)
             for subResults in subSuiteResults:
                 results += subResults
@@ -113,11 +126,11 @@ class SysTestRunner:
                 suite.suiteName)
         return results
     
-    def runSuites(self, testSuites,
-            outputSummaryXML="output/uwa-suite-summary.xml"):
+    def runSuites(self, testSuites, outputSummaryDir="testLogs"):
         """Runs a list of suites, and prints a big summary at the end.
         :param testSuites: list of test suites to run.
-        :keyword outputSummaryXML: name of filename to save a summary of tests
+        :keyword outputSummaryDir: name of directory to save a summary of
+        tests
         to.
         :returns: a list containing lists of results for each suite (results
           list in the same order as testSuites input argument).
@@ -127,26 +140,25 @@ class SysTestRunner:
             print " Project '%s', suite '%s'" % (suite.projectName,
                 suite.suiteName)
         print "-"*80
-
-        summaryNode = self._createSuiteSummaryBaseNode()
         resultsLists = []
         for suite in testSuites:
-            suiteResults = self.runSuite(suite)
+            suiteResults = self.runSuite(suite, outputSummaryDir=outputSummaryDir)
             resultsLists.append(suiteResults)
-            self._addSuiteResultToSuitesSummary(summaryNode, suite, 
-                suiteResults)
-
-        outPath = os.path.dirname(outputSummaryXML)
-        outFile = os.path.basename(outputSummaryXML)
-        xmlDoc = etree.ElementTree(summaryNode)
-        self._writeXMLDocToFile(xmlDoc, outPath, outFile)
+        print "-"*80
         self.printSuiteResultsByProject(testSuites, resultsLists)
-        self._printXMLFileInfo(outputSummaryXML)
+        self._printXMLDirInfo(outputSummaryDir)
+        print "-"*80
         return resultsLists
 
     def _createSuiteSummaryBaseNode(self):    
         baseNode = etree.Element(XML_RESULT_TAG_BASENODE)
         return baseNode
+
+
+    def getSuiteResultsFilename(self, suite):
+        """Get a standard name for a suite record file, from given suite
+        and its attributes."""
+        return "%s-%s.xml" % (suite.projectName, suite.suiteName)
 
     def _writeXMLDocToFile(self, xmlDoc, outputPath, filename,
             prettyPrint=True):
@@ -169,6 +181,8 @@ class SysTestRunner:
         suiteNode = self._createSuiteNode(suiteNode, suite, suiteResults)
         for testI, sysTest in enumerate(suite.sysTests):
             self._addSysTestInfo(suiteNode, sysTest, suiteResults[testI])
+        # Currently expect sub-suite results to be written to a separate
+        #  file, that'll be called separately.
     
     def _createSuiteNode(self, parentNode, suite, suiteResults):
         suiteNode = etree.SubElement(parentNode, XML_RESULT_TAG_SUITE)
@@ -194,7 +208,6 @@ class SysTestRunner:
         appear in the results."""
         projOrder, projIndices = self._buildResultsProjectIndex(testSuites)
         suitesResults = zip(testSuites, resultsLists)
-        print "-"*80
         print "UWA System Tests summary for all project suites ran:"
         print "------"
         totalSumsDict = {"Pass":0, "Fail":0, "Error":0}
@@ -215,7 +228,7 @@ class SysTestRunner:
                 totalSumsDict[kw] += sumVal
         print "ALL Projects Total: ",
         self._printResultsLineShort(totalSumsDict)
-        print "-"*80
+        print "------"
 
     def printSuiteResultsOrderFound(self, testSuites, resultsLists):
         """Utility function to print a set of results in the order they
@@ -327,8 +340,11 @@ class SysTestRunner:
     def _printXMLFileInfo(self, outputSummaryXML):
         print "XML summary file saved to '%s'." % outputSummaryXML
 
+    def _printXMLDirInfo(self, outputSummaryDir):
+        print "All XML summary files saved to dir '%s'." % outputSummaryDir
 
-def runSuitesFromModules(suiteModNames, xmlOutputFilename):
+
+def runSuitesFromModules(suiteModNames, outputSummaryDir):
     """Runs a set of System test suites, where suiteModNames is a list of 
     suites to import and run."""
     suites = []
@@ -339,5 +355,4 @@ def runSuitesFromModules(suiteModNames, xmlOutputFilename):
         mod = sys.modules[modName]
         suites.append(mod.suite())
     testRunner = SysTestRunner()
-    # TODO: pass in xmlOutputFilename to save record of this stuff
-    testRunner.runSuites(suites, xmlOutputFilename)
+    testRunner.runSuites(suites, outputSummaryDir)

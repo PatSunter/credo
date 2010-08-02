@@ -20,10 +20,10 @@ class SysTestRunnerTestCase(unittest.TestCase):
             "output/SkeletonTest2",
             statusToReturn=UWA_FAIL("testFail"), nproc=1)
         self.skelTest3 = SkeletonSysTest(self.inputFiles,
-            "output/SkeletonTestSub",
+            "output/SkeletonTest3",
             statusToReturn=UWA_ERROR("testError"), nproc=1)
         self.skelTest4 = SkeletonSysTest(self.inputFiles,
-            "output/SkeletonTestSub",
+            "output/SkeletonTest4",
             statusToReturn=UWA_PASS("testPass2"), nproc=1)
         for skelTest in [self.skelTest1, self.skelTest2, self.skelTest3,
                 self.skelTest4]:
@@ -42,7 +42,8 @@ class SysTestRunnerTestCase(unittest.TestCase):
     def test_runSuite(self):
         skelSuite = SysTestSuite("StgFEM", "RegressionTests", 
             sysTests=[self.skelTest1, self.skelTest2])
-        testResults = self.stRunner.runSuite(skelSuite)
+        testResults = self.stRunner.runSuite(skelSuite, 
+            outputSummaryDir="output/testRunSuite")
         self.assertEqual(len(testResults), 2)
         self.assertEqual(testResults[0].statusStr, UWA_PASS.statusStr)
         self.assertEqual(testResults[1].statusStr, UWA_FAIL.statusStr)
@@ -53,7 +54,8 @@ class SysTestRunnerTestCase(unittest.TestCase):
         subSuite = SysTestSuite("StgFEM", "RegressionTests-sub")
         skelSuite.addSubSuite(subSuite)
         subSuite.sysTests.append(self.skelTest3)
-        testResults = self.stRunner.runSuite(skelSuite)
+        testResults = self.stRunner.runSuite(skelSuite,
+            outputSummaryDir="output/testRunSuite_withSubs")
         self.assertEqual(len(testResults), 3)
         self.assertEqual(testResults[0].statusStr, UWA_PASS.statusStr)
         self.assertEqual(testResults[1].statusStr, UWA_FAIL.statusStr)
@@ -66,7 +68,8 @@ class SysTestRunnerTestCase(unittest.TestCase):
             sysTests=[self.skelTest2, self.skelTest3])
         masterSuite = SysTestSuite("StgFEM", "RegressionTests",
             subSuites=[subSuite1, subSuite2])
-        testResults = self.stRunner.runSuite(masterSuite)
+        testResults = self.stRunner.runSuite(masterSuite,
+            outputSummaryDir="output/testRunSuite_subOnly")
         self.assertEqual(len(testResults), 4)
         self.assertEqual(testResults[0].statusStr, UWA_PASS.statusStr)
         self.assertEqual(testResults[1].statusStr, UWA_FAIL.statusStr)
