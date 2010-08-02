@@ -34,13 +34,9 @@ class SysTestRunnerTestCase(unittest.TestCase):
         shutil.rmtree(self.basedir)
 
     def test_runTest(self):
-        skelTest = SkeletonSysTest(self.inputFiles, "output/SkeletonTest1",
-            statusToReturn=UWA_PASS("testPass"), nproc=1)
-        testResult = self.stRunner.runTest(skelTest)
+        testResult = self.stRunner.runTest(self.skelTest1)
         self.assertEqual(testResult.statusStr, UWA_PASS.statusStr)
-        skelTest = SkeletonSysTest(self.inputFiles, "output/SkeletonTest2",
-            statusToReturn=UWA_FAIL("testFail"), nproc=1)
-        testResult = self.stRunner.runTest(skelTest)
+        testResult = self.stRunner.runTest(self.skelTest2)
         self.assertEqual(testResult.statusStr, UWA_FAIL.statusStr)
     
     def test_runSuite(self):
@@ -94,12 +90,12 @@ class SysTestRunnerTestCase(unittest.TestCase):
             sysTests=[self.skelTest4])
         suite3 = SysTestSuite("PICellerator", "RegressionTests",
             sysTests=[self.skelTest2, self.skelTest4])
-        testResults = self.stRunner.runSuites([suite1, suite2, suite3])
+        testResults = self.stRunner.runSuites([suite1, suite2, suite3],
+            outputSummaryDir="output/testRunSuites")
 
 def suite():
     suite = unittest.TestSuite()
-    #suite.addTest(unittest.makeSuite(SysTestRunnerTestCase, 'test'))
-    suite.addTest(SysTestRunnerTestCase("test_runSuites"))
+    suite.addTest(unittest.makeSuite(SysTestRunnerTestCase, 'test'))
     return suite
 
 if __name__ == '__main__':
