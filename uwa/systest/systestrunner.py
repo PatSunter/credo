@@ -99,19 +99,17 @@ class SysTestRunner:
             % (subText, suite.projectName, suite.suiteName, testTotal,
              subSuitesTotal)
 
-        summaryNode = self._createSuiteSummaryBaseNode()
+        suiteNode = self._createSuiteNode(suite)
+        suiteXMLDoc = etree.ElementTree(suiteNode)
         if testTotal > 0:
             results += self.runTests(suite.sysTests, suite.projectName,
                 suite.suiteName)
-            self._addSuiteResultToSuitesSummary(summaryNode, suite, 
-                results)
+            self._addTestResultsInfo(suiteNode, suite, results)
 
         if not os.path.exists(outputSummaryDir):
             os.makedirs(outputSummaryDir)
-
         outFile = self.getSuiteResultsFilename(suite)
-        xmlDoc = etree.ElementTree(summaryNode)
-        self._writeXMLDocToFile(xmlDoc, outputSummaryDir, outFile)
+        self._writeXMLDocToFile(suiteXMLDoc, outputSummaryDir, outFile)
         self._printXMLFileInfo(os.path.join(outputSummaryDir, outFile))
 
         if runSubSuites and subSuitesTotal > 0:
@@ -135,6 +133,7 @@ class SysTestRunner:
         :returns: a list containing lists of results for each suite (results
           list in the same order as testSuites input argument).
         """
+
         print "Running the following system test suites:"
         for suite in testSuites:
             print " Project '%s', suite '%s'" % (suite.projectName,
@@ -142,18 +141,14 @@ class SysTestRunner:
         print "-"*80
         resultsLists = []
         for suite in testSuites:
-            suiteResults = self.runSuite(suite, outputSummaryDir=outputSummaryDir)
+            suiteResults = self.runSuite(suite, 
+                outputSummaryDir=outputSummaryDir)
             resultsLists.append(suiteResults)
         print "-"*80
         self.printSuiteResultsByProject(testSuites, resultsLists)
         self._printXMLDirInfo(outputSummaryDir)
         print "-"*80
         return resultsLists
-
-    def _createSuiteSummaryBaseNode(self):    
-        baseNode = etree.Element(XML_RESULT_TAG_BASENODE)
-        return baseNode
-
 
     def getSuiteResultsFilename(self, suite):
         """Get a standard name for a suite record file, from given suite
@@ -172,29 +167,26 @@ class SysTestRunner:
         outFile.close()
         return outFilePath
 
-    def _addSuiteResultToSuitesSummary(self, summaryNode, suite, suiteResults):
-        #TODO: below is parked here for now, likely it should be a Listener
-        #  for writing out system test info, or something similar
-        self._addSuiteInfo(summaryNode, suite, suiteResults)
-
-    def _addSuiteInfo(self, suiteNode, suite, suiteResults):
-        suiteNode = self._createSuiteNode(suiteNode, suite, suiteResults)
-        for testI, sysTest in enumerate(suite.sysTests):
-            self._addSysTestInfo(suiteNode, sysTest, suiteResults[testI])
-        # Currently expect sub-suite results to be written to a separate
-        #  file, that'll be called separately.
-    
-    def _createSuiteNode(self, parentNode, suite, suiteResults):
-        suiteNode = etree.SubElement(parentNode, XML_RESULT_TAG_SUITE)
+    def _createSuiteNode(self, suite):
+        suiteNode = etree.Element(XML_RESULT_TAG_SUITE)
         suiteNode.attrib[XML_SUITE_ATTR_NAME] = suite.suiteName
         suiteNode.attrib[XML_SUITE_ATTR_PROJECT] = suite.projectName
+        #comment = etree.Comment("System tests run by UWA System.")
+        #suiteNode.append( comment )
+        return suiteNode
+
+    def _addTestResultsInfo(self, suiteNode, suite, suiteResults):
         sumsDict, failIs, errorIs = self.getResultsTotals(suiteResults)
         totalResults = sum(sumsDict.values())
         suiteNode.attrib[XML_SUITE_ATTR_TESTS] = str(totalResults)
         suiteNode.attrib[XML_SUITE_ATTR_FAILURES] = str(sumsDict['Fail'])
         suiteNode.attrib[XML_SUITE_ATTR_ERRORS] = str(sumsDict['Error'])
-        return suiteNode
 
+        for testI, sysTest in enumerate(suite.sysTests):
+            self._addSysTestInfo(suiteNode, sysTest, suiteResults[testI])
+        # Currently expect sub-suite results to be written to a separate
+        #  file, that'll be called separately.
+    
     def _addSysTestInfo(self, parentNode, sysTest, sysTestResult):
         sysTestNode = etree.SubElement(parentNode, XML_RESULT_TAG_TESTCASE)
         sysTestNode.attrib[XML_TESTCASE_ATTR_NAME] = sysTest.testName
