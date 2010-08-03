@@ -32,7 +32,8 @@ stgUnderworld base directory::
 
 which will invoke a series of system tests.
 
-  .. note:: You no longer need to run "./scons", as UWA now prints a summary
+  .. note:: You no longer need to run a custom scons executable from the
+     local directory (e.g. "./scons.py"), as UWA is now able to print a summary
      using the standard scons executable.
   
 The output printed after running this command should start with something like
@@ -109,8 +110,12 @@ totals sorted by project, for example::
 
 The test commands will also save an XML file, for parsing by the likes of
 Bitten, summarising the results of the test suite run. These are saved in the
-"testLogs" subdirectory. For example, after running the lowres suite above, the
-testLogs directory will contain a file `testLogs/lowresSuiteSummary.xml`.
+"testLogs" subdirectory, in sub-directories based on the name of the target
+you ran. For example, after running the lowres suite above, the
+testLogs directory will contain a directory `testLogs/check-lowres`, which
+would contain a suite record file `Underworld-RegressionTests-lowres.xml`.
+The format of these files is designed to be compatible with parsers that
+can read results of the Python unittest XML reporting extensions.
 
 Running a single test suite via SCons
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -138,8 +143,9 @@ will cause that suite to be run, printing output as follows:
 .. literalinclude:: SConsOutput/scons-PICellerator-suite.txt
 
 ..and an XML log of the suite results will also be created in the `testLogs`
-directory: in this case called
-`testLogs/PICellerator.SysTest.PerformanceTests.testAll.xml`.
+directory: in this case in the subdirectory
+`PICellerator.SysTest.PerformanceTests`, containing a record of the one suite
+ran `PICellerator-PerformanceTests.xml`.
 
 .. TODO: would be good to have a section here about how to add System tests to a
    project, via SCons. Or perhaps in the appendix.
