@@ -207,7 +207,7 @@ class ModelRun:
         """Prepare the output and log dirs - usually in preparation
         for running a :class:`uwa.modelrun.ModelRun`."""
         if not os.path.exists(self.outputPath):
-            os.makedirs(outputPath)
+            os.makedirs(self.outputPath)
 
         if not os.path.exists(self.logPath):
             os.makedirs(self.logPath)
