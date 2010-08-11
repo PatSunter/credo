@@ -19,6 +19,14 @@ import uwa
 from uwa import modelrun as mrun
 from uwa import modelresult as mres
 
+# The below is for Python 2.5 compatibility
+try:
+    import itertools
+    productCalc = itertools.product
+except AttributeError:
+    import uwa.utils
+    productCalc = uwa.utils.productCalc
+
 class StgXMLVariant:
     """A class that can be added to a :class:`.ModelSuite` to help 
     auto-generate a suite of ModelRuns to perform, where a particular
@@ -189,7 +197,8 @@ class ModelSuite:
 
         variantLens = [variant.varLen() for variant in
             self.modelVariants.itervalues()]
-        for paramIndices in itertools.product(*map(range, variantLens)):
+
+        for paramIndices in productCalc(*map(range, variantLens)):
             # First create a copy of the template model run
             newMRun = copy.deepcopy(self.templateMRun)
             # Now, apply each variant to it as appropriate
