@@ -535,11 +535,11 @@ def writeSolverOptsInfoXML(solverOpts, parentNode):
 ##################
 
 # Allow MPI command to be overriden by env var.
-MPI_COMMAND = "MPI_COMMAND"
-if MPI_COMMAND in os.environ:
-    mpiCommand = os.environ[MPI_COMMAND]
+MPI_RUN_COMMAND = "MPI_RUN_COMMAND"
+if MPI_RUN_COMMAND in os.environ:
+    mpiRunCommand = os.environ[MPI_RUN_COMMAND]
 else:
-    mpiCommand = "mpirun"
+    mpiRunCommand = "mpirun"
 
 # First some helper functions to help set up the run
 # Should probably go into io sub-package
@@ -626,7 +626,7 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
     stdErrFilename = modelRun.getStdErrFilename()
     stdOutFile = open(stdOutFilename, "w+")
     stdErrFile = open(stdErrFilename, "w+")
-    mpiPart = "%s -np %d " % (mpiCommand, modelRun.jobParams.nproc)
+    mpiPart = "%s -np %d " % (mpiRunCommand, modelRun.jobParams.nproc)
     runCommand = mpiPart + stgRunStr
 
     # Run the run command, sending stdout and stderr to defined log paths
