@@ -16,7 +16,7 @@ Running a project-defined multi-suite test target
 If you invoke the SCons help for a project using UWA in it's base directory,
 e.g. stgUnderworld, by typing::
 
-  scons --help
+  ./scons.py --help
 
 the full list of check 'targets' for a project
 will be printed. UWA has been set up to also work with the 
@@ -28,14 +28,10 @@ For example, the "check-lowres" target has been set up to run low-resolution
 system test suites, so you can invoke this target by running from the
 stgUnderworld base directory::
 
-  scons check-lowres 
+  ./scons.py check-lowres 
 
-which will invoke a series of system tests.
+which will invoke a series of system tests [#f1]_.
 
-  .. note:: You no longer need to run a custom scons executable from the
-     local directory (e.g. "./scons.py"), as UWA is now able to print a summary
-     using the standard scons executable.
-  
 The output printed after running this command should start with something like
 the following::
 
@@ -136,7 +132,7 @@ import syntax, this becomes `PICellerator.SysTest.PerformanceTests.testAll`.
 
 So invoking the following at the command line::
 
-  scons PICellerator.SysTest.PerformanceTests.testAll
+  ./scons.py PICellerator.SysTest.PerformanceTests.testAll
 
 will cause that suite to be run, printing output as follows:
 
@@ -149,3 +145,13 @@ ran `PICellerator-PerformanceTests.xml`.
 
 .. TODO: would be good to have a section here about how to add System tests to a
    project, via SCons. Or perhaps in the appendix.
+
+.. rubric:: Footnotes
+.. [#f1] While you no longer need to run a custom scons executable from the
+   local directory ("./scons.py") to get system test summary results,
+   as UWA is now fully integrated with stgUnderworld's scons config files and
+   is able to print a summary using the standard scons executable ... since
+   we still distribute a patched scons with stgUnderworld, we recommend 
+   continuing to run scons via the local script. All of the examples throughout
+   this documentation will thus be in this form.
+  

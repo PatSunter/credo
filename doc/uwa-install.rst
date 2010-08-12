@@ -149,7 +149,7 @@ Setting up your environment to use UWA
 --------------------------------------
 
  .. note:: If you only intend to run UWA System tests via SCons commands like
-    `scons check` (see :ref:`uwa-examples-run-systest-scons`),
+    `./scons.py check` (see :ref:`uwa-examples-run-systest-scons`),
     then you don't need to read the section below, as UWA is
     now integrated with SCons. However, the environment variables are needed
     if you want to run UWA tests directly.
