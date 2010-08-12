@@ -534,8 +534,12 @@ def writeSolverOptsInfoXML(solverOpts, parentNode):
 
 ##################
 
-# Assume user has updated their path correctly.
-mpiCommand="mpirun"
+# Allow MPI command to be overriden by env var.
+MPI_COMMAND = "MPI_COMMAND"
+if MPI_COMMAND in os.environ:
+    mpiCommand = os.environ[MPI_COMMAND]
+else:
+    mpiCommand = "mpirun"
 
 # First some helper functions to help set up the run
 # Should probably go into io sub-package
