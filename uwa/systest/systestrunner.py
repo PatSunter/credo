@@ -104,7 +104,8 @@ class SysTestRunner:
         if testTotal > 0:
             results += self.runTests(suite.sysTests, suite.projectName,
                 suite.suiteName)
-            self._addTestResultsInfo(suiteNode, suite, results)
+        # Even if no results, call func below so we get at least empty totals.
+        self._addTestResultsInfo(suiteNode, suite, results)
 
         if not os.path.exists(outputSummaryDir):
             os.makedirs(outputSummaryDir)
