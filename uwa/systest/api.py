@@ -214,16 +214,43 @@ class SysTest:
         analysis ops associated with them to allow aspects of test to
         evaluate properly."""
 
-    def getStatus(self, suiteResults):
-        """Virtual method: after a suite of runs created by :meth:".genSuite"
+    def getStatus(self, resultsSet):
+        """After a suite of runs created by :meth:".genSuite"
         has been run, when this method is passed the results of the suite
         (as a list of :class:`uwa.modelresult.ModelResult`), it must decide
         and return the status of the test (as a :class:`.SysTestResult`).
 
         It also needs to save this status to :meth:`.testStatus`.
+
+        By default, this simply gets each :class:`~.TestComponent` registered
+        for the system test do check its status, all must pass for a total
+        pass.
+
+        .. note:: if using this default method, then sub-classes need to
+           have defined `failMsg` and `passMsg` attributes to use.
         """
-        raise NotImplementedError("Error, base class")
-        
+        # If using this defaul
+        if not (hasattr(self, 'passMsg') and hasattr(self, 'failMsg')):
+            raise AttributeError("Please define 'passMsg' and 'failMsg'"\
+                " attributes of your SysTest class to use the defualt"\
+                " getStatus method.")
+
+        self.checkResultValid(resultsSet)
+        allPassed = True
+        for tComp in self.testComponents.itervalues():
+            result = tComp.check(resultsSet)
+            if not result:
+                allPassed = False
+                testStatus = UWA_FAIL(self.failMsg)
+        if allPassed:
+            testStatus = UWA_PASS(self.passMsg)
+        self.testStatus = testStatus
+        return testStatus
+    
+    # TODO: here is where it could be useful to have a method to get all
+    #  test components to do additional optional analysis, e.g. plotting
+    #  of graphs.
+
     def defaultSysTestFilename(self):
         """Return the default system test XML record filename, based on
         properties of the systest (such as :attr:`.testName`)."""

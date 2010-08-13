@@ -30,11 +30,13 @@ class AnalyticTest(SysTest):
           in the :attr:`~uwa.systest.api.SysTest.testComponents` list.
         '''
 
+    fTestName = 'Analytic Solution compare'
     description = '''Runs a Model that has a defined analytic solution,
         and checks the outputted fields are within a given error tolerance
         of that analytic solution.'''
-
-    fTestName = 'Analytic Solution compare'
+    passMsg = "All fields were within required tolerance of analytic"\
+        " solution at end of run."
+    failMsg = "At least one Field not within tolerance of analytic soln."
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             defFieldTol=3e-2, fieldTols=None, 
@@ -70,24 +72,10 @@ class AnalyticTest(SysTest):
             # Check each fieldResult contains correct fields
             pass
 
-    def getStatus(self, resultsSet):
-        """See base class :meth:`~uwa.systest.api.SysTest.getStatus`."""
-        self.checkResultValid(resultsSet)
-        mResult = resultsSet[0]
-        fTests = self.testComponents[self.fTestName]
-        result = fTests.check(resultsSet)
-        if result:    
-            testStatus = UWA_PASS("All fields were within required"\
-                " tolerance of analytic solution at end of run." )
-        else:        
-            testStatus = UWA_FAIL("At least one Field not within"
-                " tolerance of analytic soln.")
-        # NB: should the ftest component now be able to do this?
-        # Or is it appropriate to control from here?
-        #for fRes in mResult.fieldResults:
-        #    fRes.plotOverTime(show=False, path=mResult.outputPath)
-        self.testStatus = testStatus
-        return testStatus
-        
+    # NB: Possible custom result plotting
+    # Or is it appropriate to control from here?
+    #for fRes in mResult.fieldResults:
+    #    fRes.plotOverTime(show=False, path=mResult.outputPath)
+
     def _writeXMLCustomSpec(self, specNode):
         pass

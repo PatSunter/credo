@@ -34,11 +34,13 @@ class ReferenceTest(SysTest):
           Standard name to use for this test's field comparison TestComponent
           in the :attr:`~uwa.systest.api.SysTest.testComponents` list.'''
 
+    fTestName = 'Reference Solution compare'
     description = '''Runs a Model for a set number of timesteps,
         then checks the specified fields match a previously-generated
         reference solution.'''
-
-    fTestName = 'Reference Solution compare'
+    passMsg = "All fields were within required tolerance of reference"\
+        " soln at end of run."
+    failMsg = "A Field was not within tolerance of reference soln."
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             fieldsToTest = ['VelocityField','PressureField'], runSteps=20,
@@ -104,20 +106,6 @@ class ReferenceTest(SysTest):
             # Check each fieldResult contains correct fields
             pass
 
-    def getStatus(self, resultsSet):
-        """See base class :meth:`~uwa.systest.api.SysTest.getStatus`."""
-        self.checkResultValid(resultsSet)
-        fTests = self.testComponents[self.fTestName]
-        result = fTests.check(resultsSet)
-        if result:
-            testStatus = UWA_PASS("All fields were within required"\
-                " tolerance of reference soln at end of run." )
-        else:
-            testStatus = UWA_FAIL("A Field was not within"\
-                " tolerance of reference soln.")
-        self.testStatus = testStatus
-        return testStatus
-        
     def _writeXMLCustomSpec(self, specNode):
         etree.SubElement(specNode, 'runSteps').text = str(self.runSteps)
         # fieldTols

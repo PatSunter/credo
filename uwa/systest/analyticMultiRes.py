@@ -28,6 +28,9 @@ class AnalyticMultiResTest(SysTest):
        '''
 
     description = '''Runs an existing test with multiple resolutions.'''
+    passMsg = "The solution compared to the analytic result"\
+		    " converged as expected with increasing resolution for all fields."
+    failMsg = "One of the fields failed to converge as expected."
 
     def __init__(self, inputFiles, outputPathBase, resSet, nproc=1,
             paramOverrides=None, solverOpts=None, nameSuffix=None):
@@ -70,20 +73,6 @@ class AnalyticMultiResTest(SysTest):
             # Check fieldresults exists, and is right length
             # Check each fieldResult contains correct fields
             pass
-
-    def getStatus(self, resultsSet):
-        """See base class :meth:`~uwa.systest.api.SysTest.getStatus`."""
-        self.checkResultValid(resultsSet)
-
-        testStatus = UWA_PASS("The solution compared to the analytic result"\
-		    " converged as expected with increasing resolution for all fields")
-        fConvChecker = self.testComponents['fieldConvChecker']
-        result = fConvChecker.check(resultsSet)
-        if result == False:
-            testStatus = UWA_FAIL("One of the fields failed to converge as"\
-                " expected")
-        self.testStatus = testStatus
-        return testStatus
 
     def _writeXMLCustomSpec(self, specNode):
         resSetNode = etree.SubElement(specNode, "resSet")

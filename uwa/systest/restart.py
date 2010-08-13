@@ -36,11 +36,14 @@ class RestartTest(SysTest):
           in the :attr:`~uwa.systest.api.SysTest.testComponents` list.  
         '''
 
+    fTestName = 'Restart compared with original'
     description = '''Runs a Model for a set number of timesteps,
         then restarts half-way, checking the standard fields are the
         same at the end for both the original and restart run.'''
-
-    fTestName = 'Restart compared with original'
+    passMsg = "All fields on restart were within required"\
+                " tolerance of full run at end."
+    failMsg = "At least one field wasn't within tolerance"\
+                " on restart run of original run."
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             fieldsToTest = ['VelocityField','PressureField'], fullRunSteps=20,
@@ -101,21 +104,6 @@ class RestartTest(SysTest):
             # Check each fieldResult contains correct fields
             pass
 
-    def getStatus(self, resultsSet):
-        """See base class :meth:`~uwa.systest.api.SysTest.getStatus`."""
-        self.checkResultValid(resultsSet)
-        fTests = self.testComponents[self.fTestName]
-        # We are only interested in checking the restart run
-        result = fTests.check([resultsSet[1]])
-        if result:
-            testStatus = UWA_PASS("All fields on restart were within required"\
-                " tolerance of full run at end." )
-        else:        
-            testStatus = UWA_FAIL("At least one field wasn't within tolerance"\
-                " on restart run of original run")
-        self.testStatus = testStatus
-        return testStatus
-        
     def _writeXMLCustomSpec(self, specNode):
         etree.SubElement(specNode, 'fullRunSteps').text = str(self.fullRunSteps)
         # fieldTols
