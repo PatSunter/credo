@@ -242,6 +242,7 @@ class ModelSuite:
             print "ModelRun description: \"%s\"" % (self.runDescrips[runI])
             print "Generating analysis XML:"
             modelRun.analysisXMLGen()
+
             print "Running the Model (saving results in %s):"\
                 % (modelRun.outputPath)
             customOpts = None
