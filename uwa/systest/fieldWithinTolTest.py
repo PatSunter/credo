@@ -121,7 +121,7 @@ class FieldWithinTolTest(TestComponent):
                     if numRuns > 1:
                         statusMsg += "For run %d out of %d: " % (runI, numRuns)
                     statusMsg += "Field comp '%s' error(s) of %s not within"\
-                        " tol %g of %s solution"\
+                        " tol %g of %s solution\n"\
                         % (fComp.name, fCompRes.dofErrors, fieldTol,
                         self.fComps.getCmpSrcString())
                     overallResult = False    
