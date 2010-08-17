@@ -8,6 +8,7 @@ from xml.etree import ElementTree as etree
 
 import uwa.io.stgxml
 from uwa.systest.api import *
+from uwa.modelrun import ModelRunError
 
 # Relevant to the XML Results. Designed to be compatible with the tags used
 #  by the Python unittest-xml-reporting package
@@ -53,10 +54,18 @@ class SysTestRunner:
         print "Writing pre-test info to XML"
         sysTest.writePreRunXML()
         mSuite.writeAllModelRunXMLs()
-        suiteResults = mSuite.runAll()
-        print "Checking test result:"
-        testResult = sysTest.getStatus(suiteResults)
-        mSuite.writeAllModelResultXMLs()
+        try:
+            suiteResults = mSuite.runAll()
+        except ModelRunError, mre:
+            suiteResults = None
+            testResult = sysTest.setErrorStatus(str(mre))
+        else:    
+            print "Checking test result:"
+            testResult = sysTest.getStatus(suiteResults)
+            # TODO: should we get the below to be run and we write model results
+            # even if there was an error?
+            mSuite.writeAllModelResultXMLs()
+
         print "Test result was %s" % testResult
         outFilePath = sysTest.updateXMLWithResult(suiteResults)
         testResult.setRecordFile(outFilePath)

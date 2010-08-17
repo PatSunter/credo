@@ -251,6 +251,13 @@ class SysTest:
     #  test components to do additional optional analysis, e.g. plotting
     #  of graphs.
 
+    def setErrorStatus(self, errorMsg):
+        """Utility function for if a model run fails as part of the test,
+        this function can be called to automatically set the test status."""
+        testStatus = UWA_ERROR(errorMsg)
+        self.testStatus = testStatus
+        return testStatus
+
     def defaultSysTestFilename(self):
         """Return the default system test XML record filename, based on
         properties of the systest (such as :attr:`.testName`)."""
@@ -299,7 +306,10 @@ class SysTest:
         baseNode, xmlDoc = self._getXMLBaseNodeFromFile(outputPath, filename)
         baseNode.attrib['status'] = str(self.testStatus)
         self._writeXMLResult(baseNode)
-        self._updateXMLTestComponentResults(baseNode, resultsSet)
+        if resultsSet:
+            # We only do the below if there are actual results to write - for
+            # an error run there may not be.
+            self._updateXMLTestComponentResults(baseNode, resultsSet)
         outFileName = self._writeXMLDocToFile(xmlDoc, outputPath, filename)
         return outFileName
 

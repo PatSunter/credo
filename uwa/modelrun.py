@@ -576,6 +576,38 @@ def generateResOpts(resTuple):
 
 # TODO: some of this functionality could be handled via strategy pattern - 
 # JobRunner (the MPI stuff)
+
+class ModelRunError(Exception):
+    """An Exception for when Models fail to run."""
+    def __init__(self, modelName, retCode, stdOutFilename, stdErrFilename):
+        self.modelName = modelName
+        self.retCode = retCode
+        self.stdOutFilename = stdOutFilename
+        self.stdErrFilename = stdErrFilename
+        self.tailLen = 20
+        stdOutFile = open(stdOutFilename, "r")
+        stdErrFile = open(stdErrFilename, "r")
+        self.stdErrMsg = stdErrFile.read()
+        # TODO: this is a bit inefficient and could be done with proper
+        # tail function using seek etc.
+        stdOutFileLines = stdOutFile.readlines()
+        total = len(stdOutFileLines)
+        start = 0
+        if total > self.tailLen: start = total - self.tailLen
+        self.stdOutFileTail = stdOutFileLines[start:]
+        stdOutFile.close()
+        stdErrFile.close()
+
+    def __str__(self):
+        return "Failed to run model '%s', ret code was %s\n"\
+            "Std out and error logs saved to files %s and %s, "\
+            "Std error msg was:\n%s\nLast %d lines of std out msg was:\n%s"\
+            % (self.modelName, self.retCode,
+                self.stdOutFilename, self.stdErrFilename, 
+                self.stdErrMsg, self.tailLen,
+                "".join(self.stdOutFileTail))
+
+
 def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
     """Run the specified modelRun, and return a 
     :class:`~uwa.modelresult.ModelResult` recording the results of the run.
@@ -645,23 +677,8 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
 
     # Check status of run (eg error status)
     if retcode != 0:
-        stdOutFile.seek(0)
-        stdErrFile.seek(0)
-        stdErrMsg = stdErrFile.read()
-        # TODO: this is a bit inefficient and could be done with proper
-        # tail function using seek etc.
-        tailLen = 20
-        stdOutFileLines = stdOutFile.readlines()
-        total = len(stdOutFileLines)
-        start = 0
-        if total > tailLen: start = total - tailLen
-        stdOutFileTail = stdOutFileLines[start:]
-        raise OSError("Failed to run model '%s', ret code was %s\n"\
-            "Std out and error logs saved to files %s and %s, "\
-            "Std error msg was:\n%s\nLast %d lines of std out msg was:\n%s"\
-            % (modelRun.name, retcode,
-                stdOutFilename, stdErrFilename, stdErrMsg, tailLen,
-                "".join(stdOutFileTail)))
+        raise ModelRunError(modelRun.name, retcode, stdOutFilename,
+            stdErrFilename)
     else:
         print "Model ran successfully (output saved to path %s, std out"\
             " & std error to %s." % (modelRun.outputPath, modelRun.logPath)
