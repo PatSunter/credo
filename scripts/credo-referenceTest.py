@@ -4,8 +4,8 @@ import getopt
 import sys
 import os
 
-#from uwa.modelrun import SuiteRunner
-from uwa.systest.reference import ReferenceTest
+#from credo.modelrun import SuiteRunner
+from credo.systest.reference import ReferenceTest
 
 # Temporary input processing
 opts, args = getopt.getopt(sys.argv[1:], "hs", ["help","setup"])

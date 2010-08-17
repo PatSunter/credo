@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys, getopt
-import uwa
+import credo
 
 import pdb
 
@@ -23,7 +23,7 @@ def main(argv):
     outputPath=""
     nproc=0
     #TODO: would be good to get these provided from a static function
-    # of uwa.modelRun ...
+    # of credo.modelRun ...
     assigned={'inputFile':False,'outputPath':False,'nproc':False}
     optional=[]
 
@@ -31,12 +31,12 @@ def main(argv):
         try:
             param, val = arg.split('=')
         except ValueError:
-            print "UWA ModelRun XML Writer: Error with provided" \
+            print "CREDO ModelRun XML Writer: Error with provided" \
                 " argument '%s', should be in the form param=value\n" % arg
             sys.exit(2)
 
         if val == "":
-            print "UWA ModelRun XML Writer: Error with provided"\
+            print "CREDO ModelRun XML Writer: Error with provided"\
                 " argument '%s', needs a value provided for the"
                 " parameter to be written\n" % param
             sys.exit(2)
@@ -55,7 +55,7 @@ def main(argv):
             # None currently
             pass
         else:
-            print "UWA ModelRun XML Writer: Error with provided argument '%s',"\
+            print "CREDO ModelRun XML Writer: Error with provided argument '%s',"\
                 " param '%s' is not in known list of model result parameters"\
                 % (arg,param)
             print "Parameters that need to be assigned are:"
@@ -66,13 +66,13 @@ def main(argv):
 
     for kw, val in assigned.iteritems():
         if val != True:
-            print "UWA ModelRun XML Writer: Error, necessary parameter"\
+            print "CREDO ModelRun XML Writer: Error, necessary parameter"\
                 " '%s' not specified.\n" % kw
             print "Parameters that need to be assigned are:"
             print assigned.keys()
             sys.exit(2)
 
-    mRun = uwa.ModelRun(modelName, inputFiles, outputPath, nproc)
+    mRun = credo.ModelRun(modelName, inputFiles, outputPath, nproc)
     mRun.writeModelRunXML()
 
 def usage():

@@ -4,10 +4,10 @@ import getopt
 import sys
 import os
 
-import uwa
-from uwa.modelrun import ModelRun, SimParams
-import uwa.analysis 
-from uwa.analysis.fields import FieldTest
+import credo
+from credo.modelrun import ModelRun, SimParams
+import credo.analysis 
+from credo.analysis.fields import FieldTest
 
 # This test will run a model for n timesteps, checkpointing half-way:- then
 #  re-start the model mid way through, and check the values at the end are
@@ -15,10 +15,10 @@ from uwa.analysis.fields import FieldTest
 
 #process input args
 
-#modelName, options = uwa.processInput(argv, argc)
+#modelName, options = credo.processInput(argv, argc)
 # Keep allowing options file for now in default scripts:- though for a 
  # custom script, user could easily write their own
-#uwa.processOptionsFile(options, "./options.dat")
+#credo.processOptionsFile(options, "./options.dat")
 
 # This is where we create the key data structure, the mRun.
  # It will be a key data structure storing info about the directories
@@ -46,11 +46,11 @@ mRun.simParams = SimParams(nsteps=runSteps, cpevery=runSteps/2, dumpevery=0)
 mRun.cpFields = standardFields
 
 mRun.writeInfoXML()
-uwa.prepareOutputLogDirs(mRun.outputPath, mRun.logPath)
+credo.prepareOutputLogDirs(mRun.outputPath, mRun.logPath)
 # This will run the model, and also save basic results (e.g. walltime)
 analysisXML = mRun.analysisXMLGen()
-results = uwa.modelrun.runModel(mRun)
-uwa.modelresult.writeModelResultsXML(results, path=mRun.outputPath)
+results = credo.modelrun.runModel(mRun)
+credo.modelresult.writeModelResultsXML(results, path=mRun.outputPath)
 
 print "Restart run:"
 mRun.name = modelName+"-restart"
@@ -70,18 +70,18 @@ for fieldName in standardFields:
 
 mRun.writeInfoXML()
 analysisXML = mRun.analysisXMLGen()
-uwa.prepareOutputLogDirs(mRun.outputPath, mRun.logPath)
+credo.prepareOutputLogDirs(mRun.outputPath, mRun.logPath)
 # This will run the model, and also save basic results (e.g. walltime)
-results = uwa.modelrun.runModel(mRun)
+results = credo.modelrun.runModel(mRun)
 
 print "Processing results"
 
 # TODO: This step necessary since currently convergence files saved
 # in directory of run may be better handled within the runModel
-uwa.moveConvergenceResults(os.getcwd(), mRun.outputPath)
+credo.moveConvergenceResults(os.getcwd(), mRun.outputPath)
 results.fieldResults = fTests.testConvergence(mRun.outputPath)
 
-uwa.modelresult.writeModelResultsXML(results, path=mRun.outputPath)
+credo.modelresult.writeModelResultsXML(results, path=mRun.outputPath)
 
 #Now do any required post-processing, depending on type of script
-uwa.cleanupOutputLogDirs(mRun.outputPath, mRun.logPath)
+credo.cleanupOutputLogDirs(mRun.outputPath, mRun.logPath)

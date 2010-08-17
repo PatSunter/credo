@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys, getopt
-import uwa
+import credo
 
 def main(argv):
 
@@ -25,7 +25,7 @@ def main(argv):
     walltime=0
     fResults=[]
     #TODO: would be good to get these provided from a static function
-    # of uwa.modelRun ...
+    # of credo.modelRun ...
     assigned={'walltime':False}
     optional=['FR']
 
@@ -33,12 +33,12 @@ def main(argv):
         try:
             param, val = arg.split('=')
         except ValueError:
-            print "UWA ModelResults XML Writer: Error with provided argument"\
+            print "CREDO ModelResults XML Writer: Error with provided argument"\
                 " '%s', should be in the form param=value\n" % arg
             sys.exit(2)
 
         if val == "":
-            print "UWA ModelResults XML Writer: Error with provided argument"\
+            print "CREDO ModelResults XML Writer: Error with provided argument"\
                 " '%s', needs a value provided for the parameter to be"\
                 " written\n" % param
             sys.exit(2)
@@ -52,15 +52,15 @@ def main(argv):
         elif param in optional:
             if param == 'FR':
                 fieldName, tol, error = val.split(',')
-                fResult = uwa.FieldResult(fieldName, float(tol), float(error))
+                fResult = credo.FieldResult(fieldName, float(tol), float(error))
                 if updateMode:
                     #Write the value straight away
-                    mrFile = uwa.defaultModelResultFilename(modelName)
-                    uwa.updateModelResultsXMLFieldInfo(mrFile, fResult)
+                    mrFile = credo.defaultModelResultFilename(modelName)
+                    credo.updateModelResultsXMLFieldInfo(mrFile, fResult)
                 else:
                     fResults.append(fResult)
         else:
-            print "UWA ModelResults XML Writer: Error with provided argument"\
+            print "CREDO ModelResults XML Writer: Error with provided argument"\
                 " '%s', param '%s' is not in known list of model result "\
                 " parameters" % (arg,param)
             print "Parameters that need to be assigned are:"
@@ -72,15 +72,15 @@ def main(argv):
     if not updateMode:
         for kw, val in assigned.iteritems():
             if val != True:
-                print "UWA ModelResults XML Writer: Error, necessary"\
+                print "CREDO ModelResults XML Writer: Error, necessary"\
                     " parameter '%s' not specified.\n" % kw
                 print "Parameters that need to be assigned are:"
                 print assigned.keys()
                 sys.exit(2)
 
-        mRes = uwa.ModelResult(modelName, walltime)
+        mRes = credo.ModelResult(modelName, walltime)
         mRes.fieldResults = fResults
-        uwa.writeModelResultsXML(mRes)
+        credo.writeModelResultsXML(mRes)
 
 def usage():
     print "Error in command line options passed to the XML writer script\n"

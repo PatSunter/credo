@@ -4,16 +4,16 @@ import getopt
 import sys
 import os
 
-import uwa
-from uwa.modelrun import ModelRun, SimParams
-from uwa.analysis.fields import FieldTest
+import credo
+from credo.modelrun import ModelRun, SimParams
+from credo.analysis.fields import FieldTest
 
 #process input args
 
-#modelName, options = uwa.processInput(argv, argc)
+#modelName, options = credo.processInput(argv, argc)
 # Keep allowing options file for now in default scripts:- though for a 
  # custom script, user could easily write their own
-#uwa.processOptionsFile(options, "./options.dat")
+#credo.processOptionsFile(options, "./options.dat")
 
 # This is where we create the key data structure, the mRun.
  # It will be a key data structure storing info about the directories
@@ -59,19 +59,19 @@ mRun.writeInfoXML()
 # appropriate number of timesteps etc.
 mRun.analysisXMLGen()
 
-uwa.prepareOutputLogDirs(mRun.outputPath, mRun.logPath)
+credo.prepareOutputLogDirs(mRun.outputPath, mRun.logPath)
 
 # This will run the model, and also save basic results (e.g. walltime)
-results = uwa.modelrun.runModel(mRun)
+results = credo.modelrun.runModel(mRun)
 
 if not createReference:
     # TODO: This step necessary since currently convergence files saved
     # in directory of run may be better handled within the runModel
-    uwa.moveConvergenceResults(os.getcwd(), mRun.outputPath)
+    credo.moveConvergenceResults(os.getcwd(), mRun.outputPath)
 
     results.fieldResults = fTests.testConvergence(outputPath)
 
-    uwa.modelresult.writeModelResultsXML(results, path=mRun.outputPath)
+    credo.modelresult.writeModelResultsXML(results, path=mRun.outputPath)
 
     #Now do any required post-processing, depending on type of script
-    uwa.cleanupOutputLogDirs(mRun.outputPath, mRun.logPath)
+    credo.cleanupOutputLogDirs(mRun.outputPath, mRun.logPath)
