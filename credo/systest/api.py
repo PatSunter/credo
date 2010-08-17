@@ -171,6 +171,11 @@ class SysTest:
        Solver options to be used for any models making up this test.
        See :attr:`credo.modelrun.ModelRun.solverOpts`
 
+    .. attribute:: resIndicesToTest
+    
+       If this is set to other than None, then only these indices will
+       be passed to TestComponents to check as part of the 
+       :attr:`~.getStatus` function.
     '''
 
     def __init__(self, inputFiles, outputPathBase,
@@ -196,6 +201,7 @@ class SysTest:
         # way to handle relative paths for sysTests and ModelRuns
         # -- PatrickSunter, 20 Jul 2010
         self.runPath = None
+        self.resIndicesToTest = None
 
     def setup(self):
         '''For the setup phase of tests.
@@ -213,6 +219,27 @@ class SysTest:
         the right number of model results, and model results have necessary
         analysis ops associated with them to allow aspects of test to
         evaluate properly."""
+
+    def setResIndicesToTest(self, resultIndices):
+        """Sets which result indices should be checked."""
+        for ii in resultIndices:
+            if type(ii) is not int:
+                raise TypeError("All result Indices must be integers.")
+            elif ii < 0:
+                raise ValueError("All result Indices must be positive.")
+        self.resIndicesToTest = resultIndices
+
+    def getResultsSubset(self, resultsSet):
+        if self.resIndicesToTest is None:
+            subSet = resultsSet
+        else:
+            subSet = []
+            for ii in self.resIndicesToTest:
+                if ii >= len(resultsSet):
+                    raise ValueError("Error, a result index to test is"\
+                        " greater than the number of results in the suite.")
+                subSet.append(resultsSet[ii])
+        return subSet
 
     def getStatus(self, resultsSet):
         """After a suite of runs created by :meth:".genSuite"
@@ -235,6 +262,9 @@ class SysTest:
                 " attributes of your SysTest class to use the defualt"\
                 " getStatus method.")
 
+        # In case the test is designed to only operate on a sub-set of 
+        #  the results, update here.
+        resultsSet = self.getResultsSubset(resultsSet)
         self.checkResultValid(resultsSet)
         allPassed = True
         for tComp in self.testComponents.itervalues():

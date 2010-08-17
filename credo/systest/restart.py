@@ -91,8 +91,10 @@ class RestartTest(SysTest):
         resRun.cpReadPath = self.initialOutputPath    
         fTests = self.testComponents[self.fTestName]
         fTests.attachOps(resRun)
-        mSuite.addRun(resRun, "Do the restart run and check results at end"\
-            " match initial.")
+        resRunI = mSuite.addRun(resRun, "Do the restart run and check results"\
+            " at end match initial.")
+        # Only test fields on the restart run
+        self.setResIndicesToTest([resRunI])
         return mSuite
 
     def checkResultValid(self, resultsSet):

@@ -155,13 +155,16 @@ class ModelSuite:
         :param modelRun: A :class:`~credo.modelrun.ModelRun` to be added.
         :keyword runDescrip: An (optional) string describing the run.
         :keyword runCustomOpts: (optional) string of any custom options
-          that should be passed through to StGermain, only for this run."""
+          that should be passed through to StGermain, only for this run.
+        :returns: the index of the newly added run in the modelRun list."""
         if not isinstance( modelRun, mrun.ModelRun ):
             raise TypeError("Error, given run not an instance of a"\
                 " ModelRun" % runI)
         self.runs.append(modelRun)
         self.runDescrips.append(runDescrip)
         self.runCustomOptSets.append(runCustomOpts)
+        # Return the index of the newly added run.
+        return len(self.runs) - 1
 
     def cleanAllOutputPaths(self):
         '''Remove all files in each model's output path. Useful to get rid of
