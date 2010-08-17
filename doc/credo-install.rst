@@ -198,24 +198,14 @@ stgUnderworld checkout with CREDO included was located at
 
 You might like to then save these lines to a config file for when you log in.
 
-Updating and sourcing the provided bash config file
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Updating and sourcing the provided bash config file in stgUnderworld
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Alternatively, a Bash script that does all the necessary exports once
 you specify one single path, has been included as *updatePathsCREDO-dev.sh*
-within the uwa-dev branch of the stgUnderworld repository.
+in the base directory of the stgUnderworld repository.
 
-So if you like, just modify the first line of this script so it points to the
-base of your stgUnderworld checkout, e.g. again assuming you're main checkout is
-at ~/AuScopeCodes/stgUnderworldE-credoDev, modify the first line so it reads::
-
-  export REPOSBASE=~/AuScopeCodes/stgUnderworldE-credoDev
-  export CREDO_DIR=$REPOSBASE
-  export PATH=$PATH:$REPOSBASE/credo/scripts/
-  export PYTHONPATH=$PYTHONPATH:$CREDO_DIR/credo 
-  export STG_BINDIR=$REPOSBASE/build/bin
-
-...and then just source this file into your environment each time you want to
+So you can just source this file into your environment each time you want to
 start a session and use CREDO::
 
   source updatePathsCREDO-dev.sh 
