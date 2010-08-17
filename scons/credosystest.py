@@ -3,26 +3,27 @@ import sys
 import py_compile
 from SCons.Script import *
 
-class ToolUWASysTestWarning(SCons.Warnings.Warning):
+class ToolCREDOSysTestWarning(SCons.Warnings.Warning):
     pass
 
-SCons.Warnings.enableWarningClass(ToolUWASysTestWarning)
+SCons.Warnings.enableWarningClass(ToolCREDOSysTestWarning)
 
 def generate(env, **kw):
-    # Extend the Python path, actual path, and Stg Vars, so uwa can be used.
+    # Extend the Python path, actual path, and Stg Vars, so credo can be used.
     # We need to update actual environment variables, not the SCons env,
     # so test scripts which are sub-programs can be executed.
-    # TODO: update this to be a build dir thing when UWA is installed properly.
+    # TODO: update this to be a build dir thing when CREDO
+    # is installed properly.
     # Set up paths etc for functions below
     stgBaseDir = os.path.abspath('.')
-    uwaPath = os.path.abspath('uwa')
-    sys.path.insert(0, uwaPath)
-    import uwa.systest.systestrunner
+    credoPath = os.path.abspath('credo')
+    sys.path.insert(0, credoPath)
+    import credo.systest.systestrunner
     os.environ['STG_BASEDIR'] = stgBaseDir
     # Set up the environment for sub-scripts
     env['ENV']['STG_BASEDIR'] = stgBaseDir
-    env.PrependENVPath('PATH', os.path.join(uwaPath, "scripts"))
-    env.PrependENVPath('PYTHONPATH', "%s" % uwaPath)
+    env.PrependENVPath('PATH', os.path.join(credoPath, "scripts"))
+    env.PrependENVPath('PYTHONPATH', "%s" % credoPath)
 
     testOutput = "./testLogs"
     Execute(Mkdir(testOutput))
@@ -84,13 +85,13 @@ SCons-Check Options:
            both the .py file, and the relevant project executable."""
         # On some Python/Scons implementations, need to re-add these things to the path.
         stgBaseDir = os.path.abspath('.')
-        uwaPath = os.path.abspath('uwa')
+        credoPath = os.path.abspath('credo')
         sys.path.insert(0, stgBaseDir)
-        sys.path.insert(0, uwaPath)
+        sys.path.insert(0, credoPath)
         xmlOutputDir = str(target[0])
         suiteFiles = map(str, source)
         suiteModNames = map(pathToPyModuleName, suiteFiles)
-        uwa.systest.systestrunner.runSuitesFromModules(suiteModNames,
+        credo.systest.systestrunner.runSuitesFromModules(suiteModNames,
             xmlOutputDir)
         return None
 
@@ -161,6 +162,6 @@ SCons-Check Options:
 
 
 def exists(env):
-    # Should probably have this search for the uwa
+    # Should probably have this search for the credo
     # libraries/source or something.
     return True        
