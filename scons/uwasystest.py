@@ -82,6 +82,11 @@ SCons-Check Options:
            as SCons File objects. Ideally would like some smarter target
            checking, perhaps if these were .pyc files that depended on 
            both the .py file, and the relevant project executable."""
+        # On some Python/Scons implementations, need to re-add these things to the path.
+        stgBaseDir = os.path.abspath('.')
+        uwaPath = os.path.abspath('uwa')
+        sys.path.insert(0, stgBaseDir)
+        sys.path.insert(0, uwaPath)
         xmlOutputDir = str(target[0])
         suiteFiles = map(str, source)
         suiteModNames = map(pathToPyModuleName, suiteFiles)
