@@ -1,11 +1,11 @@
 ***********************************
-UWA Utils API
+Utils API
 ***********************************
 
-:mod:`uwa.utils`
+:mod:`credo.utils`
 ==========================
 
-.. automodule:: uwa.utils
+.. automodule:: credo.utils
    :members:
    :undoc-members:
    :show-inheritance:

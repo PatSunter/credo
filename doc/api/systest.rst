@@ -1,25 +1,25 @@
 ***********************************
-UWA SysTest API
+SysTest API
 ***********************************
 
-.. automodule:: uwa.systest
+.. automodule:: credo.systest
 
-:mod:`uwa.systest.api`
+:mod:`credo.systest.api`
 ==========================
 
-.. inheritance-diagram:: uwa.systest.api
+.. inheritance-diagram:: credo.systest.api
 
-.. automodule:: uwa.systest.api
+.. automodule:: credo.systest.api
    :members:
    :undoc-members:
    :show-inheritance:
 
-:mod:`uwa.systest.systestrunner`
-================================
+:mod:`credo.systest.systestrunner`
+==================================
 
-.. inheritance-diagram:: uwa.systest.systestrunner
+.. inheritance-diagram:: credo.systest.systestrunner
 
-.. automodule:: uwa.systest.systestrunner
+.. automodule:: credo.systest.systestrunner
    :members:
    :undoc-members:
    :show-inheritance:
@@ -27,56 +27,56 @@ UWA SysTest API
 Core System Test class implementations
 ======================================
 
-UWA provides a set of core :class:`~uwa.systest.api.SysTest` instantations,
+CREDO provides a set of core :class:`~credo.systest.api.SysTest` instantations,
 which supercede the functionality of the pre-existing test scripts system,
 which are documented below.
 
 The user can always add to this list, by defining new SysTest classes to use.
 
 The most flexible of the set is the
-:class:`~uwa.systest.scibenchmark.SciBenchmarkTest`, but this requires the
+:class:`~credo.systest.scibenchmark.SciBenchmarkTest`, but this requires the
 most customisation (i.e. generally can't be created in the short-hand form
 of the other tests using the sysTestRunner's
-:meth:`~uwa.systest.systestrunner.SysTestRunner.addStdTest` method).
+:meth:`~credo.systest.systestrunner.SysTestRunner.addStdTest` method).
 
-.. inheritance-diagram:: uwa.systest.analytic
-    uwa.systest.restart uwa.systest.reference uwa.systest.analyticMultiRes
-    uwa.systest.scibenchmark
+.. inheritance-diagram:: credo.systest.analytic
+    credo.systest.restart credo.systest.reference credo.systest.analyticMultiRes
+    credo.systest.scibenchmark
 
-:mod:`uwa.systest.analytic`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:mod:`credo.systest.analytic`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: uwa.systest.analytic
+.. automodule:: credo.systest.analytic
    :members:
    :undoc-members:
    :show-inheritance:
 
-:mod:`uwa.systest.reference`
+:mod:`credo.systest.reference`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: credo.systest.reference
+   :members:
+   :undoc-members:
+
+:mod:`credo.systest.restart`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: uwa.systest.reference
+.. automodule:: credo.systest.restart
    :members:
    :undoc-members:
 
-:mod:`uwa.systest.restart`
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+:mod:`credo.systest.analyticMultiRes`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: uwa.systest.restart
-   :members:
-   :undoc-members:
-
-:mod:`uwa.systest.analyticMultiRes`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. automodule:: uwa.systest.analyticMultiRes
+.. automodule:: credo.systest.analyticMultiRes
    :members:
    :undoc-members:
    :show-inheritance:
 
-:mod:`uwa.systest.scibenchmark`
-===============================
+:mod:`credo.systest.scibenchmark`
+=================================
 
-.. automodule:: uwa.systest.scibenchmark
+.. automodule:: credo.systest.scibenchmark
    :members:
    :undoc-members:
    :show-inheritance:
@@ -84,29 +84,29 @@ of the other tests using the sysTestRunner's
 Core TestComponent implementations
 ==================================
 
-.. inheritance-diagram:: uwa.systest.fieldWithinTolTest
-    uwa.systest.fieldCvgWithScaleTest uwa.systest.outputWithinRangeTest
+.. inheritance-diagram:: credo.systest.fieldWithinTolTest
+    credo.systest.fieldCvgWithScaleTest credo.systest.outputWithinRangeTest
 
-:mod:`uwa.systest.fieldWithinTolTest`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:mod:`credo.systest.fieldWithinTolTest`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: uwa.systest.fieldWithinTolTest
+.. automodule:: credo.systest.fieldWithinTolTest
    :members:
    :undoc-members:
    :show-inheritance:
 
-:mod:`uwa.systest.fieldCvgWithScaleTest`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:mod:`credo.systest.fieldCvgWithScaleTest`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: uwa.systest.fieldCvgWithScaleTest
+.. automodule:: credo.systest.fieldCvgWithScaleTest
    :members:
    :undoc-members:
    :show-inheritance:
 
-:mod:`uwa.systest.outputWithinRangeTest`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:mod:`credo.systest.outputWithinRangeTest`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: uwa.systest.outputWithinRangeTest
+.. automodule:: credo.systest.outputWithinRangeTest
    :members:
    :undoc-members:
    :show-inheritance:

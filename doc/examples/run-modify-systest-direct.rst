@@ -1,13 +1,13 @@
-.. _uwa-examples-run-systest-direct:
+.. _credo-examples-run-systest-direct:
 
-Running UWA system test suites directly, and how to modify them
----------------------------------------------------------------
+Running CREDO system test suites directly, and how to modify them
+-----------------------------------------------------------------
 
-UWA provides the ability to run suites of system tests directly via the command
+CREDO provides the ability to run suites of system tests directly via the command
 line, similar to the interface of the previous SYS scripts system.
 
 To start off with, make sure the necessary environment variables necessary to
-run UWA have been set up, as detailed in :ref:`environment_setup`.
+run CREDO have been set up, as detailed in :ref:`environment_setup`.
 
 Then check out one of the test suite files in a SysTest directory within the
 code. We'll show in this example StgFEM/SysTest/RegressionTests/testAll-new.py:
@@ -15,7 +15,7 @@ code. We'll show in this example StgFEM/SysTest/RegressionTests/testAll-new.py:
 .. include:: ../../../StgFEM/SysTest/RegressionTests/testAll.py
    :literal:
 
-This Python script uses UWA to run several system tests, and process their
+This Python script uses CREDO to run several system tests, and process their
 results. To see it in practice, cd to that directory and then run the script
 (since it's set as executable, you don't need to invoke Python explicitly).
 You should see output starting with::
@@ -31,27 +31,27 @@ You should see output starting with::
 and finishing with::
 
   --------------------------------------------------------------------------------
-  UWA System Tests results summary, project 'StgFEM', suite 'RegressionTests':
+  CREDO System Tests results summary, project 'StgFEM', suite 'RegressionTests':
   Ran 33 system tests, with 33 passes, 0 fails, and 0 errors
   --------------------------------------------------------------------------------
 
 The following sections will explain how the file is set up, and show what the different sections do.
 
 
-Importing UWA and creating a testRunner object
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Importing CREDO and creating a testRunner object
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To explain the first few lines of the script, as shown below::
 
   #!/usr/bin/env python
 
-  from uwa.systest import *
+  from credo.systest import *
 
   testSuite = SysTestSuite("StgFEM", "RegressionTests")
 
 The first denotes the file as an executable script, using Python.
 
-The next imports everything directly under the uwa.systest package for use in
+The next imports everything directly under the credo.systest package for use in
 the rest of the Python script - this is a convenience since all the objects
 we'll need for the rest of the script, such as various types of System
 test classes, are contained here.
@@ -64,7 +64,7 @@ name of the suite.
 Note that the SysTestSuite object definition was one of those we imported
 with the preceding *import* statement.
 
-.. seealso:: The :class:`uwa.systest.api.SysTestSuite` class in the
+.. seealso:: The :class:`credo.systest.api.SysTestSuite` class in the
    API documentation.
 
 Adding system tests to the suite, and configuring them
@@ -121,7 +121,7 @@ a `Python Dictionary <http://docs.python.org/tutorial/datastructures.html#dictio
 
 Here, the paramOverrides option is a dictionary of overrides to perform exactly
 the same as described in the section for running a single analysis model through
-UWA below.
+CREDO below.
 
 With regard to the second option type, there are several options you can use to
 over-ride the default behaviour of system tests. 
@@ -130,10 +130,10 @@ principle is the same for all of these regarding SysTestRunner suites though:
 just specify the options as you would to the constructor of an individual
 SystemTest, and they will be passed through by the SysTestRunner.
 
-.. seealso:: The :class:`~uwa.systest.analytic.AnalyticTest`,
-   :class:`~uwa.systest.restart.RestartTest`,
-   :class:`~uwa.systest.reference.ReferenceTest`, and
-   :class:`~uwa.systest.analyticMultiRes.AnalyticMultiResTest` classes.
+.. seealso:: The :class:`~credo.systest.analytic.AnalyticTest`,
+   :class:`~credo.systest.restart.RestartTest`,
+   :class:`~credo.systest.reference.ReferenceTest`, and
+   :class:`~credo.systest.analyticMultiRes.AnalyticMultiResTest` classes.
 
 Creating a SysTestRunner to run all tests
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -148,10 +148,10 @@ Suites. The basic code to do this is::
 This will actually trigger the running of the tests, and produce a
 report of what happened both to the terminal, and in XML files.
 
-.. seealso:: The  :class:`~uwa.systest.systestrunner.SysTestRunner` class
+.. seealso:: The  :class:`~credo.systest.systestrunner.SysTestRunner` class
    documentation.
 
-.. _uwa-examples-run-systest-direct-importingReqs:
+.. _credo-examples-run-systest-direct-importingReqs:
 
 Requirements for importing test suites: Dual-mode, and the suite() function
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -169,8 +169,8 @@ testRunner at the end and run the tests. As a reminder, the actual code is::
 The reason for this approach is so that the test can be run directly from the
 command line to run the suite and report the results, *or* imported from another
 Python file when running and analysing a whole set of suites. This is known as a
-"dual-mode" script in Python, and is needed so that UWA test scripts can be run
-via SCons, as discussed in :ref:`uwa-examples-run-systest-scons`.
+"dual-mode" script in Python, and is needed so that CREDO test scripts can be run
+via SCons, as discussed in :ref:`credo-examples-run-systest-scons`.
 
 Generally those working on these scripts can just follow this pattern. 
 The 2 key aspects to keep in mind are:
@@ -193,18 +193,18 @@ scripts.
 
 To do this, the relevant scripts are as follows:
 
-=============================== =========================
-Script Name                     Sys Test class it invokes
-=============================== =========================
-uwa-referenceTest.py            ReferenceTest
-uwa-restartTest.py              RestartTest
-uwa-analyticTest.py             AnalyticTest
-uwa-analyticTestMultiResCvg.py  AnalyticMultiResTest
-=============================== =========================
+================================ =========================
+Script Name                      Sys Test class it invokes
+================================ =========================
+credo-referenceTest.py            ReferenceTest
+credo-restartTest.py              RestartTest
+credo-analyticTest.py             AnalyticTest
+credo-analyticTestMultiResCvg.py  AnalyticMultiResTest
+================================ =========================
 
 So for example, to run a RestartTest on the Multigrid.xml model, type::
 
-  uwa-restartTest.py Multigrid.xml
+  credo-restartTest.py Multigrid.xml
 
 ... which will run the test.
 

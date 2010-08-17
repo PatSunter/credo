@@ -1,4 +1,4 @@
-.. _uwa-pythonlinks:
+.. _credo-pythonlinks:
 
 **********************************************
 Links to useful Python info, such as tutorials
@@ -46,7 +46,7 @@ Python libraries of interest for scientific analysis
 ==========================================================================
 
 Regarding these libraries, there is potential for their future integration
-into the standard UWA toolbox - but for now users are free to download and
+into the standard CREDO toolbox - but for now users are free to download and
 experiment with them.
 
 * HDF5 analysis in Python: http://h5py.alfven.org/

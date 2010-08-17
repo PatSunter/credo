@@ -3,7 +3,7 @@
   <modelInputFiles>
     <inputFile>RayleighTaylorBenchmark.xml</inputFile>
   </modelInputFiles>
-  <outputPath>output/raytay-scibench-uwa-basic</outputPath>
+  <outputPath>output/raytay-scibench-credo-basic</outputPath>
   <jobParams>
     <nproc>1</nproc>
   </jobParams>

@@ -5,7 +5,7 @@ Doing run 1/1 (index 0), of name 'RayleighTaylorBenchmark-sciBenchmarkTest':
 ModelRun description: "Run the model needed for the benchmark."
 Generating analysis XML:
 Running the Model (saving results in output/RayleighTaylor-VanKekenBenchmark):
-Running model 'RayleighTaylorBenchmark-sciBenchmarkTest' with command 'mpirun -np 1 /home/psunter/AuScopeCodes/stgUnderworldE-uwaDev-work/build/bin/StGermain RayleighTaylorBenchmark.xml uwa-analysis.xml  --elementResI=128 --elementResJ=128 --maxTimeSteps=-1 --stopTime=250 > logFile.txt' ...
+Running model 'RayleighTaylorBenchmark-sciBenchmarkTest' with command 'mpirun -np 1 /home/psunter/AuScopeCodes/stgUnderworldE-credoDev-work/build/bin/StGermain RayleighTaylorBenchmark.xml credo-analysis.xml  --elementResI=128 --elementResJ=128 --maxTimeSteps=-1 --stopTime=250 > logFile.txt' ...
 Model ran successfully.
 Doing post-run tidyup:
 Checking test result:
@@ -13,6 +13,6 @@ Model output 'Vrms' value 0.00312004 within required range (0.0028,0.0032) for a
 Test result was Pass
 Saved test result to output/RayleighTaylor-VanKekenBenchmark/SysTest-RayleighTaylorBenchmark-sciBenchmarkTest.xml
 --------------------------------------------------------------------------------
-UWA System Tests results summary:
+CREDO System Tests results summary:
 Ran 1 system tests, with 1 passes, 0 fails, and 0 errors
 --------------------------------------------------------------------------------

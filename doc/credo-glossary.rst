@@ -1,4 +1,4 @@
-.. _uwa-glossary:
+.. _credo-glossary:
 
 *****************
 Glossary of Terms
@@ -13,7 +13,7 @@ Glossary of Terms
      their programs to complete a task.
 
    Benchmark
-     In the context of UWA, this means a test of a code's results/performance
+     In the context of CREDO, this means a test of a code's results/performance
      according to some metric, which has generally been published in the
      literature.
 
@@ -46,17 +46,17 @@ Glossary of Terms
      Underworld, and stored in an InputFiles sub-directory.
 
    Model Run
-     In the context of UWA, this means the specification of a :term:`Model` to
+     In the context of CREDO, this means the specification of a :term:`Model` to
      run, PLUS the metadata required for the run (e.g. over-rides of simulation
      parameters, processors to use, whether to run locally or over the grid,
-     etc). See the :mod:`uwa.modelrun` module.
+     etc). See the :mod:`credo.modelrun` module.
 
    Model Result
-     In the context of UWA, this refers to the "result" of a :term:`Model Run`.
+     In the context of CREDO, this refers to the "result" of a :term:`Model Run`.
      This includes all the data the model run produced, usually stored in an
      output directory (such as checkpoint files, and the FrequentOutput.dat
      summary), plus any 'meta-data' about how long the model took to run, how
-     much data was used, etc. See the :mod:`uwa.modelresult` module.
+     much data was used, etc. See the :mod:`credo.modelresult` module.
 
    System Test
      In the context of software, a test that the entire software system works as
