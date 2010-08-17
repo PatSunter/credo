@@ -1,4 +1,4 @@
-# UWAnalysis Unit test
+# CREDOnalysis Unit test
 
 import os
 import cPickle as pickle
@@ -8,8 +8,8 @@ import unittest
 
 from lxml import etree
 
-from uwa import modelresult as mres
-from uwa.modelresult import ModelResult, JobMetaInfo
+from credo import modelresult as mres
+from credo.modelresult import ModelResult, JobMetaInfo
 
 class ModelResultTestCase(unittest.TestCase):
 

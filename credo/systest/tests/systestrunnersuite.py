@@ -4,7 +4,7 @@ import shutil
 import tempfile
 import unittest
 
-from uwa.systest import SysTestRunner, SysTestSuite, UWA_PASS, UWA_FAIL, UWA_ERROR
+from credo.systest import SysTestRunner, SysTestSuite, CREDO_PASS, CREDO_FAIL, CREDO_ERROR
 from skeletonSysTest import SkeletonSysTest
 
 class SysTestRunnerTestCase(unittest.TestCase):
@@ -15,16 +15,16 @@ class SysTestRunnerTestCase(unittest.TestCase):
         self.inputFiles = [os.path.join("input","TempDiffusion.xml")]
         self.skelTest1 = SkeletonSysTest(self.inputFiles,
             "output/SkeletonTest1",
-            statusToReturn=UWA_PASS("testPass"), nproc=1)
+            statusToReturn=CREDO_PASS("testPass"), nproc=1)
         self.skelTest2 = SkeletonSysTest(self.inputFiles, 
             "output/SkeletonTest2",
-            statusToReturn=UWA_FAIL("testFail"), nproc=1)
+            statusToReturn=CREDO_FAIL("testFail"), nproc=1)
         self.skelTest3 = SkeletonSysTest(self.inputFiles,
             "output/SkeletonTest3",
-            statusToReturn=UWA_ERROR("testError"), nproc=1)
+            statusToReturn=CREDO_ERROR("testError"), nproc=1)
         self.skelTest4 = SkeletonSysTest(self.inputFiles,
             "output/SkeletonTest4",
-            statusToReturn=UWA_PASS("testPass2"), nproc=1)
+            statusToReturn=CREDO_PASS("testPass2"), nproc=1)
         for skelTest in [self.skelTest1, self.skelTest2, self.skelTest3,
                 self.skelTest4]:
             skelTest.runPath = os.path.abspath(os.getcwd())
@@ -35,9 +35,9 @@ class SysTestRunnerTestCase(unittest.TestCase):
 
     def test_runTest(self):
         testResult = self.stRunner.runTest(self.skelTest1)
-        self.assertEqual(testResult.statusStr, UWA_PASS.statusStr)
+        self.assertEqual(testResult.statusStr, CREDO_PASS.statusStr)
         testResult = self.stRunner.runTest(self.skelTest2)
-        self.assertEqual(testResult.statusStr, UWA_FAIL.statusStr)
+        self.assertEqual(testResult.statusStr, CREDO_FAIL.statusStr)
     
     def test_runSuite(self):
         skelSuite = SysTestSuite("StgFEM", "RegressionTests", 
@@ -45,8 +45,8 @@ class SysTestRunnerTestCase(unittest.TestCase):
         testResults = self.stRunner.runSuite(skelSuite, 
             outputSummaryDir="output/testRunSuite")
         self.assertEqual(len(testResults), 2)
-        self.assertEqual(testResults[0].statusStr, UWA_PASS.statusStr)
-        self.assertEqual(testResults[1].statusStr, UWA_FAIL.statusStr)
+        self.assertEqual(testResults[0].statusStr, CREDO_PASS.statusStr)
+        self.assertEqual(testResults[1].statusStr, CREDO_FAIL.statusStr)
 
     def test_runSuite_withSubs(self):
         skelSuite = SysTestSuite("StgFEM", "RegressionTests", 
@@ -57,9 +57,9 @@ class SysTestRunnerTestCase(unittest.TestCase):
         testResults = self.stRunner.runSuite(skelSuite,
             outputSummaryDir="output/testRunSuite_withSubs")
         self.assertEqual(len(testResults), 3)
-        self.assertEqual(testResults[0].statusStr, UWA_PASS.statusStr)
-        self.assertEqual(testResults[1].statusStr, UWA_FAIL.statusStr)
-        self.assertEqual(testResults[2].statusStr, UWA_ERROR.statusStr)
+        self.assertEqual(testResults[0].statusStr, CREDO_PASS.statusStr)
+        self.assertEqual(testResults[1].statusStr, CREDO_FAIL.statusStr)
+        self.assertEqual(testResults[2].statusStr, CREDO_ERROR.statusStr)
 
     def test_runSuite_subOnly(self):
         subSuite1 = SysTestSuite("StgFEM", "RegressionTests-sub1",
@@ -71,17 +71,17 @@ class SysTestRunnerTestCase(unittest.TestCase):
         testResults = self.stRunner.runSuite(masterSuite,
             outputSummaryDir="output/testRunSuite_subOnly")
         self.assertEqual(len(testResults), 4)
-        self.assertEqual(testResults[0].statusStr, UWA_PASS.statusStr)
-        self.assertEqual(testResults[1].statusStr, UWA_FAIL.statusStr)
-        self.assertEqual(testResults[2].statusStr, UWA_FAIL.statusStr)
-        self.assertEqual(testResults[3].statusStr, UWA_ERROR.statusStr)
+        self.assertEqual(testResults[0].statusStr, CREDO_PASS.statusStr)
+        self.assertEqual(testResults[1].statusStr, CREDO_FAIL.statusStr)
+        self.assertEqual(testResults[2].statusStr, CREDO_FAIL.statusStr)
+        self.assertEqual(testResults[3].statusStr, CREDO_ERROR.statusStr)
 
     def test_runTests(self):
         sysTests = [self.skelTest1, self.skelTest2]
         testResults = self.stRunner.runTests(sysTests)
         self.assertEqual(len(testResults), 2)
-        self.assertEqual(testResults[0].statusStr, UWA_PASS.statusStr)
-        self.assertEqual(testResults[1].statusStr, UWA_FAIL.statusStr)
+        self.assertEqual(testResults[0].statusStr, CREDO_PASS.statusStr)
+        self.assertEqual(testResults[1].statusStr, CREDO_FAIL.statusStr)
     
     def test_runSuites(self):
         suite1 = SysTestSuite("StgFEM", "RegressionTests", 

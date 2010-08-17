@@ -3,7 +3,7 @@ import tempfile
 import unittest
 import shutil
 
-from uwa.io import stgxml
+from credo.io import stgxml
 from xml.etree import ElementTree as etree
 
 class StgXMLTestCase(unittest.TestCase):

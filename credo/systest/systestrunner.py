@@ -6,15 +6,15 @@ import sys
 import inspect
 from xml.etree import ElementTree as etree
 
-import uwa.io.stgxml
-from uwa.systest.api import *
-from uwa.modelrun import ModelRunError
+import credo.io.stgxml
+from credo.systest.api import *
+from credo.modelrun import ModelRunError
 
 # Relevant to the XML Results. Designed to be compatible with the tags used
 #  by the Python unittest-xml-reporting package
 #  (http://pypi.python.org/pypi/unittest-xml-reporting), which are very 
 #  similar to those used by Java's Ant.
-XML_RESULT_TAG_BASENODE = 'UWA_SuiteResultSummary'
+XML_RESULT_TAG_BASENODE = 'CREDO_SuiteResultSummary'
 XML_RESULT_TAG_SUITE = 'testsuite'
 XML_RESULT_TAG_TESTCASE = 'testcase'
 
@@ -30,11 +30,11 @@ XML_TESTCASE_ATTR_STATUS = 'status'
 XML_TESTCASE_ATTR_RECORDFILE = 'recordfile'
 
 class SysTestRunner:
-    """Class that runs a set of :class:`~uwa.systest.api.SysTest`, usually
-    collected into :class:`~uwa.systest.api.SysTestSuite` collections.
+    """Class that runs a set of :class:`~credo.systest.api.SysTest`, usually
+    collected into :class:`~credo.systest.api.SysTestSuite` collections.
 
-    For examples of how to use, see the UWA documentation, especially
-    :ref:`uwa-examples-run-systest-direct`.
+    For examples of how to use, see the CREDO documentation, especially
+    :ref:`credo-examples-run-systest-direct`.
     """
 
     def __init__(self):
@@ -42,7 +42,7 @@ class SysTestRunner:
 
     def runTest(self, sysTest):
         """Run a given sysTest, and return the 
-        :class:`uwa.systest.api.SysTestResult` it produces.
+        :class:`credo.systest.api.SysTestResult` it produces.
         Will also write an XML record of the System test, and each ModelRun
         and ModelResult in the suite that made up the test."""
         # TODO A little hacky on the chdir - see api.py:183 comment
@@ -173,7 +173,7 @@ class SysTestRunner:
             os.makedirs(outputPath)
         outFilePath = os.path.join(outputPath, filename)
         outFile = open(outFilePath, 'w')
-        uwa.io.stgxml.writeXMLDoc(xmlDoc, outFile, prettyPrint)
+        credo.io.stgxml.writeXMLDoc(xmlDoc, outFile, prettyPrint)
         outFile.close()
         return outFilePath
 
@@ -181,7 +181,7 @@ class SysTestRunner:
         suiteNode = etree.Element(XML_RESULT_TAG_SUITE)
         suiteNode.attrib[XML_SUITE_ATTR_NAME] = suite.suiteName
         suiteNode.attrib[XML_SUITE_ATTR_PROJECT] = suite.projectName
-        #comment = etree.Comment("System tests run by UWA System.")
+        #comment = etree.Comment("System tests run by CREDO System.")
         #suiteNode.append( comment )
         return suiteNode
 
@@ -210,7 +210,7 @@ class SysTestRunner:
         appear in the results."""
         projOrder, projIndices = self._buildResultsProjectIndex(testSuites)
         suitesResults = zip(testSuites, resultsLists)
-        print "UWA System Tests summary for all project suites ran:"
+        print "CREDO System Tests summary for all project suites ran:"
         print "------"
         totalSumsDict = {"Pass":0, "Fail":0, "Error":0}
         for projName in projOrder:
@@ -236,7 +236,7 @@ class SysTestRunner:
         """Utility function to print a set of results in the order they
         were entered (not sub-categorised by project)."""
         print "-"*80
-        print "UWA System Tests summary for all project suites ran:"
+        print "CREDO System Tests summary for all project suites ran:"
         totalSumsDict = {"Pass":0, "Fail":0, "Error":0}
         for ii, suite in enumerate(testSuites):
             print "'%s', '%s': " % (suite.projectName, suite.suiteName),
@@ -271,7 +271,7 @@ class SysTestRunner:
     def printSuiteTotalsShortSummary(self, results, projName, suiteName):
         """Prints a short summary, useful for suites with sub-suites."""
         print "-"*80
-        print "UWA System Tests total for '%s' suite '%s' and sub-suites:"\
+        print "CREDO System Tests total for '%s' suite '%s' and sub-suites:"\
             % (projName, suiteName)
         sumsDict, failIndices, errorIndices = self.getResultsTotals(results)
         self._printResultsLine(sumsDict)
@@ -288,7 +288,7 @@ class SysTestRunner:
             headerDetail += ", project '%s'" % projName
         if suiteName is not None:
             headerDetail += ", suite '%s'" % suiteName
-        print "UWA System Tests results summary%s:" % headerDetail
+        print "CREDO System Tests results summary%s:" % headerDetail
         self.printResultsDetails(sysTests, results)
         print "-"*80
 
@@ -317,8 +317,8 @@ class SysTestRunner:
         errorIndices = []
         for resI, result in enumerate(results):
             sums[result.statusStr] += 1
-            if isinstance(result, UWA_FAIL): failIndices.append(resI)
-            if isinstance(result, UWA_ERROR): errorIndices.append(resI)
+            if isinstance(result, CREDO_FAIL): failIndices.append(resI)
+            if isinstance(result, CREDO_ERROR): errorIndices.append(resI)
         return sums, failIndices, errorIndices    
 
     def _printResultsLine(self, sumsDict):

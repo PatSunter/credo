@@ -2,10 +2,10 @@
 import os
 from xml.etree import ElementTree as etree
 
-from uwa.modelsuite import ModelSuite
-from uwa.modelrun import SimParams
-from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
-from uwa.systest.fieldWithinTolTest import FieldWithinTolTest
+from credo.modelsuite import ModelSuite
+from credo.modelrun import SimParams
+from credo.systest.api import SysTest, CREDO_PASS, CREDO_FAIL
+from credo.systest.fieldWithinTolTest import FieldWithinTolTest
 
 class RestartTest(SysTest):
     '''A Restart System test.
@@ -13,7 +13,7 @@ class RestartTest(SysTest):
        then restarts half-way through, and checks the same result is
        obtained. (Thus it's largely a regression test to ensure 
        checkpoint-restarting works for various types of models).
-       Uses a :class:`~uwa.systest.fieldWithinTolTest.FieldWithinTolTest`
+       Uses a :class:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest`
        test component to perform the check.
 
        Optional constructor keywords:
@@ -25,7 +25,7 @@ class RestartTest(SysTest):
        * defFieldTol: The default tolerance to be applied when comparing fields of
          interest between the restarted, and original solution.
          See also the FieldWithinTolTest's
-         :attr:`~uwa.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
+         :attr:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
        * fieldTols: a dictionary of tolerances to use when testing particular
          fields, rather than the default tolerance defined by 
          the defFieldTol argument.
@@ -33,7 +33,7 @@ class RestartTest(SysTest):
        .. attribute:: fTestName
 
           Standard name to use for this test's field comparison TestComponent
-          in the :attr:`~uwa.systest.api.SysTest.testComponents` list.  
+          in the :attr:`~credo.systest.api.SysTest.testComponents` list.  
         '''
 
     fTestName = 'Restart compared with original'
@@ -66,7 +66,7 @@ class RestartTest(SysTest):
             testTimestep=self.fullRunSteps)
 
     def genSuite(self):
-        """See base class :meth:`~uwa.systest.api.SysTest.genSuite`.
+        """See base class :meth:`~credo.systest.api.SysTest.genSuite`.
 
         For this test, will create a suite containing 2 model runs:
         one to initally run the requested Model and save the results,
@@ -96,7 +96,7 @@ class RestartTest(SysTest):
         return mSuite
 
     def checkResultValid(self, resultsSet):
-        """See base class :meth:`~uwa.systest.api.SysTest.checkResultValid`."""
+        """See base class :meth:`~credo.systest.api.SysTest.checkResultValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:

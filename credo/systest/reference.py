@@ -2,18 +2,18 @@
 import os
 from xml.etree import ElementTree as etree
 
-from uwa.modelsuite import ModelSuite
-from uwa.modelrun import SimParams
-import uwa.modelrun as modelrun
-from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL, getStdTestNameBasic
-from uwa.systest.fieldWithinTolTest import FieldWithinTolTest
+from credo.modelsuite import ModelSuite
+from credo.modelrun import SimParams
+import credo.modelrun as modelrun
+from credo.systest.api import SysTest, CREDO_PASS, CREDO_FAIL, getStdTestNameBasic
+from credo.systest.fieldWithinTolTest import FieldWithinTolTest
 
 class ReferenceTest(SysTest):
     '''A Reference System test.
        This case simply runs a given model for a set number of steps,
        then checks the resultant solution matches within a tolerance
        of a previously-generated reference solution. Uses a
-       :class:`~uwa.systest.fieldWithinTolTest.FieldWithinTolTest`
+       :class:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest`
        test component to perform the check.
 
        Optional constructor keywords:
@@ -24,7 +24,7 @@ class ReferenceTest(SysTest):
        * defFieldTol: The default tolerance to be applied when comparing fields of
          interest to the reference solution.
          See also the FieldWithinTolTest's
-         :attr:`~uwa.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
+         :attr:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
        * fieldTols: a dictionary of tolerances to use when testing particular
          fields, rather than the default tolerance as set in the defFieldTol
          argument.
@@ -32,7 +32,7 @@ class ReferenceTest(SysTest):
        .. attribute:: fTestName
 
           Standard name to use for this test's field comparison TestComponent
-          in the :attr:`~uwa.systest.api.SysTest.testComponents` list.'''
+          in the :attr:`~credo.systest.api.SysTest.testComponents` list.'''
 
     fTestName = 'Reference Solution compare'
     description = '''Runs a Model for a set number of timesteps,
@@ -75,13 +75,13 @@ class ReferenceTest(SysTest):
         result = modelrun.runModel(mRun)
         # It's conceivable this could be useful, if we store results about
         # e.g. solver solution times etc.
-        import uwa.modelresult as modelresult
+        import credo.modelresult as modelresult
         modelresult.writeModelResultsXML(result, path=mRun.outputPath)
 
     # TODO: a pre-check phase - check the reference dir exists?
 
     def genSuite(self):
-        """See base class :meth:`~uwa.systest.api.SysTest.genSuite`.
+        """See base class :meth:`~credo.systest.api.SysTest.genSuite`.
 
         For this test, just a single model run is needed, to run
         the model and compare against the reference solution."""
@@ -98,7 +98,7 @@ class ReferenceTest(SysTest):
         return mSuite
 
     def checkResultValid(self, resultsSet):
-        """See base class :meth:`~uwa.systest.api.SysTest.checkResultValid`."""
+        """See base class :meth:`~credo.systest.api.SysTest.checkResultValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:

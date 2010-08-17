@@ -20,7 +20,7 @@ def linreg(X, Y):
     http://www.answermysearches.com/how-to-do-a-simple-linear-regression-in-python/124/)
     Useful for field analysis, e.g. when applied to a list of length scales
     & field errors, to calculate convergence info, such as
-    :func:`uwa.analysis.fields.calcFieldCvgWithScale`.
+    :func:`credo.analysis.fields.calcFieldCvgWithScale`.
     """
     if len(X) != len(Y):  raise ValueError, 'unequal length'
     N = len(X)

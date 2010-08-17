@@ -1,4 +1,4 @@
-# UWAnalysis Unit test
+# CREDOnalysis Unit test
 
 import os
 import cPickle as pickle
@@ -6,7 +6,7 @@ import shutil
 import tempfile
 import unittest
 
-import uwa.analysis
+import credo.analysis
 
 class AnalysisTestCase(unittest.TestCase):
 

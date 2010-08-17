@@ -10,7 +10,7 @@ representative of an element in an open Stg XML document.
 import os
 from subprocess import *
 from xml.etree import ElementTree as etree
-import uwa
+import credo
 
 STG_ROOT_TAG = 'StGermainData'
 STG_NS = 'http://www.vpac.org/StGermain/XML_IO_Handler/Jun2003'
@@ -517,7 +517,7 @@ def writeStgDataDocToFile(xmlDoc, filename):
 def createFlattenedXML(inputFiles, cmdLineOverrides=""):
     '''Flatten a list of provided XML files and optionally also
     cmdLineOverrides (string), using the StGermain FlattenXML tool'''
-    flattenExe=uwa.io.stgpath.getVerifyStgExePath('FlattenXML')
+    flattenExe=credo.io.stgpath.getVerifyStgExePath('FlattenXML')
 
     try:
         p = Popen([flattenExe]+inputFiles+cmdLineOverrides.split(), stdout=PIPE, stderr=PIPE)

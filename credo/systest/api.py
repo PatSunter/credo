@@ -1,4 +1,4 @@
-"""Core API of the :mod:`uwa.systest` module.
+"""Core API of the :mod:`credo.systest` module.
 
 This defines the two key classes of the model, :class:`.SysTest` and 
 :class:`.TestComponent`, from which actual examples of System tests
@@ -8,12 +8,12 @@ or Test components need to inherit.
 import os
 import inspect
 from xml.etree import ElementTree as etree
-import uwa.modelrun as mrun
-import uwa.io.stgxml
-import uwa.io.stgpath
+import credo.modelrun as mrun
+import credo.io.stgxml
+import credo.io.stgpath
 
 class SysTestResult:
-    """Class to represent an UWA system test result.
+    """Class to represent an CREDO system test result.
 
     .. attribute:: detailMsg
 
@@ -47,22 +47,22 @@ class SysTestResult:
         return self._absRecordFile
 
 
-class UWA_PASS(SysTestResult):
-    '''Simple class to represent an UWA pass'''
+class CREDO_PASS(SysTestResult):
+    '''Simple class to represent an CREDO pass'''
     statusStr = 'Pass'
     def __init__(self, passMsg):
         assert type(passMsg) == str
         self.detailMsg = passMsg
 
-class UWA_FAIL(SysTestResult):
-    '''Simple class to represent an UWA failure'''
+class CREDO_FAIL(SysTestResult):
+    '''Simple class to represent an CREDO failure'''
     statusStr = 'Fail'
     def __init__(self, failMsg):
         assert type(failMsg) == str
         self.detailMsg = failMsg
         
-class UWA_ERROR(SysTestResult):
-    '''Simple class to represent an UWA error'''
+class CREDO_ERROR(SysTestResult):
+    '''Simple class to represent an CREDO error'''
     statusStr = 'Error'
     def __init__(self, errorMsg):
         assert type(errorMsg) == str
@@ -108,15 +108,15 @@ def getStdTestName(testTypeStr, inputFiles, nproc, paramOverrides,
 
 
 class SysTest:
-    '''A class for managing SysTests in UWA. This is an abstract base
+    '''A class for managing SysTests in CREDO. This is an abstract base
     class: you must sub-class it to create actual system test types.
 
     The SysTest is designed to interact with the 
-    :class:`~uwa.systest.systestrunner.SysTestRunner` class, primarily by
-    creating a :class:`~uwa.modelsuite.ModelSuite` on demand to run a set
+    :class:`~credo.systest.systestrunner.SysTestRunner` class, primarily by
+    creating a :class:`~credo.modelsuite.ModelSuite` on demand to run a set
     of ModelRuns required to do the test. It will then do a check that
     the results pass an expected metric:- generally by applying one or more
-    :class:`~uwa.systest.api.TestComponent` classes.
+    :class:`~credo.systest.api.TestComponent` classes.
     
     Constructor keywords not in member attribute list:
     
@@ -157,19 +157,19 @@ class SysTest:
     .. attribute:: nproc
 
        Number of processors to be used for the test. See 
-       :attr:`uwa.modelrun.ModelRun.nproc`.
+       :attr:`credo.modelrun.ModelRun.nproc`.
 
     .. attribute:: paramOverrides
 
        Any model parameter overrides to be passed to ModelRuns performed
        as part of running the test - see
-       :attr:`uwa.modelrun.ModelRun.paramOverrides`. Thus allow 
+       :attr:`credo.modelrun.ModelRun.paramOverrides`. Thus allow 
        customisation of the test properties.
 
     .. attribute:: solverOpts
 
        Solver options to be used for any models making up this test.
-       See :attr:`uwa.modelrun.ModelRun.solverOpts`
+       See :attr:`credo.modelrun.ModelRun.solverOpts`
 
     '''
 
@@ -183,7 +183,7 @@ class SysTest:
         self.inputFiles = inputFiles
         self.testName = getStdTestName(testType+"Test", inputFiles,
             nproc, paramOverrides, solverOpts, nameSuffix)
-        uwa.io.stgpath.checkAllXMLInputFilesExist(self.inputFiles)
+        credo.io.stgpath.checkAllXMLInputFilesExist(self.inputFiles)
         self.outputPathBase = outputPathBase
         self.testStatus = None
         self.testComponents = {}
@@ -204,7 +204,7 @@ class SysTest:
         pass
 
     def genSuite(self):
-        """Virtual method: must return a :class:`uwa.modelsuite.ModelSuite`
+        """Virtual method: must return a :class:`credo.modelsuite.ModelSuite`
         containing all models that need to be run to perform the test."""
         raise NotImplementedError("Error, base class")
 
@@ -217,7 +217,7 @@ class SysTest:
     def getStatus(self, resultsSet):
         """After a suite of runs created by :meth:".genSuite"
         has been run, when this method is passed the results of the suite
-        (as a list of :class:`uwa.modelresult.ModelResult`), it must decide
+        (as a list of :class:`credo.modelresult.ModelResult`), it must decide
         and return the status of the test (as a :class:`.SysTestResult`).
 
         It also needs to save this status to :meth:`.testStatus`.
@@ -241,9 +241,9 @@ class SysTest:
             result = tComp.check(resultsSet)
             if not result:
                 allPassed = False
-                testStatus = UWA_FAIL(self.failMsg)
+                testStatus = CREDO_FAIL(self.failMsg)
         if allPassed:
-            testStatus = UWA_PASS(self.passMsg)
+            testStatus = CREDO_PASS(self.passMsg)
         self.testStatus = testStatus
         return testStatus
     
@@ -254,7 +254,7 @@ class SysTest:
     def setErrorStatus(self, errorMsg):
         """Utility function for if a model run fails as part of the test,
         this function can be called to automatically set the test status."""
-        testStatus = UWA_ERROR(errorMsg)
+        testStatus = CREDO_ERROR(errorMsg)
         self.testStatus = testStatus
         return testStatus
 
@@ -264,7 +264,7 @@ class SysTest:
         return 'SysTest-'+self.testName+'.xml'
 
     def _createDefaultModelRun(self, modelName, outputPath):
-        """Create and return a :class:`uwa.modelrun.ModelRun` with the
+        """Create and return a :class:`credo.modelrun.ModelRun` with the
         default options as specified for this System Test.
         (Thus is a useful helper function for sub-classes, so they can
         use this and not keep up to date with changes in
@@ -295,7 +295,7 @@ class SysTest:
         
     def updateXMLWithResult(self, resultsSet, outputPath="", filename="", prettyPrint=True):
         """Given resultsSet, a set of model results (list of 
-        :class:`~uwa.modelresult.ModelResult`), updates a Sys Test XML with
+        :class:`~credo.modelresult.ModelResult`), updates a Sys Test XML with
         the results of the test.
         If the XML file has the standard name, as defined by
         :meth:`.defaultSysTestFilename`, then it should be found automatically.
@@ -338,7 +338,7 @@ class SysTest:
             os.makedirs(outputPath)
         outFilePath = os.path.join(outputPath, filename)
         outFile = open(outFilePath, 'w')
-        uwa.io.stgxml.writeXMLDoc(xmlDoc, outFile, prettyPrint)
+        credo.io.stgxml.writeXMLDoc(xmlDoc, outFile, prettyPrint)
         outFile.close()
         return outFilePath
 
@@ -419,10 +419,10 @@ class SysTest:
 
 
 class SysTestSuite:
-    """Class that aggregates  a set of :class:`~uwa.systest.api.SysTest`.
+    """Class that aggregates  a set of :class:`~credo.systest.api.SysTest`.
 
-    For examples of how to use, see the UWA documentation, especially
-    :ref:`uwa-examples-run-systest-direct`.
+    For examples of how to use, see the CREDO documentation, especially
+    :ref:`credo-examples-run-systest-direct`.
 
     TODO: document projectName and suiteName and nproc
 
@@ -462,10 +462,10 @@ class SysTestSuite:
         """Instantiate and add a "standard" system test type to the list
         of System tests to be run. (The "standard" refers to the user needing
         to have access to the module containing the system test type to be
-        added, usually from a `from uwa.systest import *` statement.
+        added, usually from a `from credo.systest import *` statement.
 
         :param testClass: Python class of the System test to be added. This
-          needs to be a sub-class of :class:`~uwa.systest.api.SysTest`.
+          needs to be a sub-class of :class:`~credo.systest.api.SysTest`.
         :param inputFiles: model input files to be passed through to the 
           System test when instantiated.
         :param `**testOpts`: any other keyword arguments the user wishes to
@@ -474,12 +474,12 @@ class SysTestSuite:
 
         if not inspect.isclass(testClass):
             raise TypeError("The testClass argument must be a type that's"\
-                " a subclass of the UWA SysTest type. Arg passed in, '%s',"\
+                " a subclass of the CREDO SysTest type. Arg passed in, '%s',"\
                 " of type '%s', is not a Python Class." \
                 % (testClass, type(testClass)))
         if not issubclass(testClass, SysTest):
             raise TypeError("The testClass argument must be a type that's"\
-                " a subclass of the UWA SysTest type. Type passed in, '%s',"\
+                " a subclass of the CREDO SysTest type. Type passed in, '%s',"\
                 " not a subclass of SysTest." \
                 % (testClass))
         callingFile = inspect.stack()[1][1]
@@ -487,8 +487,8 @@ class SysTestSuite:
         # If just given a single input file as a string, convert
         #  to a list (containing that single file).
         if isinstance(inputFiles, str): inputFiles = [inputFiles]
-        uwa.io.stgpath.convertLocalXMLFilesToAbsPaths(inputFiles, callingPath)
-        uwa.io.stgpath.checkAllXMLInputFilesExist(inputFiles)
+        credo.io.stgpath.convertLocalXMLFilesToAbsPaths(inputFiles, callingPath)
+        credo.io.stgpath.checkAllXMLInputFilesExist(inputFiles)
         if 'nproc' not in testOpts:
             testOpts['nproc']=self.nproc
         outputPath = self._getStdOutputPath(testClass, inputFiles, testOpts)
@@ -540,7 +540,7 @@ class SysTestSuite:
         
 
 class TestComponent:
-    '''A class for TestComponents that make up an UWA System test/benchmark.
+    '''A class for TestComponents that make up an CREDO System test/benchmark.
     Generally they will form part a list contained by a 
     :class:`.SysTest`.
 
@@ -561,10 +561,10 @@ class TestComponent:
         self.tcType = tcType
 
     def attachOps(self, modelRun):
-        '''Provided a modelRun (:class:`uwa.modelrun.ModelRun`)
+        '''Provided a modelRun (:class:`credo.modelrun.ModelRun`)
         attaches any necessary analysis operations
         to that run in order to produce the results needed for the test.
-        (see :attr:`uwa.modelrun.ModelRun.analysis`).'''
+        (see :attr:`credo.modelrun.ModelRun.analysis`).'''
         raise NotImplementedError("Abstract base class.")
 
     def check(self, resultsSet):

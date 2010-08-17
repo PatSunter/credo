@@ -1,31 +1,31 @@
 """This module allows the running of a whole suite of related 
-:class:`~uwa.modelrun.ModelRun` s, and managing and analysing their results
+:class:`~credo.modelrun.ModelRun` s, and managing and analysing their results
 as a consistent set.
 
 The key class in this module is the :class:`.ModelSuite`.
 
-For example usage, see the UWA documentation Examples section,
-:ref:`uwa-examples`, e.g. :ref:`uwa-examples-raytay-run-suite`.
+For example usage, see the CREDO documentation Examples section,
+:ref:`credo-examples`, e.g. :ref:`credo-examples-raytay-run-suite`.
 
 This class also performs a key role in the System tests provided in the
-:mod:`uwa.systest` module.
+:mod:`credo.systest` module.
 """
 
 import copy
 import os, glob
 import itertools
 
-import uwa
-from uwa import modelrun as mrun
-from uwa import modelresult as mres
+import credo
+from credo import modelrun as mrun
+from credo import modelresult as mres
 
 # The below is for Python 2.5 compatibility
 try:
     import itertools
     productCalc = itertools.product
 except AttributeError:
-    import uwa.utils
-    productCalc = uwa.utils.productCalc
+    import credo.utils
+    productCalc = credo.utils.productCalc
 
 class StgXMLVariant:
     """A class that can be added to a :class:`.ModelSuite` to help 
@@ -56,13 +56,13 @@ class StgXMLVariant:
     
     def applyToModel(self, modelRun, ii):
         """Apply the ii-th value in the attr:`.paramRange` to a particular
-        :class:`~uwa.modelrun.ModelRun`."""
+        :class:`~credo.modelrun.ModelRun`."""
         modelRun.paramOverrides[self.paramPath] = self.paramRange[ii]
 
     def applyToModelGenerator(self, modelRun):
         """Creates a Python Generator for applying parameters to
         Apply the ii-th value in the attr:`.paramRange` to a particular
-        :class:`~uwa.modelrun.ModelRun`."""
+        :class:`~credo.modelrun.ModelRun`."""
         for paramVal in self.paramRange:
             modelRun.paramOverrides[self.paramPath] = paramVal
             yield modelRun
@@ -84,10 +84,10 @@ class ModelSuite:
     The two main ways of using this class are:
 
     * Creating a :class:`.ModelSuite`, and then adding 
-      :class:`~uwa.modelrun.ModelRun` s to the suite using
+      :class:`~credo.modelrun.ModelRun` s to the suite using
       the :meth:`.addRun` method.
     * Creating a :class:`.ModelSuite`, and providing a
-      :class:`~uwa.modelrun.ModelRun` as a template, then adding 
+      :class:`~credo.modelrun.ModelRun` as a template, then adding 
       :class:`.StgXMLVariant` s to define what sort of parameter
       sweep should be performed. In this case, :meth:`.generateRuns()`
       needs to be called after all variants have been added.
@@ -98,7 +98,7 @@ class ModelSuite:
 
     .. attribute:: runs
 
-       A list of :class:`~uwa.modelrun.ModelRun` s to be run as part of the
+       A list of :class:`~credo.modelrun.ModelRun` s to be run as part of the
        suite. See :meth:`.generateRuns` and :meth:`.addRun`.
 
     .. attribute:: runDescrips
@@ -114,7 +114,7 @@ class ModelSuite:
     .. attribute:: resultsList
 
        Initially `None`, after the suite has been run (using :meth:`.runAll`),
-       saves a reference to all :class:`~uwa.modelresult.ModelResult` s
+       saves a reference to all :class:`~credo.modelresult.ModelResult` s
        generated.
 
     .. attribute:: subOutputPathGenFunc
@@ -124,7 +124,7 @@ class ModelSuite:
 
     .. attribute:: templateMRun
 
-       (Optional) setting this to an :class:`~uwa.modelresult.ModelRun`
+       (Optional) setting this to an :class:`~credo.modelresult.ModelRun`
        means this run can be used as a "template" to add variants to, 
        and create a parameter sweep over this run.
 
@@ -152,7 +152,7 @@ class ModelSuite:
     def addRun(self, modelRun, runDescrip=None, runCustomOpts=None):
         """Add a model run to the list of those to be run.
 
-        :param modelRun: A :class:`~uwa.modelrun.ModelRun` to be added.
+        :param modelRun: A :class:`~credo.modelrun.ModelRun` to be added.
         :keyword runDescrip: An (optional) string describing the run.
         :keyword runCustomOpts: (optional) string of any custom options
           that should be passed through to StGermain, only for this run."""

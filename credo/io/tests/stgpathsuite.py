@@ -4,7 +4,7 @@ import unittest
 import shutil
 import glob
 
-from uwa.io import stgpath
+from credo.io import stgpath
 from xml.etree import ElementTree as etree
 
 class StgPathTestCase(unittest.TestCase):

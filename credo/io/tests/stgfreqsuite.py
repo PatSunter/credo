@@ -3,7 +3,7 @@ import shutil
 import tempfile
 import unittest
 
-from uwa.io.stgfreq import FreqOutput
+from credo.io.stgfreq import FreqOutput
 
 class StgFreqTestCase(unittest.TestCase):
     def setUp(self):

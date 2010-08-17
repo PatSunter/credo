@@ -1,8 +1,8 @@
 from xml.etree import ElementTree as etree
 
-from uwa.systest.api import TestComponent, UWA_PASS, UWA_FAIL
-from uwa.io import stgcvg
-import uwa.analysis.fields as fields
+from credo.systest.api import TestComponent, CREDO_PASS, CREDO_FAIL
+from credo.io import stgcvg
+import credo.analysis.fields as fields
 
 # The criteria of convergence: first is cvg rate, second is correlation
 defFieldScaleCvgCriterions = {
@@ -21,7 +21,7 @@ def testAllCvgWithScale(lenScales, fieldErrorData, fieldCvgCriterions):
     the fields met their required convergence criterions.
     
     The first two arguments can be created by running
-    :func:`~uwa.analysis.fields.getFieldScaleCvgData_SingleCvgFile`
+    :func:`~credo.analysis.fields.getFieldScaleCvgData_SingleCvgFile`
     on a path containing a single cvg file."""
     overallResult = True
     for fieldName, dofErrors in fieldErrorData.iteritems():
@@ -41,7 +41,7 @@ def printCvgResult(fieldName, fieldConvResults):
 
 def testCvgWithScale(fieldName, fieldConvResults, fieldCvgCriterion):
     '''Tests that for a given field, given a list of fieldConvResults 
-    (See :func:`uwa.analysis.fields.calcFieldCvgWithScale`)
+    (See :func:`credo.analysis.fields.calcFieldCvgWithScale`)
     - that they converge according to the given fieldCvgCriterion.
     
     :returns: result of test (Bool)'''
@@ -101,13 +101,13 @@ class FieldCvgWithScaleTest(TestComponent):
     """Checks whether, for a particular set of fields, the error
     between each field and an (analytic or reference) solution
     reduces with increasing resolution at a required rate. 
-    Thus similar to :class:`~uwa.systest.fieldWithinTolTest.FieldWithinTolTest`,
+    Thus similar to :class:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest`,
     except tests accuracy of solution with increasing resolution.
 
     This relies largely on functionality of:
 
-    * :mod:`uwa.analysis.fields` to specify the comparison operations
-    * :mod:`uwa.io.stgcvg` to analyse the "convergence" files containing
+    * :mod:`credo.analysis.fields` to specify the comparison operations
+    * :mod:`credo.io.stgcvg` to analyse the "convergence" files containing
       comparison information produced by these operations.
     
     .. attribute:: fieldsToTest 
@@ -121,7 +121,7 @@ class FieldCvgWithScaleTest(TestComponent):
 
        List of Convergence criterions to be used when checking the fields.
        Currently required to be in the form used by the convernce checking 
-       :func:`uwa.analysis.fields.calcFieldCvgWithScale`, which requires 
+       :func:`credo.analysis.fields.calcFieldCvgWithScale`, which requires 
        tuples of the form (cvg_rate, correlation).
 
        .. note:: if this list doesn't contain a cvg criterion for a field
@@ -133,11 +133,11 @@ class FieldCvgWithScaleTest(TestComponent):
 
        Function to use to calculate convergence of errors of a group
        of runs - currently uses 
-       :func:`uwa.analysis.fields.calcFieldCvgWithScale` by default.
+       :func:`credo.analysis.fields.calcFieldCvgWithScale` by default.
     
     .. attribute:: fComps
 
-        A :class:`uwa.analysis.fields.FieldComparisonList` used as an
+        A :class:`credo.analysis.fields.FieldComparisonList` used as an
         operator to attach to ModelRuns to be tested, and do the actual
         comparison between fields.
     
@@ -160,7 +160,7 @@ class FieldCvgWithScaleTest(TestComponent):
        Initially {}, after the test is completed will store a dictionary
        mapping each field name to a tuple containing information on
        actual convergence rate. See the return value of 
-       :func:`uwa.analysis.fields.calcFieldCvgWithScale` for more.
+       :func:`credo.analysis.fields.calcFieldCvgWithScale` for more.
 
     """  
 
@@ -182,7 +182,7 @@ class FieldCvgWithScaleTest(TestComponent):
 
     def attachOps(self, modelRun):
         """Implements base class
-        :meth:`uwa.systest.api.TestComponent.attachOps`."""
+        :meth:`credo.systest.api.TestComponent.attachOps`."""
         self.fComps = fields.FieldComparisonList()
         if self.fieldsToTest == None:
             self.fComps.readFromStgXML(modelRun.modelInputFiles)
@@ -193,7 +193,7 @@ class FieldCvgWithScaleTest(TestComponent):
 
     def check(self, resultsSet):
         """Implements base class
-        :meth:`uwa.systest.api.TestComponent.check`.
+        :meth:`credo.systest.api.TestComponent.check`.
         
         As well as performing check, will save relevant into to attributes
         :attr:`.fErrorsByRun`, :attr:`.fCvgMeetsReq`, :attr:`.fCvgResults`."""
@@ -224,13 +224,13 @@ class FieldCvgWithScaleTest(TestComponent):
             statusMsg = "The solution compared to the %s result didn't cvg"\
                 " as expected with increasing resolution for all fields."\
                 % (self.fComps.getCmpSrcString())
-            self.tcStatus = UWA_FAIL(statusMsg)
+            self.tcStatus = CREDO_FAIL(statusMsg)
             return False
         else:
             statusMsg = "The solution compared to the %s result converged"\
                 " as expected with increasing resolution for all fields."\
                 % (self.fComps.getCmpSrcString())
-            self.tcStatus = UWA_PASS(statusMsg)
+            self.tcStatus = CREDO_PASS(statusMsg)
             return True
 
     def _writeXMLCustomSpec(self, specNode):

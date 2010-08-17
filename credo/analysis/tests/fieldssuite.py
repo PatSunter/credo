@@ -4,9 +4,9 @@ import shutil
 import tempfile
 import unittest
 
-from uwa.analysis.fields import FieldComparisonOp, FieldComparisonList
-from uwa.analysis.fields import FieldComparisonResult
-from uwa.modelresult import ModelResult
+from credo.analysis.fields import FieldComparisonOp, FieldComparisonList
+from credo.analysis.fields import FieldComparisonResult
+from credo.modelresult import ModelResult
 
 class AnalysisFieldsTestCase(unittest.TestCase):
 

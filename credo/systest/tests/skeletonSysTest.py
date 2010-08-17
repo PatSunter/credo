@@ -1,6 +1,6 @@
 
-from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
-from uwa.modelsuite import ModelSuite
+from credo.systest.api import SysTest, CREDO_PASS, CREDO_FAIL
+from credo.modelsuite import ModelSuite
 
 class SkeletonSysTest(SysTest):
     """A Skeleton system test class, used for testing."""

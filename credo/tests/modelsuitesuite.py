@@ -1,4 +1,4 @@
-# UWAnalysis Unit test
+# CREDOnalysis Unit test
 
 import os
 import cPickle as pickle
@@ -6,9 +6,9 @@ import shutil
 import tempfile
 import unittest
 
-from uwa import modelsuite as msuite
-from uwa.modelrun import ModelRun
-from uwa.modelsuite import ModelSuite, StgXMLVariant
+from credo import modelsuite as msuite
+from credo.modelrun import ModelRun
+from credo.modelsuite import ModelSuite, StgXMLVariant
 
 # Skeleton classes
 #class SkelModelRun(ModelRun):

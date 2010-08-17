@@ -50,7 +50,7 @@ def _getStgPath(pathDescription, pathEnviroVarKey, keySubDir=None,
                     % (pathEnviroVarKey)
 
         errorMsg = "Error in %s(): since this script needs to"\
-            " use %s, please set %s for use within UWA.\n" \
+            " use %s, please set %s for use within CREDO.\n" \
             % (inspect.stack()[0][3], pathDescription, varsToUse)
         raise EnvironmentError(errorMsg)
 

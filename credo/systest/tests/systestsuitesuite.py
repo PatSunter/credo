@@ -3,7 +3,7 @@ import shutil
 import tempfile
 import unittest
 
-from uwa.systest import SysTestSuite, UWA_PASS, UWA_FAIL, UWA_ERROR
+from credo.systest import SysTestSuite, CREDO_PASS, CREDO_FAIL, CREDO_ERROR
 from skeletonSysTest import SkeletonSysTest
 
 class SysTestSuiteTestCase(unittest.TestCase):
@@ -19,7 +19,7 @@ class SysTestSuiteTestCase(unittest.TestCase):
 
     def test_addStdTest(self):
         self.stSuite.addStdTest(SkeletonSysTest, self.inputFiles, 
-            statusToReturn=UWA_PASS("testPass"), nproc=1)
+            statusToReturn=CREDO_PASS("testPass"), nproc=1)
         sysTestsList = self.stSuite.sysTests
         self.assertEqual(len(self.stSuite.sysTests), 1)
         addedTest = sysTestsList[0]
@@ -28,7 +28,7 @@ class SysTestSuiteTestCase(unittest.TestCase):
         self.assertEqual(addedTest.inputFiles, self.inputFiles)
         self.assertEqual(addedTest.testStatus, None)
         self.stSuite.addStdTest(SkeletonSysTest, self.inputFiles, 
-            statusToReturn=UWA_FAIL("testFail"), nproc=1)
+            statusToReturn=CREDO_FAIL("testFail"), nproc=1)
         self.assertEqual(len(self.stSuite.sysTests), 2)
         secondTest = sysTestsList[1]
         self.assertTrue(isinstance(addedTest, SkeletonSysTest))
@@ -66,9 +66,9 @@ class SysTestSuiteTestCase(unittest.TestCase):
         self.assertEqual(self.stSuite.subSuites[1], subSuite2)
         # Now try add some tests to these suites
         self.stSuite.addStdTest(SkeletonSysTest, self.inputFiles, 
-            statusToReturn=UWA_FAIL("testFail"), nproc=1)
+            statusToReturn=CREDO_FAIL("testFail"), nproc=1)
         subSuite2.addStdTest(SkeletonSysTest, self.inputFiles, 
-            statusToReturn=UWA_PASS("testPass"), nproc=1)
+            statusToReturn=CREDO_PASS("testPass"), nproc=1)
         self.assertEqual(len(self.stSuite.sysTests), 1)
         self.assertEqual(len(self.stSuite.subSuites[0].sysTests), 0)
         self.assertEqual(len(self.stSuite.subSuites[1].sysTests), 1)

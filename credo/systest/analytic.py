@@ -1,9 +1,9 @@
 import os
 from xml.etree import ElementTree as etree
 
-from uwa.modelsuite import ModelSuite
-from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
-from uwa.systest.fieldWithinTolTest import FieldWithinTolTest
+from credo.modelsuite import ModelSuite
+from credo.systest.api import SysTest, CREDO_PASS, CREDO_FAIL
+from credo.systest.fieldWithinTolTest import FieldWithinTolTest
 
 class AnalyticTest(SysTest):
     '''An Analytic System test.
@@ -11,7 +11,7 @@ class AnalyticTest(SysTest):
        to load an anlytic soln, and compare it to the correct fields.
        Will check that each field flagged to be analysed is within
        the expected tolerance. Uses a
-       :class:`~uwa.systest.fieldWithinTolTest.FieldWithinTolTest`
+       :class:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest`
        test component to perform the check.
        
        Optional constructor keywords:
@@ -19,7 +19,7 @@ class AnalyticTest(SysTest):
        * defFieldTol: The default tolerance to be applied when comparing fields of
          interest to the analytic solution.
          See also the FieldWithinTolTest's
-         :attr:`~uwa.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
+         :attr:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
        * fieldTols: a dictionary of tolerances to use when testing particular
          fields, rather than the default tolerance defined by 
          the defFieldTol argument.
@@ -27,7 +27,7 @@ class AnalyticTest(SysTest):
        .. attribute:: fTestName
 
           Standard name to use for this test's field comparison TestComponent
-          in the :attr:`~uwa.systest.api.SysTest.testComponents` list.
+          in the :attr:`~credo.systest.api.SysTest.testComponents` list.
         '''
 
     fTestName = 'Analytic Solution compare'
@@ -47,7 +47,7 @@ class AnalyticTest(SysTest):
             defFieldTol=defFieldTol, fieldTols=fieldTols)
 
     def genSuite(self):
-        """See base class :meth:`~uwa.systest.api.SysTest.genSuite`.
+        """See base class :meth:`~credo.systest.api.SysTest.genSuite`.
 
         For this test, just a single model run is needed, to run
         the model and compare against the analytic solution."""
@@ -64,7 +64,7 @@ class AnalyticTest(SysTest):
         return mSuite
 
     def checkResultValid(self, resultsSet):
-        """See base class :meth:`~uwa.systest.api.SysTest.checkResultValid`."""
+        """See base class :meth:`~credo.systest.api.SysTest.checkResultValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:

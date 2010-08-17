@@ -1,6 +1,6 @@
 
 """
-The IO Module in UWA is for Input/Output to various forms of data important for
+The IO Module in CREDO is for Input/Output to various forms of data important for
 analysis and testing of StGermain codes.
 
 These are primarily related to the core data formats that StG-based codes such

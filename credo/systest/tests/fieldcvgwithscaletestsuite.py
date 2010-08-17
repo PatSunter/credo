@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
-import uwa.analysis.fields as fields
-from uwa.systest.fieldCvgWithScaleTest import *
-import uwa.analysis.fields as fields
+import credo.analysis.fields as fields
+from credo.systest.fieldCvgWithScaleTest import *
+import credo.analysis.fields as fields
 
 # Convergence checker
 # StgFEM case

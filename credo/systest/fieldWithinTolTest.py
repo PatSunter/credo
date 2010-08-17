@@ -1,7 +1,7 @@
 from xml.etree import ElementTree as etree
 
-from uwa.systest.api import TestComponent, UWA_PASS, UWA_FAIL
-import uwa.analysis.fields as fields
+from credo.systest.api import TestComponent, CREDO_PASS, CREDO_FAIL
+import credo.analysis.fields as fields
 
 class FieldWithinTolTest(TestComponent):
     """Checks whether, for a particular set of fields, the error
@@ -10,8 +10,8 @@ class FieldWithinTolTest(TestComponent):
 
     This relies largely on functionality of:
 
-    * :mod:`uwa.analysis.fields` to specify the comparison operations
-    * :mod:`uwa.io.stgcvg` to analyse the "convergence" files containing
+    * :mod:`credo.analysis.fields` to specify the comparison operations
+    * :mod:`credo.io.stgcvg` to analyse the "convergence" files containing
       comparison information produced by these operations.
 
     Other than those that are directly saved as attributes documented below,
@@ -19,11 +19,11 @@ class FieldWithinTolTest(TestComponent):
 
     * useReference: determines whether the fields are compared against
       a reference, or analytic solution. See 
-      :meth:`uwa.analysis.fields.FieldComparisonList.useReference`
+      :meth:`credo.analysis.fields.FieldComparisonList.useReference`
     * referencePath: See   
-      :meth:`uwa.analysis.fields.FieldComparisonList.referencePath`
+      :meth:`credo.analysis.fields.FieldComparisonList.referencePath`
     * referencePath: See   
-      :meth:`uwa.analysis.fields.FieldComparisonList.testTimestep`
+      :meth:`credo.analysis.fields.FieldComparisonList.testTimestep`
 
     .. attribute:: fieldsToTest 
 
@@ -45,7 +45,7 @@ class FieldWithinTolTest(TestComponent):
 
     .. attribute:: fComps
 
-        A :class:`uwa.analysis.fields.FieldComparisonList` used as an
+        A :class:`credo.analysis.fields.FieldComparisonList` used as an
         operator to attach to ModelRuns to be tested, and do the actual
         comparison between fields.
 
@@ -82,7 +82,7 @@ class FieldWithinTolTest(TestComponent):
 
     def attachOps(self, modelRun):
         """Implements base class
-        :meth:`uwa.systest.api.TestComponent.attachOps`."""
+        :meth:`credo.systest.api.TestComponent.attachOps`."""
         if self.fieldsToTest == None:
             self.fComps.readFromStgXML(modelRun.modelInputFiles)
         else:
@@ -102,7 +102,7 @@ class FieldWithinTolTest(TestComponent):
 
     def check(self, resultsSet):
         """Implements base class
-        :meth:`uwa.systest.api.TestComponent.check`."""
+        :meth:`credo.systest.api.TestComponent.check`."""
         self.fieldResults = {}
         self.fieldErrors = {}
         statusMsg = ""
@@ -133,9 +133,9 @@ class FieldWithinTolTest(TestComponent):
 
         print statusMsg
         if overallResult == False:
-            self.tcStatus = UWA_FAIL(statusMsg)
+            self.tcStatus = CREDO_FAIL(statusMsg)
         else:
-            self.tcStatus = UWA_PASS(statusMsg)
+            self.tcStatus = CREDO_PASS(statusMsg)
         return overallResult
 
     def _writeXMLCustomSpec(self, specNode):

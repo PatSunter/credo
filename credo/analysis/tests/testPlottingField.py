@@ -1,6 +1,6 @@
-from uwa.modelresult import ModelResult
-from uwa.analysis.fields import FieldComparisonOp, FieldComparisonList
-from uwa.io import stgcvg
+from credo.modelresult import ModelResult
+from credo.analysis.fields import FieldComparisonOp, FieldComparisonList
+from credo.io import stgcvg
 
 fComps = FieldComparisonList()
 fComp = FieldComparisonOp('VelocityField')

@@ -4,8 +4,8 @@ import shutil
 import tempfile
 import unittest
 
-from uwa import modelrun as mrun
-from uwa import modelresult as mres
+from credo import modelrun as mrun
+from credo import modelresult as mres
 
 class ModelRunTestCase(unittest.TestCase):
 

@@ -1,9 +1,9 @@
-"""A core module for UWA, since it defines and manages running models of a
+"""A core module for CREDO, since it defines and manages running models of a
 StGermain-based code such as Underworld.
 
 Primary interface is via the :class:`ModelRun`, which enables you to specify,
 configure and run a Model, and save records of this as an XML. This process will
-produce a :class:`uwa.modelresult.ModelResult` class.
+produce a :class:`credo.modelresult.ModelResult` class.
 """
 
 import os, shutil
@@ -11,37 +11,37 @@ import sys
 import subprocess
 
 from xml.etree import ElementTree as etree
-from uwa.io.stgxml import writeXMLDoc
-import uwa.modelresult
-from uwa.io import stgxml, stgfreq
-from uwa.analysis import fields
+from credo.io.stgxml import writeXMLDoc
+import credo.modelresult
+from credo.io import stgxml, stgfreq
+from credo.analysis import fields
 
 # Global list of allowed Python types that can be saved as StGermain SimParams
 #  I.E. that StGermain's Dictionary knows how to handle.
 _allowedModelParamTypes = [int, float, long, bool, str]
 
-UWA_ANALYSIS_RECORD_FILENAME = "uwa-analysis.xml"
+CREDO_ANALYSIS_RECORD_FILENAME = "credo-analysis.xml"
 SOLVER_OPTS_RECORD_FILENAME = "solverOptsUsed.opt"
 
 class ModelRun:
     '''A class to keep records about a StgDomain/Underworld Model Run,
     including access to the underlying XML of the actual model.
 
-    This is one of the key core classes in UWA, useful on it's own for
-    managing analysis, but also underlying the :mod:`uwa.systest` module.
+    This is one of the key core classes in CREDO, useful on it's own for
+    managing analysis, but also underlying the :mod:`credo.systest` module.
 
     The basic usage pattern of this class is that a ModelRun needs to be
     constructed and configured to specify the basic XML files defining
     a StGermain Model, but also any customisations and 
-    :class:`uwa.analysis.api.AnalysisOperation` classes attached to be
+    :class:`credo.analysis.api.AnalysisOperation` classes attached to be
     performed.
 
     After the model is run (currently by calling :func:`.runModel`), 
-    a :class:`~uwa.modelresult.ModelResult` will be produced as a record of the run and
+    a :class:`~credo.modelresult.ModelResult` will be produced as a record of the run and
     for further analysis.
 
-    Examples of using the ModelRun are documented in UWA, see
-    :ref:`uwa-examples-analysis`.
+    Examples of using the ModelRun are documented in CREDO, see
+    :ref:`credo-examples-analysis`.
     
     Key attributes:
     
@@ -101,7 +101,7 @@ class ModelRun:
 
        A file recording the options used for a modelRun will be saved in
        the output path, with name specified in
-       :const:`uwa.modelrun.SOLVER_OPTS_RECORD_FILENAME`.
+       :const:`credo.modelrun.SOLVER_OPTS_RECORD_FILENAME`.
 
        .. note:: the interface here has been kept as specifying a filename with
           the options rather than using a Python list, as the solver options
@@ -123,7 +123,7 @@ class ModelRun:
 
     .. attribute:: analysisOps
 
-       A list of :class:`uwa.analysis.api.AnalysisOperation` that are
+       A list of :class:`credo.analysis.api.AnalysisOperation` that are
        associated with this ModelRun, and will be applied when the 
        model is actually run (which involves writing and submitting
        additional StGermain XML).
@@ -205,7 +205,7 @@ class ModelRun:
 
     def prepareOutputLogDirs(self):
         """Prepare the output and log dirs - usually in preparation
-        for running a :class:`uwa.modelrun.ModelRun`."""
+        for running a :class:`credo.modelrun.ModelRun`."""
         if not os.path.exists(self.outputPath):
             os.makedirs(self.outputPath)
 
@@ -224,7 +224,7 @@ class ModelRun:
 
     def writeInfoXML(self, writePath="", filename="", update=False,
             prettyPrint=True):
-        """Writes an XML recording the key details of this ModelRun, in UWA
+        """Writes an XML recording the key details of this ModelRun, in CREDO
         format - useful for benchmarking etc.
         
         `writePath` and `filename` can be specified, if not they will use
@@ -279,7 +279,7 @@ class ModelRun:
         outFile.close()
         return writePath+filename
 
-    def analysisXMLGen(self, filename=UWA_ANALYSIS_RECORD_FILENAME):
+    def analysisXMLGen(self, filename=CREDO_ANALYSIS_RECORD_FILENAME):
         """Generates an XML file, in StGermainData XML format, to over-ride
         necessary parameters of the model as specified on this ModelRun
         instance. Returns the name of the just-written XML file.
@@ -610,7 +610,7 @@ class ModelRunError(Exception):
 
 def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
     """Run the specified modelRun, and return a 
-    :class:`~uwa.modelresult.ModelResult` recording the results of the run.
+    :class:`~credo.modelresult.ModelResult` recording the results of the run.
 
     :param modelRun: the :class:`.ModelRun` to be run.
     :keyword extraCmdLineOpts: if specified, these extra cmd line opts will
@@ -624,7 +624,7 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
        It's planned for much of this functionality to move to a JobRunner class
        in future, to allow things like launching PBS or grid jobs."""
 
-    uwa.io.stgpath.checkAllXMLInputFilesExist(modelRun.modelInputFiles)
+    credo.io.stgpath.checkAllXMLInputFilesExist(modelRun.modelInputFiles)
 
     # Pre-run checks for validity - e.g. at least one input file,
     # nproc is sensible value
@@ -638,7 +638,7 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
     modelRun.prepareOutputLogDirs()
 
     # Construct StGermain run command
-    runExe=uwa.io.stgpath.getVerifyStgExePath("StGermain")
+    runExe=credo.io.stgpath.getVerifyStgExePath("StGermain")
     stgRunStr = "%s " % (runExe)
     for inputFile in modelRun.modelInputFiles:    
         stgRunStr += inputFile+" "
@@ -698,7 +698,7 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
         # For now, allow runs that didn't create a freq output
         tSteps, simTime = None, None
 
-    result = uwa.modelresult.ModelResult(modelRun.name,
+    result = credo.modelresult.ModelResult(modelRun.name,
         modelRun.outputPath, simTime)
     
     return result
@@ -708,7 +708,7 @@ def getSimInfoFromFreqOutput(outputPath):
     """Get necessary information to create a :class:`.SimInfo` from
     the FrequentOutput.dat, given a particular output Path.
     
-    .. seealso:: :mod:`uwa.io.stgfreq`."""
+    .. seealso:: :mod:`credo.io.stgfreq`."""
     freqOut = stgfreq.FreqOutput(path=outputPath)
     freqOut.populateFromFile()
     recordDict = freqOut.getRecordDictAtStep(freqOut.finalStep())

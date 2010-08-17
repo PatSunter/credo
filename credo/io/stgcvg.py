@@ -7,7 +7,7 @@ the possibility of a set of cvg files in one path that should all be referenced.
 (e.g. the see function :func:`genConvergenceFileIndex`).
 
 It provides a similar, though not identical, interface to the 
-:mod:`uwa.io.stgfreq` module.
+:mod:`credo.io.stgfreq` module.
 
 The format of CVG files is space-separated, of the form:
 

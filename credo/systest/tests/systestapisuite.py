@@ -1,23 +1,23 @@
 import unittest
 
-from uwa.systest.api import *
+from credo.systest.api import *
 
 class SysTestResultTestCase(unittest.TestCase):
     def setUp(self):
         self.passMsg = "All fields passed."
-        self.passResult = UWA_PASS(self.passMsg)
+        self.passResult = CREDO_PASS(self.passMsg)
         self.failMsg = "One of the fields outside tolerance."
-        self.failResult = UWA_FAIL(self.failMsg)
+        self.failResult = CREDO_FAIL(self.failMsg)
         self.errorMsg = "Model failed to run."
-        self.errorResult = UWA_ERROR(self.errorMsg)
+        self.errorResult = CREDO_ERROR(self.errorMsg)
 
     def test_printBasic(self):
         resStr = "%s" % self.passResult
-        self.assertEqual(resStr, UWA_PASS.statusStr)
+        self.assertEqual(resStr, CREDO_PASS.statusStr)
         resStr = "%s" % self.failResult
-        self.assertEqual(resStr, UWA_FAIL.statusStr)
+        self.assertEqual(resStr, CREDO_FAIL.statusStr)
         resStr = "%s" % self.errorResult
-        self.assertEqual(resStr, UWA_ERROR.statusStr)
+        self.assertEqual(resStr, CREDO_ERROR.statusStr)
 
     def test_printDetailMsg(self):
         self.assertEqual(self.passResult.detailMsg, self.passMsg)

@@ -1,10 +1,10 @@
 import os
 from xml.etree import ElementTree as etree
 
-from uwa.modelsuite import ModelSuite
-import uwa.modelrun as mrun
-from uwa.systest.api import SysTest, UWA_PASS, UWA_FAIL
-from uwa.systest.fieldCvgWithScaleTest import FieldCvgWithScaleTest
+from credo.modelsuite import ModelSuite
+import credo.modelrun as mrun
+from credo.systest.api import SysTest, CREDO_PASS, CREDO_FAIL
+from credo.systest.fieldCvgWithScaleTest import FieldCvgWithScaleTest
 
 class AnalyticMultiResTest(SysTest):
     '''A Multiple Resolution system test.
@@ -12,7 +12,7 @@ class AnalyticMultiResTest(SysTest):
        analyses fields, to check that the error between the analytic
        solution fields and the actual results improves at the required
        rate as the model resolution is increased. Uses a
-       :class:`~uwa.systest.fieldCvgWithScaleTest.FieldCvgWithScaleTest`
+       :class:`~credo.systest.fieldCvgWithScaleTest.FieldCvgWithScaleTest`
        test component to perform the check.
 
        Optional constructor keywords:
@@ -42,7 +42,7 @@ class AnalyticMultiResTest(SysTest):
         self.testComponents['fieldConvChecker'] = cvgChecker
 
     def genSuite(self):
-        """See base class :meth:`~uwa.systest.api.SysTest.genSuite`.
+        """See base class :meth:`~credo.systest.api.SysTest.genSuite`.
 
         The generated suite will contain model runs all with the same model
         XML files, but with increasing resolution as specified by the 
@@ -66,7 +66,7 @@ class AnalyticMultiResTest(SysTest):
         return mSuite
 
     def checkResultValid(self, resultsSet):
-        """See base class :meth:`~uwa.systest.api.SysTest.checkResultValid`."""
+        """See base class :meth:`~credo.systest.api.SysTest.checkResultValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:

@@ -1,12 +1,12 @@
 
-"""UWA functions and classes for doing analysis of Fields in StGermain-based
+"""CREDO functions and classes for doing analysis of Fields in StGermain-based
 codes.
 
 Currently this is primarily based on the FieldTest component/plugin within
 StgFEM, which allows comparison between one or more Fields in a model run (eg
 "VelocityField"), and either saved reference fields, or analytic solutions.
 
-The UWA Field functions allow either single-model comparisons, e.g. those
+The CREDO Field functions allow either single-model comparisons, e.g. those
 defined by :class:`.FieldComparisonOp`, or analysis on fields to be performed
 across multiple runs, e.g. :func:`~calcFieldCvgWithScale`.
 
@@ -19,10 +19,10 @@ import os
 import math
 from xml.etree import ElementTree as etree
 
-import uwa.io.stgpath
-from uwa.analysis import AnalysisOperation
-from uwa.io import stgxml, stgcvg
-import uwa.analysis.stats as stats
+import credo.io.stgpath
+from credo.analysis import AnalysisOperation
+from credo.io import stgxml, stgcvg
+import credo.analysis.stats as stats
 
 class FieldComparisonOp:
     '''Class for setting up and performing a comparison between two Fields.
@@ -47,9 +47,9 @@ class FieldComparisonOp:
     def getResult(self, modelResult):
         '''Gets the result of the operator on the given fields (as a
         :class:`.FieldComparisonResult`), given a 
-        modelResult (:class:`~uwa.modelresult.ModelResult`) which
+        modelResult (:class:`~credo.modelresult.ModelResult`) which
         refers to a directory containing field comparisons
-        (i.e. cvg files, see :mod:`uwa.io.stgcvg`).
+        (i.e. cvg files, see :mod:`credo.io.stgcvg`).
         '''
         cvgIndex = stgcvg.genConvergenceFileIndex(modelResult.outputPath)
         try:
@@ -66,12 +66,12 @@ class FieldComparisonOp:
 
 
 class FieldComparisonResult:
-    '''Simple class for storing UWA FieldComparisonOp Results, so they can be
+    '''Simple class for storing CREDO FieldComparisonOp Results, so they can be
     analysed and saved.
     
     By default only contains the difference between the field DOFs at the final
     timestep - but recording a reference to the
-    :class:`uwa.io.stgcvg.CvgFileInfo` for this field allows more complex
+    :class:`credo.io.stgcvg.CvgFileInfo` for this field allows more complex
     analysis.
     
     .. attribute:: fieldName
@@ -85,7 +85,7 @@ class FieldComparisonResult:
 
     .. attribute:: cvgFileInfo
 
-       A :class:`uwa.io.stgcvg.CvgFileInfo` allowing detailed access to the CVG
+       A :class:`credo.io.stgcvg.CvgFileInfo` allowing detailed access to the CVG
        result for this field. Required for plotting etc. Is optional, needs
        to be recorded after the class has been constructed.
     
@@ -135,13 +135,13 @@ class FieldComparisonResult:
            `Matplotlib <http://matplotlib.sourceforge.net/>`_ library installed.
         
         'show', 'save' and 'path' parameters are the same as for
-        :meth:`uwa.io.stgfreq.FreqOutput.plotOverTime`. The optional 'dofIndex'
+        :meth:`credo.io.stgfreq.FreqOutput.plotOverTime`. The optional 'dofIndex'
         parameter allows you to only plot a particular DOF of the field,
         otherwise all dofs will be plotted on separate graphs."""
         try:
             import matplotlib.pyplot as plt
         except ImportError:
-            print "Error, to use UWA built-in plot functions, please "\
+            print "Error, to use CREDO built-in plot functions, please "\
                 " install the matplotlib python library."
             return    
         
@@ -201,7 +201,7 @@ class FieldComparisonList(AnalysisOperation):
     Currently maps to the "FieldTest" component's functionality in StgFEM.
 
     .. Note:: Currently the whole _list_ of Field comparisons is a single
-       :class:`uwa.analysis.api.AnalysisOperation`,
+       :class:`credo.analysis.api.AnalysisOperation`,
        because this is the design of the FieldTest component
        in StgFEM. In future we may look at modularising this functionality
        further so that single comparisons can be managed as operators.
@@ -239,7 +239,7 @@ class FieldComparisonList(AnalysisOperation):
     # These attributes are all needed as to read/write the XML description
     # of this Op in StGermain (FieldTest).
     stgXMLCompType = 'FieldTest'
-    stgXMLCompName = 'uwaFieldTester'
+    stgXMLCompName = 'credoFieldTester'
     # This component is unusual in that it needs a "pluginData" struct
     # separate to the actual component definition.
     stgXMLSpecName = 'pluginData'
@@ -269,7 +269,7 @@ class FieldComparisonList(AnalysisOperation):
     def postRun(self, modelRun, runPath):
         """Implements :meth:`AnalysisOperation.postRun`. In this case, moves
         all CVG files created to output path."""
-        uwa.io.stgpath.moveAllToTargetPath(runPath, modelRun.outputPath,
+        credo.io.stgpath.moveAllToTargetPath(runPath, modelRun.outputPath,
             stgcvg.CVG_EXT)
     
     def writeInfoXML(self, parentNode):
@@ -381,7 +381,7 @@ class FieldComparisonList(AnalysisOperation):
         """Return a list of :class:`FieldComparisonResult` based on all the
         :class:`FieldComparisonOps` specified to be done during
         a run, from the given modelResult
-        (:class:`~uwa.modelresult.ModelResult`)."""
+        (:class:`~credo.modelresult.ModelResult`)."""
 
         fComps = self.fields.values()
         return [fCompOp.getResult(modelResult) for fCompOp in fComps]

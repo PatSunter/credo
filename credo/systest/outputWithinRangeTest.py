@@ -1,13 +1,13 @@
 from xml.etree import ElementTree as etree
 
-from uwa.systest.api import TestComponent, UWA_PASS, UWA_FAIL
+from credo.systest.api import TestComponent, CREDO_PASS, CREDO_FAIL
 
 class OutputWithinRangeTest(TestComponent):
     '''Test component to check that a given output parameter 
     (found in the frequent output) is within a given range, and
     optionally also that this occurs within a given set of model times.
     
-    .. seealso:: :mod:`uwa.io.stgfreq`.
+    .. seealso:: :mod:`credo.io.stgfreq`.
 
     .. attribute:: outputName
 
@@ -25,7 +25,7 @@ class OutputWithinRangeTest(TestComponent):
        * `min() <http://docs.python.org/library/functions.html#min>`_
          - the Minimum value
 
-       .. seealso:: :func:`uwa.io.stgfreq.FreqOutput.getReductionOp`  
+       .. seealso:: :func:`credo.io.stgfreq.FreqOutput.getReductionOp`  
 
     .. attribute:: allowedRange
 
@@ -82,7 +82,7 @@ class OutputWithinRangeTest(TestComponent):
 
     def attachOps(self, modelRun):
         """Implements base class
-        :meth:`uwa.systest.api.TestComponent.attachOps`.
+        :meth:`credo.systest.api.TestComponent.attachOps`.
         
         .. note:: Currently does nothing. Intend to make it ensure the
            correct plugin is set to be loaded (to make sure observable
@@ -94,7 +94,7 @@ class OutputWithinRangeTest(TestComponent):
 
     def check(self, resultsSet):
         """Implements base class
-        :meth:`uwa.systest.api.TestComponent.check`."""
+        :meth:`credo.systest.api.TestComponent.check`."""
         self.actualVal = None
         self.withinRange = None
         statusMsg = ""
@@ -139,9 +139,9 @@ class OutputWithinRangeTest(TestComponent):
 
         print statusMsg
         if overallResult == False:
-            self.tcStatus = UWA_FAIL(statusMsg)
+            self.tcStatus = CREDO_FAIL(statusMsg)
         else:
-            self.tcStatus = UWA_PASS(statusMsg)
+            self.tcStatus = CREDO_PASS(statusMsg)
         return overallResult
 
     def _writeXMLCustomResult(self, resNode, resultsSet):

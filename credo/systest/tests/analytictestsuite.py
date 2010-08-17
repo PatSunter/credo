@@ -4,7 +4,7 @@ import shutil
 import tempfile
 import unittest
 
-from uwa.systest.analytic import AnalyticTest
+from credo.systest.analytic import AnalyticTest
 
 class AnalyticTestTestCase(unittest.TestCase):
 

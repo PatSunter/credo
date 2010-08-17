@@ -320,7 +320,7 @@ class FreqOutput:
         try:
             import matplotlib.pyplot as plt
         except ImportError:
-            print "Error, to use UWA built-in plot functions, please "\
+            print "Error, to use CREDO built-in plot functions, please "\
                 " install the matplotlib python library."
             return    
         

@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from scipy.stats import linregress as scipylinregress
-from uwa.analysis.stats import linreg as uwalinreg
+from credo.analysis.stats import linreg as credolinreg
 import math
 
 # -------------------------------------
@@ -17,8 +17,8 @@ print "R-squared", r_value**2
 print "prob-value", prob_value
 
 
-xCoeff, yCoeff, rSq = uwalinreg(xArr,yArr)
-print "\n** Results from custom func used in UWA**"
+xCoeff, yCoeff, rSq = credolinreg(xArr,yArr)
+print "\n** Results from custom func used in CREDO**"
 print "xCoeff (gradient)", xCoeff
 print "yCoeff (intercept)", yCoeff
 print "R value (Pearson correlation)", math.sqrt(rSq)
@@ -35,7 +35,7 @@ velErrLogs = map(math.log10, velField1Err)
 print "Len scales(log10): %s" % scaleLogs
 print "errors vs analytic(log10): %s" % velErrLogs
 
-xCoeff, yCoeff, rSq = uwalinreg(scaleLogs, velErrLogs)
+xCoeff, yCoeff, rSq = credolinreg(scaleLogs, velErrLogs)
 cvgRate = xCoeff
 intercept = yCoeff
 print "R value (Pearson correlation)", math.sqrt(rSq)

@@ -4,8 +4,8 @@ import shutil
 import tempfile
 import unittest
 
-from uwa.io import stgcvg 
-from uwa.io.stgcvg import CvgFileInfo
+from credo.io import stgcvg 
+from credo.io.stgcvg import CvgFileInfo
 
 class StgCVGTestCase(unittest.TestCase):
 

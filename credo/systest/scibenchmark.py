@@ -1,19 +1,19 @@
 import os
 from xml.etree import ElementTree as etree
 
-from uwa.modelsuite import ModelSuite
-from uwa.systest.api import SysTest, TestComponent, UWA_PASS, UWA_FAIL
+from credo.modelsuite import ModelSuite
+from credo.systest.api import SysTest, TestComponent, CREDO_PASS, CREDO_FAIL
 
 class SciBenchmarkTest(SysTest):
     '''A Science benchmark test.
         This is an open-ended system test, designed for the user to add multiple
-        :class:`~uwa.systest.api.TestComponent` s to,
+        :class:`~credo.systest.api.TestComponent` s to,
         which test the conditions of the benchmark.
         Contains extra capabilities to report more fully on the test result
         than a standard system test.
         
-        See the examples section of the UWA documentation,
-        :ref:`uwa-examples-scibenchmarking`, for examples of sci benchmarking
+        See the examples section of the CREDO documentation,
+        :ref:`credo-examples-scibenchmarking`, for examples of sci benchmarking
         in practice.'''
 
     description = '''Runs a user-defined science benchmark.'''
@@ -24,7 +24,7 @@ class SciBenchmarkTest(SysTest):
             paramOverrides, solverOpts, "SciBenchmark", nameSuffix)
 
     def addTestComponent(self, testComp, testCompName):
-        """Add a testComponent (:class:`~uwa.systest.api.TestComponent`)
+        """Add a testComponent (:class:`~credo.systest.api.TestComponent`)
         with name testCompName to the list of test
         components to be applied as part of determining if the benchmark
         has passed."""
@@ -39,7 +39,7 @@ class SciBenchmarkTest(SysTest):
         pass
 
     def genSuite(self):
-        """See base class :meth:`~uwa.systest.api.SysTest.genSuite`.
+        """See base class :meth:`~credo.systest.api.SysTest.genSuite`.
         
         By default will create just a single model run.
 
@@ -56,14 +56,14 @@ class SciBenchmarkTest(SysTest):
         return mSuite
 
     def checkResultValid(self, resultsSet):
-        """See base class :meth:`~uwa.systest.api.SysTest.checkResultValid`."""
+        """See base class :meth:`~credo.systest.api.SysTest.checkResultValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:
             pass
 
     def getStatus(self, resultsSet):
-        """See base class :meth:`~uwa.systest.api.SysTest.getStatus`."""
+        """See base class :meth:`~credo.systest.api.SysTest.getStatus`."""
         self.checkResultValid(resultsSet)
         mResult = resultsSet[0]
 
@@ -76,9 +76,9 @@ class SciBenchmarkTest(SysTest):
                 failedCompNames.append(tCompName)
 
         if overallResult:    
-            testStatus = UWA_PASS("All aspects of the benchmark passed.")
+            testStatus = CREDO_PASS("All aspects of the benchmark passed.")
         else:        
-            testStatus = UWA_FAIL("The following components of the benchmark" \
+            testStatus = CREDO_FAIL("The following components of the benchmark" \
                 " failed: %s" % failedCompNames)
 
         self.testStatus = testStatus
