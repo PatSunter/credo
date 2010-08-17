@@ -1,1 +1,1 @@
-export PYTHONPATH=$PYTHONPATH:~/AuScopeCodes/stgUnderworldE-uwaDev-work/uwa/
+export PYTHONPATH=$PYTHONPATH:~/AuScopeCodes/stgUnderworldE-uwaDev-work/credo/
