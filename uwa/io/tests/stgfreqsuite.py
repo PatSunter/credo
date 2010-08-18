@@ -99,8 +99,8 @@ class StgFreqTestCase(unittest.TestCase):
             self.assertEqual(firstStep, self.tSteps[calcIndex])
 
     def test_plotOverTime(self):
-        self.stgFreq.plotOverTime("Time", show=False, path="sampleData/temp")
-        self.stgFreq.plotOverTime("VRMS", show=False, path="sampleData/temp")
+        self.stgFreq.plotOverTime("Time", show=False, path="output/Plots")
+        self.stgFreq.plotOverTime("VRMS", show=False, path="output/Plots")
     
     def test_printAllMinMax(self):
         self.stgFreq.printAllMinMax()

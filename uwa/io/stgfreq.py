@@ -337,6 +337,8 @@ class FreqOutput:
 
         if save:
             filename = os.path.join(path, headerName+"-timeSeries.png")
+            if not os.path.exists(path):
+                os.makedirs(path)
             plt.savefig(filename, format="png")
         if show: plt.show()
         return plt
