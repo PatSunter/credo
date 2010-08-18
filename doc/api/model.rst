@@ -1,33 +1,33 @@
 ***********************************
-UWA Model API
+Model API
 ***********************************
 
-:mod:`uwa.modelrun`
+:mod:`credo.modelrun`
 ==========================
 
-.. inheritance-diagram:: uwa.modelrun
+.. inheritance-diagram:: credo.modelrun
 
-.. automodule:: uwa.modelrun
+.. automodule:: credo.modelrun
    :members:
    :undoc-members:
    :show-inheritance:
 
-:mod:`uwa.modelresult`
+:mod:`credo.modelresult`
 ==========================
 
-.. inheritance-diagram:: uwa.modelresult
+.. inheritance-diagram:: credo.modelresult
 
-.. automodule:: uwa.modelresult
+.. automodule:: credo.modelresult
    :members:
    :undoc-members:
    :show-inheritance:
 
-:mod:`uwa.modelsuite`
+:mod:`credo.modelsuite`
 ==========================
 
-.. inheritance-diagram:: uwa.modelsuite
+.. inheritance-diagram:: credo.modelsuite
 
-.. automodule:: uwa.modelsuite
+.. automodule:: credo.modelsuite
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,33 +1,33 @@
 ***********************************
-UWA Analysis API
+Analysis API
 ***********************************
 
-.. automodule:: uwa.analysis
+.. automodule:: credo.analysis
 
-:mod:`uwa.analysis.api`
+:mod:`credo.analysis.api`
 ==========================
 
-.. inheritance-diagram:: uwa.analysis.api
+.. inheritance-diagram:: credo.analysis.api
 
-.. automodule:: uwa.analysis.api
+.. automodule:: credo.analysis.api
    :members:
    :undoc-members:
    :show-inheritance:
 
-:mod:`uwa.analysis.fields`
-==========================
+:mod:`credo.analysis.fields`
+============================
 
-.. inheritance-diagram:: uwa.analysis.fields
+.. inheritance-diagram:: credo.analysis.fields
 
-.. automodule:: uwa.analysis.fields
+.. automodule:: credo.analysis.fields
    :members:
    :undoc-members:
    :show-inheritance:
 
-:mod:`uwa.analysis.stats`
-==========================
+:mod:`credo.analysis.stats`
+============================
 
-.. automodule:: uwa.analysis.stats
+.. automodule:: credo.analysis.stats
    :members:
    :undoc-members:
    :show-inheritance:

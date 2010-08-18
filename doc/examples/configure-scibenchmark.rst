@@ -1,9 +1,9 @@
-.. _uwa-examples-configure-scibenchmark:
+.. _credo-examples-configure-scibenchmark:
 
 Running and configuring Scientific Benchmark Tests
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Sci Benchmark testing interface for UWA is still being developed, but
+The Sci Benchmark testing interface for CREDO is still being developed, but
 essentially requires the user to write a Python script to configure and run
 a particular benchmark. This interface was chosen since benchmarks generally
 require more detailed specification and configuration than standard system
@@ -15,7 +15,7 @@ Setup
 The one example benchmark so far is testing a Rayleigh Taylor model can perform
 as required by the Van Keken benchmark:
 
-.. include:: ../../../Underworld/SysTest/ScienceBenchmarks/uwa_rayTayBenchmark.py
+.. include:: ../../../Underworld/SysTest/ScienceBenchmarks/credo_rayTayBenchmark.py
    :literal:
 
 As the code shows, once you set up a SciBenchmarkTest, you need to then add

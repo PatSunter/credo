@@ -1,41 +1,41 @@
-***********************************
-UWA IO (Input Output functions) API
-***********************************
+*************************************
+IO (Input Output functions) API
+*************************************
 
-.. automodule:: uwa.io
+.. automodule:: credo.io
 
-:mod:`uwa.io.stgxml`
+:mod:`credo.io.stgxml`
 ==========================
 
-.. automodule:: uwa.io.stgxml
+.. automodule:: credo.io.stgxml
    :members:
    :undoc-members:
    :show-inheritance:
 
-:mod:`uwa.io.stgfreq`
+:mod:`credo.io.stgfreq`
 ==========================
 
-.. inheritance-diagram:: uwa.io.stgfreq
+.. inheritance-diagram:: credo.io.stgfreq
 
-.. automodule:: uwa.io.stgfreq
+.. automodule:: credo.io.stgfreq
    :members:
    :undoc-members:
    :show-inheritance:
 
-:mod:`uwa.io.stgcvg`
+:mod:`credo.io.stgcvg`
 ==========================
 
-.. inheritance-diagram:: uwa.io.stgcvg
+.. inheritance-diagram:: credo.io.stgcvg
 
-.. automodule:: uwa.io.stgcvg
+.. automodule:: credo.io.stgcvg
    :members:
    :undoc-members:
    :show-inheritance:
 
-:mod:`uwa.io.stgpath`
+:mod:`credo.io.stgpath`
 ==========================
 
-.. automodule:: uwa.io.stgpath
+.. automodule:: credo.io.stgpath
    :members:
    :undoc-members:
    :show-inheritance:

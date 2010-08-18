@@ -1,25 +1,25 @@
-.. _uwa-examples-run-systest-scons:
+.. _credo-examples-run-systest-scons:
 
 Running a test target, or test suite, via the SCons build system
 ----------------------------------------------------------------
 
-UWA is now integrated with the SCons build system, so for project such as
-Underworld it is now possible to run UWA System tests via SCons.
+CREDO is now integrated with the SCons build system, so for project such as
+Underworld it is now possible to run CREDO System tests via SCons.
 
 For this to work, it requires test maintainers to follow the directions in
-:ref:`uwa-examples-run-systest-direct-importingReqs`, but you can follow
+:ref:`credo-examples-run-systest-direct-importingReqs`, but you can follow
 the instructions below without knowing the internal contents of suites.
 
 Running a project-defined multi-suite test target
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you invoke the SCons help for a project using UWA in it's base directory,
+If you invoke the SCons help for a project using CREDO in it's base directory,
 e.g. stgUnderworld, by typing::
 
   ./scons.py --help
 
 the full list of check 'targets' for a project
-will be printed. UWA has been set up to also work with the 
+will be printed. CREDO has been set up to also work with the 
 `PCU (Parallel C-Unit) <https://www.mcc.monash.edu.au/pcu-doc/>`_
 unit testing suite also used by StGermain codes, so
 that some testing targets can run both unit and system tests.
@@ -54,7 +54,7 @@ the following::
   ModelRun description: "Run the model, and check results against previously generated reference solution."
   Generating analysis XML:
   Running the Model (saving results in output/Anisotropic-referenceTest-np1-lowres):
-  Running model 'Anisotropic-referenceTest-np1-lowres' with command 'mpirun -np 1 /home/psunter/AuScopeCodes/stgUnderworldE-uwaDev-work/build/bin/StGermain /home/psunter/AuScopeCodes/stgUnderworldE-uwaDev-work/Underworld/SysTest/RegressionTests/Anisotropic.xml uwa-analysis.xml  --elementResI=10 --elementResJ=10 --elementResK=10' ...
+  Running model 'Anisotropic-referenceTest-np1-lowres' with command 'mpirun -np 1 /home/psunter/AuScopeCodes/stgUnderworldE-credoDev-work/build/bin/StGermain /home/psunter/AuScopeCodes/stgUnderworldE-credoDev-work/Underworld/SysTest/RegressionTests/Anisotropic.xml credo-analysis.xml  --elementResI=10 --elementResJ=10 --elementResK=10' ...
   Model ran successfully (output saved to path output/Anisotropic-referenceTest-np1-lowres, std out & std error to log.
   Doing post-run tidyup:
   Checking test result:
@@ -66,13 +66,13 @@ the following::
 ..and so on through a series of test suites, concluding with::
 
   --------------------------------------------------------------------------------
-  UWA System Tests results summary, project 'Underworld', suite 'RegressionTests-lowres':
+  CREDO System Tests results summary, project 'Underworld', suite 'RegressionTests-lowres':
   Ran 30 system tests, with 29 passes, 1 fails, and 0 errors
   Failures were:
    CylinderRiseThermal-referenceTest-np2-lowres: A Field was not within tolerance of reference soln.
   --------------------------------------------------------------------------------
   --------------------------------------------------------------------------------
-  UWA System Tests summary for all project suites ran:
+  CREDO System Tests summary for all project suites ran:
   ------
   Project 'Underworld':
    Suite 'RegressionTests-lowres': 30 tests, 29/1/0 passes/fails/errors
@@ -87,7 +87,7 @@ targets that run across multiple projects, the final summary will show the
 totals sorted by project, for example::
 
   --------------------------------------------------------------------------------
-  UWA System Tests summary for all project suites ran:
+  CREDO System Tests summary for all project suites ran:
   ------
   Project 'StgFEM':
    Suite 'PerformanceTests': 3 tests, 3/0/0 passes/fails/errors
@@ -118,7 +118,7 @@ Running a single test suite via SCons
 
 Instead of running a whole set of system test suites, you may wish to run 
 just a single suite. Of course this can be done directly as described in
-:ref:`uwa-examples-run-systest-direct`, but we also have the facility to
+:ref:`credo-examples-run-systest-direct`, but we also have the facility to
 do this at the base directory of a project via SCons.
 
 The syntax for running individual suites is based on the Python import name of
@@ -149,7 +149,7 @@ ran `PICellerator-PerformanceTests.xml`.
 .. rubric:: Footnotes
 .. [#f1] While you no longer need to run a custom scons executable from the
    local directory ("./scons.py") to get system test summary results,
-   as UWA is now fully integrated with stgUnderworld's scons config files and
+   as CREDO is now fully integrated with stgUnderworld's scons config files and
    is able to print a summary using the standard scons executable ... since
    we still distribute a patched scons with stgUnderworld, we recommend 
    continuing to run scons via the local script. All of the examples throughout

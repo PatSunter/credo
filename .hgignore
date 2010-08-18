@@ -7,8 +7,9 @@ syntax: glob
 doc/_build/*
 doc/temp
 sampledoc_tut*
-uwa/io/tests/output
-uwa/systest/tests/output
+credo/io/tests/output
+credo/systest/tests/output
+credo/tests/output/*
 
 # switch to regexp syntax.
 syntax: regexp
