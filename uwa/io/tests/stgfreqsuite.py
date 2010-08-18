@@ -4,6 +4,7 @@ import tempfile
 import unittest
 
 from uwa.io.stgfreq import FreqOutput
+import uwa.io.stgfreq as stgfreq
 
 class StgFreqTestCase(unittest.TestCase):
     def setUp(self):
@@ -78,6 +79,24 @@ class StgFreqTestCase(unittest.TestCase):
         meanVal = self.stgFreq.getMean('VRMS')
         calcMean = sum(self.VRMSVals, 0.0) / len(self.VRMSVals)
         self.assertAlmostEqual(meanVal, calcMean)
+
+    def test_getReductionOps(self):
+        for headerName, testList in [('Time', self.timeVals),
+                ('VRMS', self.VRMSVals)]:
+            lastVal, lastStep = self.stgFreq.getReductionOp(headerName,
+                stgfreq.last)
+            calcLast = testList[-1]
+            calcIndex = len(testList)-1
+            self.assertAlmostEqual(lastVal, calcLast)
+            self.assertEqual(lastStep, self.tSteps[calcIndex])
+        for headerName, testList in [('Time', self.timeVals),
+                ('VRMS', self.VRMSVals)]:
+            firstVal, firstStep = self.stgFreq.getReductionOp(headerName,
+                stgfreq.first)
+            calcFirst = testList[0]
+            calcIndex = 0
+            self.assertAlmostEqual(firstVal, calcFirst)
+            self.assertEqual(firstStep, self.tSteps[calcIndex])
 
     def test_plotOverTime(self):
         self.stgFreq.plotOverTime("Time", show=False, path="sampleData/temp")

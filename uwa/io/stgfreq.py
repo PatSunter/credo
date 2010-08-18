@@ -340,3 +340,15 @@ class FreqOutput:
             plt.savefig(filename, format="png")
         if show: plt.show()
         return plt
+
+def first(inList, key=None):
+    """A utility function designed to pass to 
+    attr:`~.FreqOutput.getReductionOp` for getting the first value from a
+    frequent output list."""
+    return inList[0]
+
+def last(inList, key=None):
+    """A utility function designed to pass to 
+    attr:`~.FreqOutput.getReductionOp` for getting the last value from a
+    frequent output list."""
+    return inList[-1]
