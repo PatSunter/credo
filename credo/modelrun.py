@@ -29,7 +29,9 @@ configure and run a Model, and save records of this as an XML. This process will
 produce a :class:`credo.modelresult.ModelResult` class.
 """
 
-import os, shutil
+import os
+import shutil
+import signal
 import sys
 import subprocess
 import time
@@ -721,8 +723,6 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False, maxTime=None):
     p = subprocess.Popen(runCommand, shell=True, stdout=stdOutFile,
         stderr=stdErrFile)
 
-    #import pdb
-    #pdb.set_trace()
     if maxTime == None or maxTime <= 0:    
         timeOut = False
         retCode = p.wait()
@@ -737,6 +737,10 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False, maxTime=None):
             if retCode is not None:
                 timeOut = False
                 break
+        if timeOut:
+            # At this point, we know the process has run too long.
+            # From Python 2.6, change this to p.kill()
+            os.kill(p.pid, signal.SIGKILL)
 
     # Check status of run (eg error status)
     if timeOut == True:
