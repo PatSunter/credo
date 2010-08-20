@@ -68,9 +68,10 @@ class ReferenceTest(SysTest):
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             fieldsToTest = ['VelocityField','PressureField'], runSteps=20,
             defFieldTol=1e-2, fieldTols=None, paramOverrides=None,
-            solverOpts=None, expPathPrefix="expected", nameSuffix=None ):
+            solverOpts=None, expPathPrefix="expected", nameSuffix=None,
+            timeout=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, solverOpts, "Reference", nameSuffix)
+            paramOverrides, solverOpts, "Reference", nameSuffix, timeout)
         testNameBasic = getStdTestNameBasic(self.testType+"Test", inputFiles)
         self.expectedSolnPath = os.path.join(expPathPrefix, testNameBasic)
         self.fieldsToTest = fieldsToTest

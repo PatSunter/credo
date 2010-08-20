@@ -32,6 +32,7 @@ produce a :class:`credo.modelresult.ModelResult` class.
 import os, shutil
 import sys
 import subprocess
+import time
 
 from xml.etree import ElementTree as etree
 from credo.io.stgxml import writeXMLDoc
@@ -45,6 +46,10 @@ _allowedModelParamTypes = [int, float, long, bool, str]
 
 CREDO_ANALYSIS_RECORD_FILENAME = "credo-analysis.xml"
 SOLVER_OPTS_RECORD_FILENAME = "solverOptsUsed.opt"
+
+# Default amount of time to wait (sec) between polling model results
+# when timeout active
+DEF_WAIT_TIME = 5
 
 class ModelRun:
     """A class to keep records about a StgDomain/Underworld Model Run,
@@ -631,7 +636,26 @@ class ModelRunError(Exception):
                 "".join(self.stdOutFileTail))
 
 
-def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
+class ModelRunTimeoutError(ModelRunError):
+    """An Exception for when Models fail to run due to timing out."""
+    def __init__(self, modelName, stdOutFilename, stdErrFilename,
+            maxTime):
+        ModelRunError.__init__(self, modelName, None, stdOutFilename,
+            stdErrFilename)
+        self.maxTime = maxTime
+    
+    def __str__(self):
+        return "Failed to run model '%s' due to timeout, max time was"\
+            " %.3f sec\n"\
+            "Std out and error logs saved to files %s and %s, "\
+            "Std error msg was:\n%s\nLast %d lines of std out msg was:\n%s"\
+            % (self.modelName, self.maxTime,
+                self.stdOutFilename, self.stdErrFilename, 
+                self.stdErrMsg, self.tailLen,
+                "".join(self.stdOutFileTail))
+
+
+def runModel(modelRun, extraCmdLineOpts=None, dryRun=False, maxTime=None):
     """Run the specified modelRun, and return a 
     :class:`~credo.modelresult.ModelResult` recording the results of the run.
 
@@ -696,11 +720,30 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False):
     #TODO: handle stdout properly as well
     p = subprocess.Popen(runCommand, shell=True, stdout=stdOutFile,
         stderr=stdErrFile)
-    retcode = p.wait()
+
+    #import pdb
+    #pdb.set_trace()
+    if maxTime == None or maxTime <= 0:    
+        timeOut = False
+        retCode = p.wait()
+    else:
+        waitTime = DEF_WAIT_TIME if DEF_WAIT_TIME < maxTime else maxTime
+        totalTime = 0
+        timeOut = True
+        while totalTime <= maxTime:
+            time.sleep(waitTime)
+            totalTime += waitTime
+            retCode = p.poll()
+            if retCode is not None:
+                timeOut = False
+                break
 
     # Check status of run (eg error status)
-    if retcode != 0:
-        raise ModelRunError(modelRun.name, retcode, stdOutFilename,
+    if timeOut == True:
+        raise ModelRunTimeoutError(modelRun.name, stdOutFilename,
+            stdErrFilename, maxTime)
+    if retCode != 0:
+        raise ModelRunError(modelRun.name, retCode, stdOutFilename,
             stdErrFilename)
     else:
         print "Model ran successfully (output saved to path %s, std out"\

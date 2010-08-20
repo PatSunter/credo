@@ -199,10 +199,18 @@ class SysTest:
        If this is set to other than None, then only these indices will
        be passed to TestComponents to check as part of the 
        :attr:`~.getStatus` function.
+    
+    .. attribute:: timeout
+
+       if set to a positive integer, this will be used as a maximum time
+       (in seconds) the test is allowed to run for - if it runs over this
+       the result of the test will be set to an Error.
+       If timeout is None, 0 or negative, no timeout will be applied.
     '''
 
     def __init__(self, inputFiles, outputPathBase,
-            nproc, paramOverrides, solverOpts, testType, nameSuffix=None):
+            nproc, paramOverrides, solverOpts, testType, nameSuffix=None,
+            timeout=None):
         self.testType = testType
         # Be forgiving of user passing a single string rather than a list,
         # and correct for this.
@@ -225,6 +233,7 @@ class SysTest:
         # -- PatrickSunter, 20 Jul 2010
         self.runPath = None
         self.resIndicesToTest = None
+        self.timeout = timeout
 
     def setup(self):
         '''For the setup phase of tests.
@@ -310,6 +319,12 @@ class SysTest:
         testStatus = CREDO_ERROR(errorMsg)
         self.testStatus = testStatus
         return testStatus
+
+    def setTimeout(self, seconds=0, minutes=0, hours=0, days=0):
+        """Sets the :attr:`~.timeout` parameter, used to determine how long
+        the test is allowed to run for."""
+        assert seconds >= 0 and minutes >=0 and days >= 0
+        self.timeout = seconds + minutes*60 + hours*60*60 + days*60*60*24
 
     def defaultSysTestFilename(self):
         """Return the default system test XML record filename, based on
@@ -568,6 +583,15 @@ class SysTestSuite:
         subSuite = SysTestSuite(*subSuiteRegArgs, **subSuiteKWArgs)
         self.addSubSuite(subSuite)
         return subSuite
+
+    def setAllTimeouts(self, seconds=0, minutes=0, applyToSubSuites=True):
+        """Utility function to set all the timeouts for all system tests
+        associated with the suite to a certain value."""
+        for sysTest in self.sysTests:
+            sysTest.setTimeout(seconds, minutes)
+        
+        for subSuite in self.subSuites:
+            subSuite.setAllTimeouts(seconds, minutes, applyToSubSuites)
 
     def _getStdOutputPath(self, testClass, inputFiles, testOpts):
         """Get the standard name for the test's output path. Attempts to

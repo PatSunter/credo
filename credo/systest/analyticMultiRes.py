@@ -56,10 +56,11 @@ class AnalyticMultiResTest(SysTest):
     failMsg = "One of the fields failed to converge as expected."
 
     def __init__(self, inputFiles, outputPathBase, resSet, nproc=1,
-            paramOverrides=None, solverOpts=None, nameSuffix=None):
+            paramOverrides=None, solverOpts=None, nameSuffix=None,
+            timeout=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
             paramOverrides, solverOpts, "AnalyticMultiResConvergence",
-            nameSuffix)
+            nameSuffix, timeout)
         self.resSet = resSet
         cvgChecker = FieldCvgWithScaleTest()
         self.testComponents['fieldConvChecker'] = cvgChecker
