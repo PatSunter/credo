@@ -63,7 +63,7 @@ environment variables. These are:
 
 In the application bundle CREDO was distributed as part of, there should be
 a script you can edit to easily update these variables and then source, such
-as "updatePathsCREDO-dev.sh".
+as "updatePathsCREDO.sh".
 
 After that, you should be good to go!
 
