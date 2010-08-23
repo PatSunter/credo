@@ -35,6 +35,7 @@ import signal
 import sys
 import subprocess
 import time
+from datetime import timedelta
 
 from xml.etree import ElementTree as etree
 from credo.io.stgxml import writeXMLDoc
@@ -51,7 +52,7 @@ SOLVER_OPTS_RECORD_FILENAME = "solverOptsUsed.opt"
 
 # Default amount of time to wait (sec) between polling model results
 # when timeout active
-DEF_WAIT_TIME = 5
+DEF_WAIT_TIME = 2
 
 class ModelRun:
     """A class to keep records about a StgDomain/Underworld Model Run,
@@ -639,7 +640,12 @@ class ModelRunError(Exception):
 
 
 class ModelRunTimeoutError(ModelRunError):
-    """An Exception for when Models fail to run due to timing out."""
+    """An Exception for when Models fail to run due to timing out.
+    
+    .. attribute:: maxTime
+    
+       maximum time to run that the model exceeded, in seconds.
+    """
     def __init__(self, modelName, stdOutFilename, stdErrFilename,
             maxTime):
         ModelRunError.__init__(self, modelName, None, stdOutFilename,
@@ -648,10 +654,10 @@ class ModelRunTimeoutError(ModelRunError):
     
     def __str__(self):
         return "Failed to run model '%s' due to timeout, max time was"\
-            " %.3f sec\n"\
+            " %s\n"\
             "Std out and error logs saved to files %s and %s, "\
             "Std error msg was:\n%s\nLast %d lines of std out msg was:\n%s"\
-            % (self.modelName, self.maxTime,
+            % (self.modelName, str(timedelta(seconds=self.maxTime)),
                 self.stdOutFilename, self.stdErrFilename, 
                 self.stdErrMsg, self.tailLen,
                 "".join(self.stdOutFileTail))
