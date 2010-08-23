@@ -81,70 +81,40 @@ tests and doing basic analysis.
 Setting up CREDO - Temporary instructions for beta users
 ========================================================
 
-The instructions below are for setting up to use the current beta release of
-CREDO, |release|. In future the process will become more streamlined as part of
-the normal process of configuring, building and installing stgUnderworld, but
-for now follow these instructions to try out the beta version.
+Currently, CREDO is primarily designed to be distributed with the
+stgUnderworld application bundle. It is possible to install it on
+its own, but currently the instructions below focus on this main
+use case.
 
-obtaining the CREDO-dev branch
-------------------------------
+obtaining CREDO as part of stgUnderworld
+----------------------------------------
 
-The |release| release of CREDO is currently being developed on a branch of the
-main stgUnderworld framework, called *credo-dev*. This is so it doesn't
-interfere with the main-line of the stgUnderworld framework until ready
-for a first production release.
-
-To obtain this branch of the code for experimentation:
+To obtain CREDO as part of stgUnderworld:
 
 1. Check out the stgUnderworld codebase, from
    https://www.mcc.monash.edu.au/hg/stgUnderworld.
    (Check out instructions at the `Underworld download page <http://www.underworldproject.org/documentation/Releases.html#Bleeding_Edge_version>`_
-   if unsure how to do this. We suggest you name the checked-out
-   directory descriptively, e.g. stgUnderworldE-credoDev, which would use the
-   following command::
+   if unsure how to do this.
+   
+   e.g. use the following command::
 
-    hg clone https://www.mcc.monash.edu.au/hg/stgUnderworld stgUnderworldE-credoDev
+    hg clone https://www.mcc.monash.edu.au/hg/stgUnderworld
 
-2. Update to the `uwa-dev` branch [#f1]_::
-
-    cd ./stgUnderworldE-credoDev
-    hg update uwa-dev
-
-3. running obtainRepositories.py to download all the sub-packages,
+2. run obtainRepositories.py to download all the sub-packages,
    including CREDO::
 
-    ./obtainRepositories.py --with-experimental=1
+    ./obtainRepositories.py
 
-  * (You will have to submit your repository authentication details while
-    cloning both CREDO, and Experimental.)
-  * (We suggest you use the --with-experimental=1 flag, because the
-    Experimental repository contains several examples of CREDO code.)
+  * (You may have to submit your repository authentication details while
+    cloning both repositories such as Experimental above, if you
+    have specified to download them.)
 
-4. Verify you have obtained the credo-dev branch of each repository::
-
-    ./identify-all.sh
-
-5. Which should produce output such as the following (the numbers are not
-   important and will depend on the particular revision you check out - the
-   important thing is the *(uwa-dev)* beside each codebase except for CREDO)::
-
-    02345d81430b (uwa-dev) .
-    29f1a3b12768 (uwa-dev) tip ./config
-    6e579efb9cba (uwa-dev) ./Experimental
-    33ead9b1dd4a (uwa-dev) ./gLucifer
-    bd690d648b46 (uwa-dev) ./PICellerator
-    73a57163f45c (uwa-dev) ./StgDomain
-    3f1ae708ca70 (uwa-dev) ./StGermain
-    cfc1f5e5c316 (uwa-dev) tip ./StgFEM
-    261e8602f34e (uwa-dev) tip ./Underworld
-    204034be3ebf tip ./credo
-
-6. Finally, configure and build the codebase as normal using scons, as detailed
+3. Configure and build the codebase as normal using scons, as detailed
    on the
    `Underworld website <http://www.underworldproject.org/documentation/CompileSCons.html#Compiling_the_Bleeding_Edge>`_.
 
-You should now have a working version of the uwa-dev branch of the stgUnderworld
-codebase installed.
+You should now have a working version of the stgUnderworld codebase installed,
+including CREDO.
 
 .. _environment_setup:
 
@@ -190,11 +160,11 @@ Modifying the shell variables directly
 If you would like to manually set up these environment variables, just first
 work out the correct values, and set them in your shell. E.g. if your
 stgUnderworld checkout with CREDO included was located at
-~/AuScopeCodes/stgUnderworldE-credoDev, then in Bash you would type::
+~/AuScopeCodes/stgUnderworldE, then in Bash you would type::
 
-  export PATH=$PATH:~/AuScopeCodes/stgUnderworldE-credoDev/credo/scripts/  
-  export PYTHONPATH=$PYTHONPATH:~/AuScopeCodes/stgUnderworldE-credoDev/credo/credo/  
-  export STG_BINDIR=~/AuScopeCodes/stgUnderworldE-credoDev/build/bin/
+  export PATH=$PATH:~/AuScopeCodes/stgUnderworldE/credo/scripts/  
+  export PYTHONPATH=$PYTHONPATH:~/AuScopeCodes/stgUnderworldE/credo/credo/  
+  export STG_BINDIR=~/AuScopeCodes/stgUnderworldE/build/bin/
 
 You might like to then save these lines to a config file for when you log in.
 
@@ -202,13 +172,13 @@ Updating and sourcing the provided bash config file in stgUnderworld
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Alternatively, a Bash script that does all the necessary exports once
-you specify one single path, has been included as *updatePathsCREDO-dev.sh*
+you specify one single path, has been included as *updatePathsCREDO.sh*
 in the base directory of the stgUnderworld repository.
 
 So you can just source this file into your environment each time you want to
 start a session and use CREDO::
 
-  source updatePathsCREDO-dev.sh 
+  source updatePathsCREDO.sh 
 
 you will then be ready to use CREDO.
 
@@ -218,7 +188,7 @@ Testing you're set up correctly to use CREDO
 It's easy to test if these environment variables have been set up correctly -
 just open a Python script and test that you can import CREDO: ::
 
-  psunter@auscope-02:~/AuScopeCodes/stgUnderworldE-credoDev-work$ python
+  psunter@auscope-02:~/AuScopeCodes/stgUnderworldE$ python
   Python 2.6.4 (r264:75706, Dec  7 2009, 18:43:55) 
   [GCC 4.4.1] on linux2
   Type "help", "copyright", "credits" or "license" for more information.
@@ -241,7 +211,3 @@ If there's an error, you will see something like::
 ...which means you need to go back through the steps - most likely it's a
 problem with the setup of the environment variables above.
 
-.. rubric:: Footnotes
-
-.. [#f1] We haven't renamed the branch from the original "uwa-dev" name of the 
-   project, as this is a hassle in Mercurial.
