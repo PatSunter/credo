@@ -4,7 +4,8 @@ CREDO Readme
 CREDO is a toolkit for running, analysing and benchmarking computational models
 based on the StGermain framework, primarily Underworld.
 
-(TODO: website link.)
+The current CREDO website with links to documentation, release info etc is:
+https://www.mcc.monash.edu.au/trac/AuScopeEngineering/wiki/CREDO
 
 (For more info on StGermain and Underworld, see http://www.stgermainproject.org,
 and http://www.underworldproject.org).
