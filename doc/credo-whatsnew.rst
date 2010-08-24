@@ -9,6 +9,46 @@ This page summarises what's new in each CREDO version.
 (See the files in the "changelogs" sub-directory of the CREDO distribution for
 full ChangeLogs based on Mercurial commits.)
 
+new in credo-0.1.2
+==================
+
+The main changes in this version were:
+
+* Applied an LGPLv2.1 license to the codebase, and added appropriate 
+  Copyright statements.
+* Can now over-ride the MPI command used for running models by setting the
+  MPI_RUN_COMMAND env variable.
+* Updated the :class:`~credo.systest.systestrunner.SysTestRunner` class's 
+  XML output to be more like that of the Python Unittest XML suite addon,
+  unittest-xml-reporting (which helps Bitten integration). The XML suite
+  results are now written to separate sub-files, in a "testLogs" sub
+  directory by default.
+* Refactored the :class:`~credo.systest.api.SysTest` class 
+  hierarchy to simplify it, it's now easier to write sub-classes as they
+  all use a default `check` function that checks all TestComponents.
+* Added capability to specify a Timeout for system tests, after which time the
+  test is deemed to have failed if still running.
+* New exception classes:
+
+  * Added a custom exception,
+    :class:`~credo.modelrun.ModelRunError`,
+    to record if a model failed to run.
+  * Added a :class:`~credo.modelrun.ModelRunTimeoutError`,
+    (see comments on Timeout above.)
+
+* Added new reduction operators for :mod:`~credo.io.stgfreq` module, `first`
+  and `last`, that help with setting up system tests based on this.
+
+* Bug/version fixes:
+ 
+  * Updated the code used to generate model suites so that the itertools.product
+    function, which is Python 2.6 onwards, is replaced by similar functionality
+    if using Python 2.5
+  * Fixed SCons integration stuff to make sure paths are set correctly on all
+    machines.
+  * Fixed the ability to save plots in non-standard directories from frequent
+    output data.
+
 new in credo-0.1.1
 ==================
 
