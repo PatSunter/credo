@@ -32,6 +32,7 @@ defFieldScaleCvgCriterions = {
     'VelocityField':(1.6,0.99),
     'PressureField':(0.9,0.99),
     'StrainRateField':(0.85,0.99),
+    'recoveredStrainRateField':(1.6,0.99),
     'recoveredSigmaField':(1.6,0.99),
     'recoveredPressureField':(1.6,0.99),
     'recoveredTauField':(1.6,0.99),
