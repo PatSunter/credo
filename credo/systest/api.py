@@ -444,10 +444,12 @@ class SysTest:
         nProcNode = etree.SubElement(specNode, "nproc")
         nProcNode.text = str(self.nproc)
 
+        etree.SubElement(specNode, "timeout").text = str(self.timeout)
+
         mrun.writeParamOverridesInfoXML(self.paramOverrides, specNode)
         mrun.writeSolverOptsInfoXML(self.solverOpts, specNode)
         try:
-            self._writeXMLCustomSpec(specNode)   
+            self._writeXMLCustomSpec(specNode)
         except AttributeError, ae:
             raise NotImplementedError("Please implement a "\
                 " _writeXMLCustomSpec()"\

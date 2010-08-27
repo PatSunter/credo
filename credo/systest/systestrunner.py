@@ -78,7 +78,7 @@ class SysTestRunner:
         sysTest.writePreRunXML()
         mSuite.writeAllModelRunXMLs()
         try:
-            suiteResults = mSuite.runAll(maxTime=sysTest.timeout)
+            suiteResults = mSuite.runAll(maxRunTime=sysTest.timeout)
         except ModelRunError, mre:
             suiteResults = None
             testResult = sysTest.setErrorStatus(str(mre))

@@ -642,28 +642,28 @@ class ModelRunError(Exception):
 class ModelRunTimeoutError(ModelRunError):
     """An Exception for when Models fail to run due to timing out.
     
-    .. attribute:: maxTime
+    .. attribute:: maxRunTime
     
        maximum time to run that the model exceeded, in seconds.
     """
     def __init__(self, modelName, stdOutFilename, stdErrFilename,
-            maxTime):
+            maxRunTime):
         ModelRunError.__init__(self, modelName, None, stdOutFilename,
             stdErrFilename)
-        self.maxTime = maxTime
+        self.maxRunTime = maxRunTime
     
     def __str__(self):
         return "Failed to run model '%s' due to timeout, max time was"\
             " %s\n"\
             "Std out and error logs saved to files %s and %s, "\
             "Std error msg was:\n%s\nLast %d lines of std out msg was:\n%s"\
-            % (self.modelName, str(timedelta(seconds=self.maxTime)),
+            % (self.modelName, str(timedelta(seconds=self.maxRunTime)),
                 self.stdOutFilename, self.stdErrFilename, 
                 self.stdErrMsg, self.tailLen,
                 "".join(self.stdOutFileTail))
 
 
-def runModel(modelRun, extraCmdLineOpts=None, dryRun=False, maxTime=None):
+def runModel(modelRun, extraCmdLineOpts=None, dryRun=False, maxRunTime=None):
     """Run the specified modelRun, and return a 
     :class:`~credo.modelresult.ModelResult` recording the results of the run.
 
@@ -729,14 +729,14 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False, maxTime=None):
     p = subprocess.Popen(runCommand, shell=True, stdout=stdOutFile,
         stderr=stdErrFile)
 
-    if maxTime == None or maxTime <= 0:    
+    if maxRunTime == None or maxRunTime <= 0:    
         timeOut = False
         retCode = p.wait()
     else:
-        waitTime = DEF_WAIT_TIME if DEF_WAIT_TIME < maxTime else maxTime
+        waitTime = DEF_WAIT_TIME if DEF_WAIT_TIME < maxRunTime else maxRunTime
         totalTime = 0
         timeOut = True
-        while totalTime <= maxTime:
+        while totalTime <= maxRunTime:
             time.sleep(waitTime)
             totalTime += waitTime
             retCode = p.poll()
@@ -751,7 +751,7 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False, maxTime=None):
     # Check status of run (eg error status)
     if timeOut == True:
         raise ModelRunTimeoutError(modelRun.name, stdOutFilename,
-            stdErrFilename, maxTime)
+            stdErrFilename, maxRunTime)
     if retCode != 0:
         raise ModelRunError(modelRun.name, retCode, stdOutFilename,
             stdErrFilename)

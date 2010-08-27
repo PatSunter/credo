@@ -249,7 +249,7 @@ class ModelSuite:
             self.runDescrips.append(subPath)
             self.runCustomOptSets.append(None)
 
-    def runAll(self, extraCmdLineOpts=None, dryRun=False, maxTime=None):
+    def runAll(self, extraCmdLineOpts=None, dryRun=False, maxRunTime=None):
         '''Run each modelRun in the suite - with optional extra cmd line opts.
         Will also write XML records of each ModelRun and ModelResult in the 
         suite.
@@ -277,7 +277,7 @@ class ModelSuite:
             if extraCmdLineOpts:
                 if customOpts == None: customOpts = ""
                 customOpts += extraCmdLineOpts
-            result = mrun.runModel(modelRun, customOpts, dryRun, maxTime)
+            result = mrun.runModel(modelRun, customOpts, dryRun, maxRunTime)
             if dryRun == True: continue
             assert isinstance( result, mres.ModelResult )
             print "Doing post-run tidyup:"
