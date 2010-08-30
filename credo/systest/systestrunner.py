@@ -29,6 +29,7 @@ import sys
 import inspect
 from xml.etree import ElementTree as etree
 
+import credo.jobrunner
 import credo.io.stgxml
 from credo.systest.api import *
 from credo.modelrun import ModelRunError
@@ -68,9 +69,6 @@ class SysTestRunner:
         :class:`credo.systest.api.SysTestResult` it produces.
         Will also write an XML record of the System test, and each ModelRun
         and ModelResult in the suite that made up the test."""
-        # TODO A little hacky on the chdir - see api.py:183 comment
-        startDir = os.getcwd()
-        os.chdir(sysTest.runPath)
         mSuite = sysTest.genSuite()
         mSuite.cleanAllOutputPaths()
         mSuite.cleanAllLogFiles()
@@ -78,7 +76,11 @@ class SysTestRunner:
         sysTest.writePreRunXML()
         mSuite.writeAllModelRunXMLs()
         try:
-            suiteResults = mSuite.runAll(maxRunTime=sysTest.timeout)
+            # TODO: maybe could allow job-runner type to be over-ridden as
+            # a command line argument, or set on the constructor.
+            jobRunner = credo.jobrunner.defaultRunner()
+            suiteResults = jobRunner.runSuite(mSuite,
+                maxRunTime=sysTest.timeout)
         except ModelRunError, mre:
             suiteResults = None
             testResult = sysTest.setErrorStatus(str(mre))
@@ -93,7 +95,6 @@ class SysTestRunner:
         outFilePath = sysTest.updateXMLWithResult(suiteResults)
         testResult.setRecordFile(outFilePath)
         print "Saved test result to %s" % (outFilePath)
-        os.chdir(startDir)
         return testResult
 
     def runTests(self, sysTests, projName=None, suiteName=None,

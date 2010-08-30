@@ -86,18 +86,6 @@ class ModelSuiteTestCase(unittest.TestCase):
                 os.path.join("output", "genSuiteTest",
                 "depthVary_%s-ZVary_%s" % (yRange[yIndex],zRange[zIndex])))
 
-    def test_runAll(self):
-        mSuite = ModelSuite(os.path.join("output","suiteTest"))
-        results = mSuite.runAll()
-        self.assertEqual(results,[])
-        # Now add some runs
-        mRun1 = ModelRun("testRun1",["Input1.xml"],"./output/tr1")
-        mRun2 = ModelRun("testRun2",["Input2.xml"],"./output/tr2")
-        mSuite.addRun(mRun1, "Initial run")
-        mSuite.addRun(mRun2, "Second run")
-        #TODO: some sort of --pretend or --dry-run mode?
-        #results = self.mSuite.runAll()
-
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(ModelSuiteTestCase, 'test'))

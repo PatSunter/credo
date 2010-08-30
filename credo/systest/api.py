@@ -339,7 +339,7 @@ class SysTest:
         use this and not keep up to date with changes in
         the ModelRun interface.)"""
         return mrun.ModelRun(modelName,
-            self.inputFiles, outputPath,
+            self.inputFiles, outputPath, basePath=self.runPath,
             nproc=self.nproc, paramOverrides=self.paramOverrides,
             solverOpts=self.solverOpts)
 
@@ -561,7 +561,8 @@ class SysTestSuite:
         callingPath = os.path.dirname(callingFile)
         # If just given a single input file as a string, convert
         #  to a list (containing that single file).
-        if isinstance(inputFiles, str): inputFiles = [inputFiles]
+        if isinstance(inputFiles, str):
+            inputFiles = [inputFiles]
         credo.io.stgpath.convertLocalXMLFilesToAbsPaths(inputFiles, callingPath)
         credo.io.stgpath.checkAllXMLInputFilesExist(inputFiles)
         if 'nproc' not in testOpts:

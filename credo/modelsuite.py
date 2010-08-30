@@ -193,20 +193,26 @@ class ModelSuite:
         '''Remove all files in each model's output path. Useful to get rid of
         results still there from previous jobs. Doesn't delete sub-directories,
         in case they are other model runs' results that should be ignored.'''
+        startDir = os.getcwd()
         for modelRun in self.runs:
+            os.chdir(modelRun.basePath)
             for filePath in glob.glob(os.path.join(modelRun.outputPath,"*")):
                 if os.path.isfile(filePath):
                     os.unlink(filePath)
+            os.chdir(startDir)
 
     def cleanAllLogFiles(self):
         """Remove all stdout and stderr files from each ModelRun's designated
         output and log paths."""
+        startDir = os.getcwd()
         for modelRun in self.runs:
+            os.chdir(modelRun.basePath)
             logFiles = [modelRun.getStdOutFilename(),
                 modelRun.getStdErrFilename()]
             for fname in logFiles:
                 if os.path.isfile(fname):
                     os.unlink(fname)
+            os.chdir(startDir)
 
     def addVariant(self, name, modelVariant):
         """Add a :class:`.StgXMLVariant` to the list to be applied to a
@@ -249,43 +255,6 @@ class ModelSuite:
             self.runDescrips.append(subPath)
             self.runCustomOptSets.append(None)
 
-    def runAll(self, extraCmdLineOpts=None, dryRun=False, maxRunTime=None):
-        '''Run each modelRun in the suite - with optional extra cmd line opts.
-        Will also write XML records of each ModelRun and ModelResult in the 
-        suite.
-
-        :returns: a reference to the :attr:`.resultsList` containing all
-           the ModelResults generated.'''
-        # NB: may want to pass in a jobRunner argument, to do the run
-
-        print "Running the %d modelRuns specified in the suite" % len(self.runs)
-        for runI, modelRun in enumerate(self.runs):
-            if not isinstance(modelRun, mrun.ModelRun):
-                raise TypeError("Error, stored run %d not an instance of a"\
-                    " ModelRun" % runI)
-            print "Doing run %d/%d (index %d), of name '%s':"\
-                % (runI+1, len(self.runs), runI, modelRun.name)
-            print "ModelRun description: \"%s\"" % (self.runDescrips[runI])
-            print "Generating analysis XML:"
-            modelRun.analysisXMLGen()
-
-            print "Running the Model (saving results in %s):"\
-                % (modelRun.outputPath)
-            customOpts = None
-            if self.runCustomOptSets[runI]:
-                customOpts = self.runCustomOptSets[runI]
-            if extraCmdLineOpts:
-                if customOpts == None: customOpts = ""
-                customOpts += extraCmdLineOpts
-            result = mrun.runModel(modelRun, customOpts, dryRun, maxRunTime)
-            if dryRun == True: continue
-            assert isinstance( result, mres.ModelResult )
-            print "Doing post-run tidyup:"
-            modelRun.postRunCleanup(os.getcwd())
-            self.resultsList.append(result)
-
-        return self.resultsList    
-    
     def writeAllModelRunXMLs(self):
         """Save an XML record of each ModelRun currently in :attr:`.runs`."""
         for runI, modelRun in enumerate(self.runs):
@@ -294,8 +263,8 @@ class ModelSuite:
     def writeAllModelResultXMLs(self):
         """Save an XML record of each ModelResult currently in
         :attr:`.resultsList`."""
-        for runI, result in enumerate(self.resultsList):
-            mres.writeModelResultsXML(result, path=self.runs[runI].outputPath)
+        for runI, mResult in enumerate(self.resultsList):
+            mResult.writeRecordXML()
             
     # TODO: here perhaps would be where we have tools to generate stats/plots
     # of various properties of the suite, e.g. memory usage? Or should

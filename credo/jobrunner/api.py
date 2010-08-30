@@ -22,6 +22,7 @@
 ##  MA  02110-1301  USA
 
 import credo.modelrun
+import credo.modelresult
 
 class JobRunner:
     def __init__(self):
@@ -68,3 +69,44 @@ class JobRunner:
            but don't actually run anything."""
 
         raise NotImplementedError("Error, virtual func on base class")   
+
+    def runSuite(self, modelSuite, extraCmdLineOpts=None, dryRun=False,
+            maxRunTime=None):
+        '''Run each ModelRun in the suite - with optional extra cmd line opts.
+        Will also write XML records of each ModelRun and ModelResult in the 
+        suite.
+
+        Input arguments same as for :meth:`.runModel`.
+
+        :returns: a reference to the :attr:`.resultsList` containing all
+           the ModelResults generated.'''
+
+        print "Running the %d modelRuns specified in the suite" % \
+            (len(modelSuite.runs))
+
+        for runI, modelRun in enumerate(modelSuite.runs):
+            if not isinstance(modelRun, credo.modelrun.ModelRun):
+                raise TypeError("Error, stored run %d not an instance of a"\
+                    " ModelRun" % runI)
+            print "Doing run %d/%d (index %d), of name '%s':"\
+                % (runI+1, len(modelSuite.runs), runI, modelRun.name)
+            print "ModelRun description: \"%s\"" % \
+                (modelSuite.runDescrips[runI])
+
+            print "Running the Model (saving results in %s):"\
+                % (modelRun.outputPath)
+
+            customOpts = None
+            if modelSuite.runCustomOptSets[runI]:
+                customOpts = modelSuite.runCustomOptSets[runI]
+            if extraCmdLineOpts:
+                if customOpts == None: customOpts = ""
+                customOpts += extraCmdLineOpts
+
+            result = self.runModel(modelRun, customOpts, dryRun, maxRunTime)
+
+            if dryRun == True: continue
+            assert isinstance(result, credo.modelresult.ModelResult)
+            modelSuite.resultsList.append(result)
+
+        return modelSuite.resultsList

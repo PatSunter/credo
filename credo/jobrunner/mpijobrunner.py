@@ -26,6 +26,7 @@ import signal
 import subprocess
 import time
 from datetime import timedelta
+import credo.modelrun
 from credo.modelresult import ModelResult, getSimInfoFromFreqOutput
 from credo.jobrunner.api import JobRunner
 from credo.io import stgpath
@@ -38,12 +39,11 @@ DEF_WAIT_TIME = 2
 MPI_RUN_COMMAND = "MPI_RUN_COMMAND"
 
 class MPIJobRunner(JobRunner):
-    def __init__(self, runPath):
+    def __init__(self):
         if MPI_RUN_COMMAND in os.environ:
             self.mpiRunCommand = os.environ[MPI_RUN_COMMAND]
         else:
             self.mpiRunCommand = "mpirun"
-        self.runPath = runPath
 
     def setup(self):
         # TODO: check mpd is running, if necessary
@@ -55,6 +55,14 @@ class MPIJobRunner(JobRunner):
     def runModel(self, modelRun, extraCmdLineOpts=None, dryRun=False,
             maxRunTime=None):
         """See :meth:`credo.jobrunner.api.JobRunner.runModel`."""     
+
+        # Navigate to the model's base directory
+        startDir = os.getcwd()
+        if modelRun.basePath != startDir:
+            print "Changing to ModelRun's specified base path '%s'" % \
+                (modelRun.basePath)
+            os.chdir(modelRun.basePath)
+
         stgpath.checkAllXMLInputFilesExist(modelRun.modelInputFiles)
 
         # Pre-run checks for validity - e.g. at least one input file,
@@ -72,22 +80,24 @@ class MPIJobRunner(JobRunner):
         modelRun.analysisXMLGen()
         stgRunStr = self.constructStGermainRunCommand(modelRun)
 
-        # Construct full run line
         stdOutFilename = modelRun.getStdOutFilename()
         stdErrFilename = modelRun.getStdErrFilename()
         stdOutFile = open(stdOutFilename, "w+")
         stdErrFile = open(stdErrFilename, "w+")
+
+        # Construct full run line
         mpiPart = "%s -np %d " % (self.mpiRunCommand, modelRun.jobParams.nproc)
         runCommand = mpiPart + stgRunStr
 
         # Run the run command, sending stdout and stderr to defined log paths
         print "Running model '%s' via MPI with command '%s' ..."\
             % (modelRun.name, runCommand)
-        # TODO: the mpirunner should check things like mpd are set up properly,
-        # in case of mpich2
 
         # If we're only doing a dry run, return here.
-        if dryRun == True: return None
+        if dryRun == True:
+            os.chdir(startDir)
+            return None
+
         # Do the actual run
         p = subprocess.Popen(runCommand, shell=True, stdout=stdOutFile,
             stderr=stdErrFile)
@@ -120,13 +130,18 @@ class MPIJobRunner(JobRunner):
             raise ModelRunError(modelRun.name, retCode, stdOutFilename,
                 stdErrFilename)
         else:
+            # Taking advantage of os.path.join functionality to automatically
+            #  over-ride later absolute paths.
+            absOutPath = os.path.join(modelRun.basePath, modelRun.outputPath)
+            absLogPath = os.path.join(modelRun.basePath, modelRun.logPath)
             print "Model ran successfully (output saved to path %s, std out"\
-                " & std error to %s." % (modelRun.outputPath, modelRun.logPath)
+                " & std error to %s." % (absOutPath, absLogPath)
 
         # Now tidy things up after the run.
         stdOutFile.close()
         stdErrFile.close()
-        modelRun.postRunCleanup(self.runPath)
+        print "Doing post-run tidyup:"
+        modelRun.postRunCleanup()
 
         # Construct a modelResult
         # TODO: Maybe should construct just a basic ModelResult, and provide
@@ -137,7 +152,12 @@ class MPIJobRunner(JobRunner):
             # For now, allow runs that didn't create a freq output
             tSteps, simTime = None, None
 
-        mResult = ModelResult(modelRun.name, modelRun.outputPath, simTime)
+        mResult = ModelResult(modelRun.name, absOutPath, simTime)
+
+        if modelRun.basePath != startDir:
+            print "Restoring initial path '%s'" % \
+                (startDir)
+            os.chdir(startDir)
         
         # TODO: perhaps should return info on stdout and stderr?
         return mResult

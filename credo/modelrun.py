@@ -31,6 +31,7 @@ produce a :class:`credo.modelresult.ModelResult` class.
 
 import os
 import shutil
+import inspect
 from xml.etree import ElementTree as etree
 from credo.io.stgxml import writeXMLDoc
 import credo.modelresult
@@ -70,8 +71,14 @@ class ModelRun:
     
        name of the modelRun.
        
+    .. attribute:: basePath
+
+       The path from which all paths to model input files (on the local machine)
+       are specified relative to, and which the job will run in (if running
+       on local machine).
+
     .. attribute:: modelInputFiles
-    
+
        'Input files' that comprise the XML model that will be run.
 
     .. attribute:: outputPath
@@ -164,19 +171,29 @@ class ModelRun:
 
     solverOptsRecordFilename = "solverOptsUsed.opt"
 
-    def __init__(self, name, modelInputFiles, outputPath, logPath="log",
-      cpReadPath=None, nproc=1, simParams=None,
-      paramOverrides=None, solverOpts=None, xmlExtras=None):
+    def __init__(self, name, modelInputFiles, outputPath, basePath=None,
+            logPath="log",
+            cpReadPath=None, nproc=1, simParams=None,
+            paramOverrides=None, solverOpts=None, xmlExtras=None):
         self.name = name
         # Be forgiving if the user passes a single string input file, rather
         # than list
         if isinstance(modelInputFiles, str):
             modelInputFiles = [modelInputFiles]
         self.modelInputFiles = modelInputFiles
-        self.outputPath = outputPath
-        self.cpReadPath = cpReadPath
-        self.logPath = logPath
-        self.jobParams = JobParams(nproc) 
+        if basePath is None:
+            # Default to the path of the calling script
+            callingFile = inspect.stack()[1][1]
+            callingPath = os.path.dirname(callingFile)
+            self.basePath = callingPath
+        else:
+            self.basePath = basePath
+        self.basePath = os.path.abspath(self.basePath)    
+
+        self.outputPath = self.setPath(outputPath)
+        self.cpReadPath = self.setPath(cpReadPath)
+        self.logPath = self.setPath(logPath)
+        self.jobParams = JobParams(nproc)
         self.simParams = simParams
         self.paramOverrides = paramOverrides
         if self.paramOverrides == None:
@@ -190,7 +207,7 @@ class ModelRun:
         self.cpFields = []
         self.analysisXML = None
 
-    def postRunCleanup(self, runPath):
+    def postRunCleanup(self):
         """function designed to be run after a modelRun has completed, and will
         do any post-run cleanup to get ready for analysis - e.g. moving files 
         into the output directory that were created to configure the run and
@@ -202,7 +219,7 @@ class ModelRun:
             os.path.join(self.outputPath, self.analysisXML))
 
         for opName, analysisOp in self.analysisOps.iteritems(): 
-            analysisOp.postRun(self, runPath)
+            analysisOp.postRun(self, self.basePath)
 
         # Keep a record of any solver options used.
         if self.solverOpts:
@@ -243,6 +260,14 @@ class ModelRun:
         saved to."""
         return os.path.join(self.logPath, "%s.stderr" % self.name)
 
+    def setPath(self, inPath):
+        """Do any needed manipulations when setting paths.
+        """
+        if inPath == None:
+            return None
+        else:
+            return inPath
+
     def writeInfoXML(self, writePath="", filename="", update=False,
             prettyPrint=True):
         """Writes an XML recording the key details of this ModelRun, in CREDO
@@ -268,6 +293,7 @@ class ModelRun:
         for xmlFilename in self.modelInputFiles:
             modFile = etree.SubElement(filesList, 'inputFile')
             modFile.text = xmlFilename
+        etree.SubElement(root, 'basePath').text = self.basePath
         etree.SubElement(root, 'outputPath').text = self.outputPath
         if self.cpReadPath:
             etree.SubElement(root, 'cpReadPath').text = self.cpReadPath

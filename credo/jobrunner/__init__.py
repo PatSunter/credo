@@ -27,6 +27,6 @@ MPI locally, via PBS scripts in a queueing system, or via grid submission."""
 from credo.jobrunner.mpijobrunner import MPIJobRunner
 
 # TODO: the runPath is temporary I think
-def defaultRunner(runPath):
-    defRunner = MPIJobRunner(runPath=runPath)
+def defaultRunner():
+    defRunner = MPIJobRunner()
     return defRunner

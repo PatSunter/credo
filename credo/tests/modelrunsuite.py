@@ -43,7 +43,7 @@ class ModelRunTestCase(unittest.TestCase):
     def test_writeModelRunXML(self):
         nproc = 2
         modelRun = mrun.ModelRun('TestModel', ["testModel.xml"], \
-            'output/testModel', nproc)
+            'output/testModel', nproc=nproc)
         modelRun.simParams = mrun.SimParams(nsteps=5, cpevery=10)
         modelRun.writeInfoXML(prettyPrint=True)
 
