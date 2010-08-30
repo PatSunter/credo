@@ -99,6 +99,35 @@ class ModelResult:
         fieldResult = fields.FieldComparisonResult(fieldName, errors)
         self.fieldResults.append(fieldResult)
         return fieldResult
+    
+    def writeRecordXML(self, outputDir="", filename="", prettyPrint=True):
+        """Write an XML record of a :class:`.ModelResult`."""
+        if filename == "":
+            filename = defaultModelResultFilename(self.modelName)
+        if outputDir == "":
+            outputDir = self.outputPath
+
+        # Write extra model results, e.g.
+        # create model file
+        mrNode = etree.Element(self.XML_INFO_TAG)
+        xmlDoc = etree.ElementTree(mrNode)
+        etree.SubElement(mrNode, 'modelName').text = self.modelName
+        etree.SubElement(mrNode, 'outputPath').text = self.outputPath
+        self.jobMetaInfo.writeInfoXML(mrNode)
+        if (self.fieldResults):
+            fieldResultsNode = etree.SubElement(mrNode,
+                fields.FieldComparisonResult.XML_INFO_LIST_TAG)
+            for fieldResult in self.fieldResults:
+                fieldResult.writeInfoXML(fieldResultsNode)
+
+        # Write the files
+        if not os.path.exists(outputDir): os.makedirs(outputDir)
+        fullPath = os.path.join(outputDir, filename)
+        outFile = open(fullPath, 'w')
+        writeXMLDoc(xmlDoc, outFile, prettyPrint)
+        outFile.close()
+        return fullPath
+
 
 # TODO: can the below just be collapsed into a dictionary? Then have
 # standard write facilities.
@@ -125,39 +154,6 @@ class JobMetaInfo:
          XML doc node'''
         jmNode = etree.SubElement(xmlNode, self.XML_INFO_TAG)
         etree.SubElement(jmNode, 'simtime').text = str(self.simtime)
-
-# Key XML tags
-
-def writeModelResultsXML(modelResult, path="", filename="", prettyPrint=True):
-    """Write an XML record of a :class:`.ModelResult`."""
-    mres = modelResult
-    assert isinstance(mres, ModelResult)
-    if filename == "":
-        filename = defaultModelResultFilename(mres.modelName)
-    if path == "":
-        path = modelResult.outputPath
-    else:
-        path += os.sep
-        if not os.path.exists(path): os.makedirs(path)
-
-    # Write extra model results, e.g.
-    # create model file
-    mrNode = etree.Element(modelResult.XML_INFO_TAG)
-    xmlDoc = etree.ElementTree(mrNode)
-    etree.SubElement(mrNode, 'modelName').text = mres.modelName
-    etree.SubElement(mrNode, 'outputPath').text = mres.outputPath
-    mres.jobMetaInfo.writeInfoXML(mrNode)
-    if (mres.fieldResults):
-        fieldResultsNode = etree.SubElement(mrNode,
-            fields.FieldComparisonResult.XML_INFO_LIST_TAG)
-        for fieldResult in mres.fieldResults:
-            fieldResult.writeInfoXML(fieldResultsNode)
-
-    # Write the file, default name if filename provided is empty
-    outFile = open(path+filename, 'w')
-    writeXMLDoc(xmlDoc, outFile, prettyPrint)
-    outFile.close()
-    return path+filename
 
 
 def updateModelResultsXMLFieldInfo(filename, newFieldResult, prettyPrint=True):
@@ -191,3 +187,18 @@ def defaultModelResultFilename(modelName):
     particular model."""
     return 'ModelResult-'+modelName+'.xml'
 
+def getSimInfoFromFreqOutput(outputPath):
+    """Get necessary information to create a :class:`.SimInfo` from
+    the FrequentOutput.dat, given a particular output Path.
+    
+    .. seealso:: :mod:`credo.io.stgfreq`."""
+    freqOut = stgfreq.FreqOutput(path=outputPath)
+    freqOut.populateFromFile()
+    recordDict = freqOut.getRecordDictAtStep(freqOut.finalStep())
+    tSteps = freqOut.finalStep()
+    try:
+        simTime = recordDict['Time']
+    except KeyError:
+        # For now, allow none as simTime
+        simTime = None
+    return tSteps, simTime

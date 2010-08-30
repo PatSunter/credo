@@ -31,16 +31,10 @@ produce a :class:`credo.modelresult.ModelResult` class.
 
 import os
 import shutil
-import signal
-import sys
-import subprocess
-import time
-from datetime import timedelta
-
 from xml.etree import ElementTree as etree
 from credo.io.stgxml import writeXMLDoc
 import credo.modelresult
-from credo.io import stgxml, stgfreq
+from credo.io import stgxml
 from credo.analysis import fields
 
 # Global list of allowed Python types that can be saved as StGermain SimParams
@@ -49,10 +43,6 @@ _allowedModelParamTypes = [int, float, long, bool, str]
 
 CREDO_ANALYSIS_RECORD_FILENAME = "credo-analysis.xml"
 SOLVER_OPTS_RECORD_FILENAME = "solverOptsUsed.opt"
-
-# Default amount of time to wait (sec) between polling model results
-# when timeout active
-DEF_WAIT_TIME = 2
 
 class ModelRun:
     """A class to keep records about a StgDomain/Underworld Model Run,
@@ -67,9 +57,9 @@ class ModelRun:
     :class:`credo.analysis.api.AnalysisOperation` classes attached to be
     performed.
 
-    After the model is run (currently by calling :func:`.runModel`), 
-    a :class:`~credo.modelresult.ModelResult` will be produced as a record of the run and
-    for further analysis.
+    After the model is run (see :mod:`credo.jobrunner`), 
+    a :class:`~credo.modelresult.ModelResult` will be produced as a record of
+    the run and for further analysis.
 
     Examples of using the ModelRun are documented in CREDO, see
     :ref:`credo-examples-analysis`.
@@ -565,13 +555,6 @@ def writeSolverOptsInfoXML(solverOpts, parentNode):
 
 ##################
 
-# Allow MPI command to be overriden by env var.
-MPI_RUN_COMMAND = "MPI_RUN_COMMAND"
-if MPI_RUN_COMMAND in os.environ:
-    mpiRunCommand = os.environ[MPI_RUN_COMMAND]
-else:
-    mpiRunCommand = "mpirun"
-
 # First some helper functions to help set up the run
 # Should probably go into io sub-package
 def stgCmdLineParam(paramName, val):
@@ -663,135 +646,4 @@ class ModelRunTimeoutError(ModelRunError):
                 "".join(self.stdOutFileTail))
 
 
-def runModel(modelRun, extraCmdLineOpts=None, dryRun=False, maxRunTime=None):
-    """Run the specified modelRun, and return a 
-    :class:`~credo.modelresult.ModelResult` recording the results of the run.
 
-    :param modelRun: the :class:`.ModelRun` to be run.
-    :keyword extraCmdLineOpts: if specified, these extra cmd line opts will
-       be passed through on the command line to the run, extra to any
-       :attr:`.ModelRun.simParams` or :attr:`.ModelRun.paramOverrides`.
-    :keyword dryRun: If set to True, just print out what *would* be run,
-       but don't actually run anything.
-
-    .. Note:
-
-       It's planned for much of this functionality to move to a JobRunner class
-       in future, to allow things like launching PBS or grid jobs."""
-
-    credo.io.stgpath.checkAllXMLInputFilesExist(modelRun.modelInputFiles)
-
-    # Pre-run checks for validity - e.g. at least one input file,
-    # nproc is sensible value
-    if modelRun.simParams:
-        modelRun.simParams.checkValidParams()
-        modelRun.simParams.checkNoDuplicates(modelRun.paramOverrides.keys())
-    if modelRun.solverOpts:
-        modelRun.checkSolverOptsFile()
-
-    # Do necessary pathing preparation
-    modelRun.prepareOutputLogDirs()
-
-    # Construct StGermain run command
-    runExe=credo.io.stgpath.getVerifyStgExePath("StGermain")
-    stgRunStr = "%s " % (runExe)
-    for inputFile in modelRun.modelInputFiles:    
-        stgRunStr += inputFile+" "
-    if modelRun.analysisXML:
-        stgRunStr += modelRun.analysisXML+" "
-
-    stgRunStr += getParamOverridesAsStr(modelRun.paramOverrides)
-    if modelRun.solverOpts:
-        #TODO: perhaps encapsulate this using OO in a solverOpts class
-        stgRunStr += " -options_file %s" % modelRun.solverOpts
-    if extraCmdLineOpts:
-        stgRunStr += " "+extraCmdLineOpts
-
-    # BEGIN JOBRUNNER PART
-    # Construct run line
-    stdOutFilename = modelRun.getStdOutFilename()
-    stdErrFilename = modelRun.getStdErrFilename()
-    stdOutFile = open(stdOutFilename, "w+")
-    stdErrFile = open(stdErrFilename, "w+")
-    mpiPart = "%s -np %d " % (mpiRunCommand, modelRun.jobParams.nproc)
-    runCommand = mpiPart + stgRunStr
-
-    # Run the run command, sending stdout and stderr to defined log paths
-    print "Running model '%s' with command '%s' ..."\
-        % (modelRun.name, runCommand)
-    # TODO: the mpirunner should check things like mpd are set up properly,
-    # in case of mpich2
-
-    # If we're only doing a dry run, return here.
-    if dryRun == True: return None
-    # Do the actual run
-    #TODO: handle stdout properly as well
-    p = subprocess.Popen(runCommand, shell=True, stdout=stdOutFile,
-        stderr=stdErrFile)
-
-    if maxRunTime == None or maxRunTime <= 0:    
-        timeOut = False
-        retCode = p.wait()
-    else:
-        waitTime = DEF_WAIT_TIME if DEF_WAIT_TIME < maxRunTime else maxRunTime
-        totalTime = 0
-        timeOut = True
-        while totalTime <= maxRunTime:
-            time.sleep(waitTime)
-            totalTime += waitTime
-            retCode = p.poll()
-            if retCode is not None:
-                timeOut = False
-                break
-        if timeOut:
-            # At this point, we know the process has run too long.
-            # From Python 2.6, change this to p.kill()
-            os.kill(p.pid, signal.SIGKILL)
-
-    # Check status of run (eg error status)
-    if timeOut == True:
-        raise ModelRunTimeoutError(modelRun.name, stdOutFilename,
-            stdErrFilename, maxRunTime)
-    if retCode != 0:
-        raise ModelRunError(modelRun.name, retCode, stdOutFilename,
-            stdErrFilename)
-    else:
-        print "Model ran successfully (output saved to path %s, std out"\
-            " & std error to %s." % (modelRun.outputPath, modelRun.logPath)
-
-    stdOutFile.close()
-    stdErrFile.close()
-    # END JOBRUNNER PART
-
-    # Construct a modelResult
-    # TODO: the idiom where modelRun has to read stuff from freq out temporarily
-    # and pass into model result not really a good one. Maybe should construct
-    # just a basic ModelResult, and provide a function on it to populate data
-    # structures from file.
-    try:
-        tSteps, simTime = getSimInfoFromFreqOutput(modelRun.outputPath)
-    except ValueError:
-        # For now, allow runs that didn't create a freq output
-        tSteps, simTime = None, None
-
-    result = credo.modelresult.ModelResult(modelRun.name,
-        modelRun.outputPath, simTime)
-    
-    return result
-
-
-def getSimInfoFromFreqOutput(outputPath):
-    """Get necessary information to create a :class:`.SimInfo` from
-    the FrequentOutput.dat, given a particular output Path.
-    
-    .. seealso:: :mod:`credo.io.stgfreq`."""
-    freqOut = stgfreq.FreqOutput(path=outputPath)
-    freqOut.populateFromFile()
-    recordDict = freqOut.getRecordDictAtStep(freqOut.finalStep())
-    tSteps = freqOut.finalStep()
-    try:
-        simTime = recordDict['Time']
-    except KeyError:
-        # For now, allow none as simTime
-        simTime = None
-    return tSteps, simTime
