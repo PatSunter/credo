@@ -30,6 +30,7 @@ or Test components need to inherit.
 
 import os
 import inspect
+from datetime import timedelta
 from xml.etree import ElementTree as etree
 import credo.modelrun as mrun
 import credo.io.stgxml
@@ -444,7 +445,8 @@ class SysTest:
         nProcNode = etree.SubElement(specNode, "nproc")
         nProcNode.text = str(self.nproc)
 
-        etree.SubElement(specNode, "timeout").text = str(self.timeout)
+        etree.SubElement(specNode, "timeout").text = \
+            str(timedelta(seconds=self.timeout))
 
         mrun.writeParamOverridesInfoXML(self.paramOverrides, specNode)
         mrun.writeSolverOptsInfoXML(self.solverOpts, specNode)
