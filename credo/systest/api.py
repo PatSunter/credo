@@ -445,8 +445,11 @@ class SysTest:
         nProcNode = etree.SubElement(specNode, "nproc")
         nProcNode.text = str(self.nproc)
 
-        etree.SubElement(specNode, "timeout").text = \
-            str(timedelta(seconds=self.timeout))
+        if self.timeout is not None:
+            timeOutStr = str(timedelta(seconds=self.timeout))
+        else:
+            timeOutStr = "None"
+        etree.SubElement(specNode, "timeout").text = timeOutStr
 
         mrun.writeParamOverridesInfoXML(self.paramOverrides, specNode)
         mrun.writeSolverOptsInfoXML(self.solverOpts, specNode)
