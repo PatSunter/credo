@@ -36,6 +36,7 @@ from xml.etree import ElementTree as etree
 from credo.io.stgxml import writeXMLDoc
 import credo.modelresult
 from credo.io import stgxml
+from credo.io import stgpath
 from credo.analysis import fields
 
 # Global list of allowed Python types that can be saved as StGermain SimParams
@@ -212,18 +213,19 @@ class ModelRun:
         do any post-run cleanup to get ready for analysis - e.g. moving files 
         into the output directory that were created to configure the run and
         need to be kept."""
-        if not os.path.exists(self.outputPath):
-            os.makedirs(self.outputPath)
+        absOutputPath = os.path.join(self.basePath, self.outputPath)
+        if not os.path.exists(absOutputPath):
+            os.makedirs(absOutputPath)
 
         shutil.move(self.analysisXML, 
-            os.path.join(self.outputPath, self.analysisXML))
+            os.path.join(absOutputPath, self.analysisXML))
 
         for opName, analysisOp in self.analysisOps.iteritems(): 
             analysisOp.postRun(self, self.basePath)
 
         # Keep a record of any solver options used.
         if self.solverOpts:
-            soCopyPath = os.path.join(self.outputPath,
+            soCopyPath = os.path.join(absOutputPath,
                 SOLVER_OPTS_RECORD_FILENAME)
             shutil.copy(self.solverOpts, soCopyPath)
 
@@ -232,9 +234,11 @@ class ModelRun:
         if not isinstance(self.solverOpts, str):
             raise TypeError("Solver options must be specified as a filename"\
                 " string, not type %s." % type(self.solverOpts))
-        if not os.path.exists(self.solverOpts):
+        solverOptsAbs = os.path.join(self.basePath, self.solverOpts)
+        if not os.path.exists(solverOptsAbs):
             raise IOError("Solver options file specified, '%s', doesn't"\
-                " exist." % (self.solverOpts))
+                " exist relative to base path %s." % \
+                (self.solverOpts, self.basePath))
 
     def defaultModelRunFilename(self):
         """Calculates and returns a default filename for the ModelRun's XML
@@ -244,11 +248,13 @@ class ModelRun:
     def prepareOutputLogDirs(self):
         """Prepare the output and log dirs - usually in preparation
         for running a :class:`credo.modelrun.ModelRun`."""
-        if not os.path.exists(self.outputPath):
-            os.makedirs(self.outputPath)
+        absOutputPath = os.path.join(self.basePath, self.outputPath)
+        if not os.path.exists(absOutputPath):
+            os.makedirs(absOutputPath)
 
-        if not os.path.exists(self.logPath):
-            os.makedirs(self.logPath)
+        absLogPath = os.path.join(self.basePath, self.logPath)
+        if not os.path.exists(absLogPath):
+            os.makedirs(absLogPath)
     
     def getStdOutFilename(self):
         """Get the name of the file this Model's stdout needs to/has been
@@ -279,7 +285,7 @@ class ModelRun:
         if filename == "":
             filename = self.defaultModelRunFilename()
         if writePath == "":
-            writePath=self.outputPath
+            writePath=os.path.join(self.basePath, self.outputPath)
         writePath+=os.sep
 
         # create XML document
@@ -306,7 +312,8 @@ class ModelRun:
             # Make sure we include all override parameters
             # by first writing to XML
             paramOverridesStr = getParamOverridesAsStr(self.paramOverrides)
-            simParams.readFromStgXML(self.modelInputFiles, paramOverridesStr)
+            simParams.readFromStgXML(self.modelInputFiles, self.basePath,
+                paramOverridesStr)
             simParams.writeInfoXML(root)
         else:
             self.simParams.writeInfoXML(root)
@@ -518,10 +525,12 @@ class SimParams:
                 stgxml.writeParam(xmlNode, stgParam.stgName, val,\
                     mt='replace')
 
-    def readFromStgXML(self, inputFilesList, cmdLineOverrides):
+    def readFromStgXML(self, inputFilesList, basePath, cmdLineOverrides):
         '''Reads all the parameters of this class from a given StGermain 
         set of input files'''
-        ffile=stgxml.createFlattenedXML(inputFilesList, cmdLineOverrides)
+        absInputFiles = stgpath.convertLocalXMLFilesToAbsPaths(
+            inputFilesList, basePath)
+        ffile=stgxml.createFlattenedXML(absInputFiles, cmdLineOverrides)
         xmlDoc = etree.parse(ffile)
         stgRoot = xmlDoc.getroot()
         for param, stgParam in self.stgParamInfos.iteritems():

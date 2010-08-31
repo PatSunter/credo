@@ -71,10 +71,11 @@ class RestartTest(SysTest):
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             fieldsToTest = ['VelocityField','PressureField'], fullRunSteps=20,
             defFieldTol=1e-5, fieldTols=None, 
-            paramOverrides=None, solverOpts=None, nameSuffix=None,
-            timeout=None):
+            paramOverrides=None, solverOpts=None, 
+            basePath=None, nameSuffix=None, timeout=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, solverOpts, "Restart", nameSuffix, timeout)
+            paramOverrides, solverOpts, "Restart",
+            basePath, nameSuffix, timeout)
         self.initialOutputPath = os.path.join(self.outputPathBase, "initial")
         self.restartOutputPath = os.path.join(self.outputPathBase, "restart")
         self.fieldsToTest = fieldsToTest

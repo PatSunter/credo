@@ -209,7 +209,8 @@ class FieldCvgWithScaleTest(TestComponent):
         :meth:`credo.systest.api.TestComponent.attachOps`."""
         self.fComps = fields.FieldComparisonList()
         if self.fieldsToTest == None:
-            self.fComps.readFromStgXML(modelRun.modelInputFiles)
+            self.fComps.readFromStgXML(modelRun.modelInputFiles,
+                modelRun.basePath)
         else:
             for fieldName in self.fieldsToTest:
                 self.fComps.add(fields.FieldComparisonOp(fieldName))

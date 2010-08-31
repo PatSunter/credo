@@ -51,20 +51,19 @@ class StgPathTestCase(unittest.TestCase):
     def test_convertLocalXMLFilesToAbsPaths(self):
         sampleXMLsOrig = glob.glob(os.path.join(
             "sampleData", "stgXML", "*.xml")) 
-        sampleXMLsTest = sampleXMLsOrig[:]
-        stgpath.convertLocalXMLFilesToAbsPaths(sampleXMLsTest,
+        sampleXMLsUp = stgpath.convertLocalXMLFilesToAbsPaths(sampleXMLsOrig,
             "Underworld/SysTests")
-        self.assertEqual(sampleXMLsOrig, sampleXMLsTest)   
+        self.assertEqual(sampleXMLsOrig, sampleXMLsUp)   
 
     def test_convertLocalXMLFilesToAbsPaths_ConvertNeeded(self):
         testCallingPath = "Underworld/SysTests"
         sampleXMLsOrig = glob.glob(os.path.join(
             "sampleData", "stgXML", "*.xml"))
         sampleXMLsOrig.append(os.path.join("rel","notExist.xml"))    
-        sampleXMLsTest = sampleXMLsOrig[:]
-        stgpath.convertLocalXMLFilesToAbsPaths(sampleXMLsTest, testCallingPath)
-        self.assertEqual(sampleXMLsOrig[:-1], sampleXMLsTest[:-1])   
-        self.assertEqual(sampleXMLsTest[-1], 
+        sampleXMLsUp = stgpath.convertLocalXMLFilesToAbsPaths(sampleXMLsOrig,
+            testCallingPath)
+        self.assertEqual(sampleXMLsOrig[:-1], sampleXMLsUp[:-1])   
+        self.assertEqual(sampleXMLsUp[-1], 
             os.path.join(testCallingPath, "rel", "notExist.xml"))
 
 # TODO: more tests required!

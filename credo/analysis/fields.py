@@ -42,7 +42,7 @@ import os
 import math
 from xml.etree import ElementTree as etree
 
-import credo.io.stgpath
+import credo.io.stgpath as stgpath
 from credo.analysis import AnalysisOperation
 from credo.io import stgxml, stgcvg
 import credo.analysis.stats as stats
@@ -292,7 +292,8 @@ class FieldComparisonList(AnalysisOperation):
     def postRun(self, modelRun, runPath):
         """Implements :meth:`AnalysisOperation.postRun`. In this case, moves
         all CVG files created to output path."""
-        credo.io.stgpath.moveAllToTargetPath(runPath, modelRun.outputPath,
+        stgpath.moveAllToTargetPath(runPath, 
+            os.path.join(modelRun.basePath, modelRun.outputPath),
             stgcvg.CVG_EXT)
     
     def writeInfoXML(self, parentNode):
@@ -358,14 +359,16 @@ class FieldComparisonList(AnalysisOperation):
                 'context':'context',
                 'appendToAnalysisFile':'True'})
     
-    def readFromStgXML(self, inputFilesList):
+    def readFromStgXML(self, inputFilesList, basePath):
         '''Read in the list of fields that have already been specified to 
          be tested from a set of StGermain input files. Useful when e.g. 
          working with an Analytic Solution plugin.'''
         self.fromXML = True
 
         # create a flattened file
-        ffile=stgxml.createFlattenedXML(inputFilesList)
+        absInputFiles = stgpath.convertLocalXMLFilesToAbsPaths(inputFilesList,
+            basePath)
+        ffile=stgxml.createFlattenedXML(absInputFiles)
         xmlDoc = etree.parse(ffile)
         stgRoot = xmlDoc.getroot()
         # Go and grab necessary info from XML file
@@ -387,10 +390,12 @@ class FieldComparisonList(AnalysisOperation):
         # would be useful to do this in future.
         os.remove(ffile)
 
-    def checkStgXMLResultsEnabled(self, inputFilesList):
+    def checkStgXMLResultsEnabled(self, inputFilesList, basePath):
         """Checks that the field comparison has the writing of comparison
         info to file enabled (returning Bool)."""
-        ffile=stgxml.createFlattenedXML(inputFilesList)
+        absInputFiles = stgpath.convertLocalXMLFilesToAbsPaths(inputFilesList,
+            basePath)
+        ffile=stgxml.createFlattenedXML(absInputFiles)
         xmlDoc = etree.parse(ffile)
         stgRoot = xmlDoc.getroot()
         fieldTestDataEl = stgxml.getStructNode(stgRoot, self.stgXMLSpecName)

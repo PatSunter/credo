@@ -42,10 +42,11 @@ class SciBenchmarkTest(SysTest):
     description = '''Runs a user-defined science benchmark.'''
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
-            paramOverrides=None, solverOpts=None, nameSuffix=None,
-            timeout=None):
+            paramOverrides=None, solverOpts=None, 
+            basePath=None, nameSuffix=None, timeout=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc, 
-            paramOverrides, solverOpts, "SciBenchmark", nameSuffix, timeout)
+            paramOverrides, solverOpts, "SciBenchmark",
+            basePath, nameSuffix, timeout)
 
     def addTestComponent(self, testComp, testCompName):
         """Add a testComponent (:class:`~credo.systest.api.TestComponent`)

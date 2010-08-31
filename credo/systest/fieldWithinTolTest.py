@@ -107,7 +107,8 @@ class FieldWithinTolTest(TestComponent):
         """Implements base class
         :meth:`credo.systest.api.TestComponent.attachOps`."""
         if self.fieldsToTest == None:
-            self.fComps.readFromStgXML(modelRun.modelInputFiles)
+            self.fComps.readFromStgXML(modelRun.modelInputFiles,
+                modelRun.basePath)
         else:
             for fieldName in self.fieldsToTest:
                 self.fComps.add(fields.FieldComparisonOp(fieldName))

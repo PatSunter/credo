@@ -63,10 +63,11 @@ class AnalyticTest(SysTest):
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
             defFieldTol=3e-2, fieldTols=None, 
-            paramOverrides=None, solverOpts=None, nameSuffix=None,
-            timeout=None):
+            paramOverrides=None, solverOpts=None,
+            basePath=None, nameSuffix=None, timeout=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, solverOpts, "Analytic", nameSuffix, timeout)
+            paramOverrides, solverOpts, "Analytic", 
+            basePath, nameSuffix, timeout)
         self.testComponents[self.fTestName] = FieldWithinTolTest(
             defFieldTol=defFieldTol, fieldTols=fieldTols)
 

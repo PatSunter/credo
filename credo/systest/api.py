@@ -34,7 +34,7 @@ from datetime import timedelta
 from xml.etree import ElementTree as etree
 import credo.modelrun as mrun
 import credo.io.stgxml
-import credo.io.stgpath
+import credo.io.stgpath as stgpath
 
 class SysTestResult:
     """Class to represent an CREDO system test result.
@@ -127,7 +127,8 @@ def getStdTestName(testTypeStr, inputFiles, nproc, paramOverrides,
             paramNameLast = paramName.split('.')[-1]
             paramValCanon = str(paramVal).replace(".","_")
             paramOsStr += "-%s-%s" % (paramNameLast, paramValCanon)
-        testName += paramOsStr 
+        testName += paramOsStr
+
     return testName
 
 
@@ -162,6 +163,10 @@ class SysTest:
 
        The name of this test, generally auto-generated from other properties.
        
+    .. attribute:: basePath
+
+       The base path of the System test, that runs will be done relative to.
+
     .. attribute:: outputPathBase
 
        The "base" output path to store results of the test in. Results from
@@ -210,17 +215,29 @@ class SysTest:
     '''
 
     def __init__(self, inputFiles, outputPathBase,
-            nproc, paramOverrides, solverOpts, testType, nameSuffix=None,
-            timeout=None):
+            nproc, paramOverrides, solverOpts, testType,
+            basePath=None, nameSuffix=None, timeout=None):
         self.testType = testType
         # Be forgiving of user passing a single string rather than a list,
         # and correct for this.
         if isinstance(inputFiles, str):
             inputFiles = [inputFiles]
         self.inputFiles = inputFiles
+        if basePath is not None:
+            self.basePath = basePath
+        else:
+            # By default, base path is the path of the calling script *2.
+            # (Since immediately calling script is likely to be child instantiation).
+            callingFile = inspect.stack()[2][1]
+            callingPath = os.path.dirname(callingFile)
+            self.basePath = callingPath
+        self.basePath = os.path.abspath(self.basePath) 
+
         self.testName = getStdTestName(testType+"Test", inputFiles,
             nproc, paramOverrides, solverOpts, nameSuffix)
-        credo.io.stgpath.checkAllXMLInputFilesExist(self.inputFiles)
+        absInputFiles = stgpath.convertLocalXMLFilesToAbsPaths(self.inputFiles,
+            self.basePath)
+        stgpath.checkAllXMLInputFilesExist(absInputFiles)
         self.outputPathBase = outputPathBase
         self.testStatus = None
         self.testComponents = {}
@@ -229,10 +246,6 @@ class SysTest:
         if self.paramOverrides == None:
             self.paramOverrides = {}
         self.solverOpts = solverOpts
-        # TODO: a bit of a hack currently ... need to think about the best
-        # way to handle relative paths for sysTests and ModelRuns
-        # -- PatrickSunter, 20 Jul 2010
-        self.runPath = None
         self.resIndicesToTest = None
         self.timeout = timeout
 
@@ -339,7 +352,7 @@ class SysTest:
         use this and not keep up to date with changes in
         the ModelRun interface.)"""
         return mrun.ModelRun(modelName,
-            self.inputFiles, outputPath, basePath=self.runPath,
+            self.inputFiles, outputPath, basePath=self.basePath,
             nproc=self.nproc, paramOverrides=self.paramOverrides,
             solverOpts=self.solverOpts)
 
@@ -394,7 +407,7 @@ class SysTest:
         if filename == "":
             filename = self.defaultSysTestFilename()
         if outputPath == "":
-            outputPath=self.outputPathBase
+            outputPath = os.path.join(self.basePath, self.outputPathBase)
         outputPath+=os.sep
         return outputPath, filename
 
@@ -499,8 +512,17 @@ class SysTestSuite:
     For examples of how to use, see the CREDO documentation, especially
     :ref:`credo-examples-run-systest-direct`.
 
-    TODO: document projectName and suiteName and nproc
+    .. attribute:: projectName
 
+       Name of the "Project" the test suite is attached to, e.g. "Underworld"
+       or "StgFEM".
+
+    .. attribute:: suiteName
+
+       A short descriptive name of the test suite. NB: doesn't have to be
+       unique, e.g. you may want to create different suites with the same\
+       suite names, but different project names.
+     
     .. attribute:: sysTests
 
        List of system tests that should be run and reported upon. Generally
@@ -511,6 +533,11 @@ class SysTestSuite:
 
        List of subSuites (defaults to none) associated with this suite.
        Associating sub-suites allows a nested hierarchy of system tests.
+    
+    .. attribute:: nproc
+
+       The default number of processors to use for tests associated with this
+       suite (can be over-ridden per test case though).
     """
 
     def __init__(self, projectName, suiteName, sysTests=None,
@@ -563,14 +590,14 @@ class SysTestSuite:
         #  to a list (containing that single file).
         if isinstance(inputFiles, str):
             inputFiles = [inputFiles]
-        credo.io.stgpath.convertLocalXMLFilesToAbsPaths(inputFiles, callingPath)
-        credo.io.stgpath.checkAllXMLInputFilesExist(inputFiles)
+        absInputFiles = stgpath.convertLocalXMLFilesToAbsPaths(inputFiles,
+            callingPath)
+        stgpath.checkAllXMLInputFilesExist(absInputFiles)
         if 'nproc' not in testOpts:
             testOpts['nproc']=self.nproc
         outputPath = self._getStdOutputPath(testClass, inputFiles, testOpts)
-        newSysTest = testClass(inputFiles, outputPath, **testOpts)
-        # TODO: line below needs updating, see SysTest constructor comment
-        newSysTest.runPath = callingPath
+        newSysTest = testClass(inputFiles, outputPath, basePath=callingPath, 
+            **testOpts)
         self.sysTests.append(newSysTest)
 
     def addSubSuite(self, subSuite):

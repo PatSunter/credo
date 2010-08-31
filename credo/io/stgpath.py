@@ -106,14 +106,18 @@ def getStgStandardXMLPath():
 def convertLocalXMLFilesToAbsPaths(inputFilesList, callingPath):
     """Check through the given input file list, and for any that aren't found
     relative to either the local directory or the StGermain standard path,
-    convert them to be relative to the given `callingPath`"""
-    for ii, iFile in enumerate(inputFilesList[:]):
-        if os.path.exists(iFile): continue
-        elif xmlExistsInStdXMLPath(iFile): continue
-        else:
-            inputFilesList[ii] = os.path.join(callingPath, iFile)
+    convert them to be relative to the given `callingPath`
 
-    return inputFilesList
+    :returns: new list of adjusted XML files
+    """
+    newInputFilesList = []
+    for ii, iFile in enumerate(inputFilesList[:]):
+        if os.path.exists(iFile) or xmlExistsInStdXMLPath(iFile):
+            newInputFilesList.append(iFile)
+        else:
+            newInputFilesList.append(os.path.join(callingPath, iFile))
+
+    return newInputFilesList
 
 def checkAllXMLInputFilesExist(inputFilesList):        
     """Checks a whole set of XML input files exist, and raises an IOError if
