@@ -35,6 +35,7 @@ import signal
 import sys
 import subprocess
 import time
+import shlex
 from datetime import timedelta
 
 from xml.etree import ElementTree as etree
@@ -725,8 +726,11 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False, maxRunTime=None):
     # If we're only doing a dry run, return here.
     if dryRun == True: return None
     # Do the actual run
-    #TODO: handle stdout properly as well
-    p = subprocess.Popen(runCommand, shell=True, stdout=stdOutFile,
+    # NB: We will split the arguments and run directly rather than in 
+    # "shell mode":- this allows us to kill all sub-processes properly if
+    # necessary.
+    runAsArgs = shlex.split(runCommand)
+    p = subprocess.Popen(runAsArgs, shell=False, stdout=stdOutFile,
         stderr=stdErrFile)
 
     if maxRunTime == None or maxRunTime <= 0:    
@@ -746,7 +750,9 @@ def runModel(modelRun, extraCmdLineOpts=None, dryRun=False, maxRunTime=None):
         if timeOut:
             # At this point, we know the process has run too long.
             # From Python 2.6, change this to p.kill()
-            os.kill(p.pid, signal.SIGKILL)
+            print "Error: passed timeout of %s, sending quit signal." % \
+                (str(timedelta(seconds=maxRunTime)))
+            os.kill(p.pid, signal.SIGQUIT)
 
     # Check status of run (eg error status)
     if timeOut == True:
