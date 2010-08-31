@@ -78,7 +78,8 @@ class MPIJobRunner(JobRunner):
 
         # Now create the XML file for custom analysis commands
         modelRun.analysisXMLGen()
-        stgRunStr = self.constructStGermainRunCommand(modelRun)
+        stgRunStr = self.constructStGermainRunCommand(modelRun,
+            extraCmdLineOpts)
 
         stdOutFilename = modelRun.getStdOutFilename()
         stdErrFilename = modelRun.getStdErrFilename()
