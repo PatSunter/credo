@@ -34,6 +34,7 @@ overview of how the various sub-packages in CREDO relate and are integrated.
 
    api/model.rst
    api/utils.rst
+   api/jobrunner.rst
    api/io.rst
    api/analysis.rst
    api/systest.rst
