@@ -26,7 +26,7 @@ import signal
 import subprocess
 import time
 from datetime import timedelta
-import credo.modelrun
+from credo.modelrun import ModelRunError, ModelRunTimeoutError
 from credo.modelresult import ModelResult, getSimInfoFromFreqOutput
 from credo.jobrunner.api import JobRunner
 from credo.io import stgpath

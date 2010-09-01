@@ -623,9 +623,6 @@ def generateResOpts(resTuple):
     return resOptsStr
 
 
-# TODO: some of this functionality could be handled via strategy pattern - 
-# JobRunner (the MPI stuff)
-
 class ModelRunError(Exception):
     """An Exception for when Models fail to run."""
     def __init__(self, modelName, retCode, stdOutFilename, stdErrFilename):
