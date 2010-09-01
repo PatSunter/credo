@@ -69,6 +69,9 @@ class SysTestRunner:
         :class:`credo.systest.api.SysTestResult` it produces.
         Will also write an XML record of the System test, and each ModelRun
         and ModelResult in the suite that made up the test."""
+        # Change directories in sys test run, just to be careful
+        startDir = os.getcwd()
+        os.chdir(sysTest.basePath)
         mSuite = sysTest.genSuite()
         mSuite.cleanAllOutputPaths()
         mSuite.cleanAllLogFiles()
@@ -95,6 +98,7 @@ class SysTestRunner:
         outFilePath = sysTest.updateXMLWithResult(suiteResults)
         testResult.setRecordFile(outFilePath)
         print "Saved test result to %s" % (outFilePath)
+        os.chdir(startDir)
         return testResult
 
     def runTests(self, sysTests, projName=None, suiteName=None,
