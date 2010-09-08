@@ -12,7 +12,7 @@ tests.
 Setup
 """""
 
-The one example benchmark so far is testing a Rayleigh Taylor model can perform
+An example science benchmark test is that a Rayleigh Taylor model can perform
 as required by the Van Keken benchmark:
 
 .. include:: ../../../Underworld/SysTest/ScienceBenchmarks/credo_rayTayBenchmark.py
