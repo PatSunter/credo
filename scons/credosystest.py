@@ -55,15 +55,18 @@ def generate(env, **kw):
     env.SetDefault(CHECK_INTEGRATION_TARGET="check-integration")
     env.SetDefault(CHECK_CONVERGENCE_TARGET="check-convergence")
     env.SetDefault(CHECK_LOWRES_TARGET="check-lowres")
+    env.SetDefault(CHECK_SCIBENCH_TARGET="check-scibench")
 
     LOWRES_SUITES = []
     INTEGRATION_SUITES = []
     CONVERGENCE_SUITES = []
+    SCIBENCH_SUITES = []
     # Need to use Export rather than saving on env object, since we clone
     #  the env for each sub-project
     Export('LOWRES_SUITES')
     Export('INTEGRATION_SUITES')
     Export('CONVERGENCE_SUITES')
+    Export('SCIBENCH_SUITES')
 
     # This will append to the standard help with testing help.
     Help("""
@@ -74,6 +77,7 @@ SCons-Check Options:
           './scons.py check-convergence' to run the stgUnderworld convergence tests only,
           './scons.py check-integration' to run the normal-res integration tests,
           './scons.py check-lowres' to run the low-res integration tests.
+          './scons.py check-scibench' to run the science benchmark tests.
 """ )
 
     def pathToPyModuleName(relPath):
@@ -168,6 +172,12 @@ SCons-Check Options:
         Export('CONVERGENCE_SUITES')
         return retVal
 
+    def addSciBenchTestSuite(env, suiteFilename):
+        Import('SCIBENCH_SUITES')
+        retVal = addSysTestSuite(env, suiteFilename, SCIBENCH_SUITES)
+        Export('SCIBENCH_SUITES')
+        return retVal
+
     # Define the runSuites function as a proper builder
     # The emitter adds StGermain binary as a required target.
     runSuitesBuilder = Builder(action=runSuites, emitter=addStGermainTarget)
@@ -182,6 +192,7 @@ SCons-Check Options:
     env.AddMethod(addLowResTestSuite, "AddLowResTestSuite")
     env.AddMethod(addIntegrationTestSuite, "AddIntegrationTestSuite")
     env.AddMethod(addConvergenceTestSuite, "AddConvergenceTestSuite")
+    env.AddMethod(addSciBenchTestSuite, "AddSciBenchTestSuite")
 
 
 def exists(env):
