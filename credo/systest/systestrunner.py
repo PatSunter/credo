@@ -30,9 +30,9 @@ import inspect
 from xml.etree import ElementTree as etree
 
 import credo.jobrunner
+from credo.jobrunner.api import ModelRunError
 import credo.io.stgxml
 from credo.systest.api import *
-from credo.modelrun import ModelRunError
 
 # Relevant to the XML Results. Designed to be compatible with the tags used
 #  by the Python unittest-xml-reporting package

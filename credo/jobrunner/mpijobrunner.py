@@ -27,9 +27,8 @@ import subprocess
 import time
 import shlex
 from datetime import timedelta
-from credo.modelrun import ModelRunError, ModelRunTimeoutError
 from credo.modelresult import ModelResult, getSimInfoFromFreqOutput
-from credo.jobrunner.api import JobRunner
+from credo.jobrunner.api import JobRunner, ModelRunError, ModelRunTimeoutError
 from credo.io import stgpath
 
 # Default amount of time to wait (sec) between polling model results

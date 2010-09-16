@@ -32,7 +32,6 @@ produce a :class:`credo.modelresult.ModelResult` class.
 import os
 import shutil
 import inspect
-from datetime import timedelta
 from xml.etree import ElementTree as etree
 from credo.io.stgxml import writeXMLDoc
 import credo.modelresult
@@ -622,61 +621,6 @@ def generateResOpts(resTuple):
     # run, it ignores any 3rd dimension spec set in the original model file
     resOptsStr+=stgCmdLineParam("dim",len(resTuple))
     return resOptsStr
-
-
-class ModelRunError(Exception):
-    """An Exception for when Models fail to run."""
-    def __init__(self, modelName, retCode, stdOutFilename, stdErrFilename):
-        self.modelName = modelName
-        self.retCode = retCode
-        self.stdOutFilename = stdOutFilename
-        self.stdErrFilename = stdErrFilename
-        self.tailLen = 20
-        stdOutFile = open(stdOutFilename, "r")
-        stdErrFile = open(stdErrFilename, "r")
-        self.stdErrMsg = stdErrFile.read()
-        # TODO: this is a bit inefficient and could be done with proper
-        # tail function using seek etc.
-        stdOutFileLines = stdOutFile.readlines()
-        total = len(stdOutFileLines)
-        start = 0
-        if total > self.tailLen: start = total - self.tailLen
-        self.stdOutFileTail = stdOutFileLines[start:]
-        stdOutFile.close()
-        stdErrFile.close()
-
-    def __str__(self):
-        return "Failed to run model '%s', ret code was %s\n"\
-            "Std out and error logs saved to files %s and %s, "\
-            "Std error msg was:\n%s\nLast %d lines of std out msg was:\n%s"\
-            % (self.modelName, self.retCode,
-                self.stdOutFilename, self.stdErrFilename, 
-                self.stdErrMsg, self.tailLen,
-                "".join(self.stdOutFileTail))
-
-
-class ModelRunTimeoutError(ModelRunError):
-    """An Exception for when Models fail to run due to timing out.
-    
-    .. attribute:: maxRunTime
-    
-       maximum time to run that the model exceeded, in seconds.
-    """
-    def __init__(self, modelName, stdOutFilename, stdErrFilename,
-            maxRunTime):
-        ModelRunError.__init__(self, modelName, None, stdOutFilename,
-            stdErrFilename)
-        self.maxRunTime = maxRunTime
-    
-    def __str__(self):
-        return "Failed to run model '%s' due to timeout, max time was"\
-            " %s\n"\
-            "Std out and error logs saved to files %s and %s, "\
-            "Std error msg was:\n%s\nLast %d lines of std out msg was:\n%s"\
-            % (self.modelName, str(timedelta(seconds=self.maxRunTime)),
-                self.stdOutFilename, self.stdErrFilename, 
-                self.stdErrMsg, self.tailLen,
-                "".join(self.stdOutFileTail))
 
 
 
