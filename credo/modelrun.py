@@ -32,6 +32,7 @@ produce a :class:`credo.modelresult.ModelResult` class.
 import os
 import shutil
 import inspect
+from datetime import timedelta
 from xml.etree import ElementTree as etree
 from credo.io.stgxml import writeXMLDoc
 import credo.modelresult
