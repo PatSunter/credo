@@ -32,9 +32,11 @@ class SkeletonSysTest(SysTest):
 
     def __init__(self, inputFiles, outputPathBase,
             statusToReturn, nproc=1,
-            paramOverrides=None, solverOpts=None, nameSuffix=None):
+            paramOverrides=None, solverOpts=None,
+            basePath=None, nameSuffix=None, timeout=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, solverOpts, "Skeleton", nameSuffix)        
+            paramOverrides, solverOpts, "Skeleton",
+            basePath, nameSuffix, timeout)        
         self.statusToReturn = statusToReturn    
     
     def genSuite(self):
