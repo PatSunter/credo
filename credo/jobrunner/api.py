@@ -114,9 +114,14 @@ class JobRunner:
 
 
 class ModelRunError(Exception):
+    """Base class of ModelRunError exception hierarchy."""
+    def __init__(self, modelName):
+        self.modelName = modelName
+
+class ModelRunRegularError(ModelRunError):
     """An Exception for when Models fail to run."""
     def __init__(self, modelName, retCode, stdOutFilename, stdErrFilename):
-        self.modelName = modelName
+        ModelRunError.__init__(self, modelName)
         self.retCode = retCode
         self.stdOutFilename = stdOutFilename
         self.stdErrFilename = stdErrFilename
@@ -144,7 +149,7 @@ class ModelRunError(Exception):
                 "".join(self.stdOutFileTail))
 
 
-class ModelRunTimeoutError(ModelRunError):
+class ModelRunTimeoutError(ModelRunRegularError):
     """An Exception for when Models fail to run due to timing out.
     
     .. attribute:: maxRunTime
@@ -153,7 +158,7 @@ class ModelRunTimeoutError(ModelRunError):
     """
     def __init__(self, modelName, stdOutFilename, stdErrFilename,
             maxRunTime):
-        ModelRunError.__init__(self, modelName, None, stdOutFilename,
+        ModelRunRegularError.__init__(self, modelName, None, stdOutFilename,
             stdErrFilename)
         self.maxRunTime = maxRunTime
     
@@ -166,3 +171,25 @@ class ModelRunTimeoutError(ModelRunError):
                 self.stdOutFilename, self.stdErrFilename, 
                 self.stdErrMsg, self.tailLen,
                 "".join(self.stdOutFileTail))
+
+class ModelRunLaunchError(ModelRunError):
+    """An Exception for when Models fail to run due to being unable to launch
+    the run process in some way.
+    
+    .. attribute:: runExecCmd
+    
+       command used to launch the job.
+    """
+    def __init__(self, modelName, runExecCmd, launchHint=None):
+        ModelRunError.__init__(self, modelName)
+        self.runExecCmd = runExecCmd
+        self.launchHint = launchHint
+    
+    def __str__(self):
+        retStr = "Failed to run model '%s' due to being unable to launch"\
+            " run with command '%s'.\n"\
+            % (self.modelName, self.runExecCmd)
+        if self.launchHint is not None:
+            retStr += " (%s)" % self.launchHint
+        return retStr
+

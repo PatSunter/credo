@@ -28,7 +28,7 @@ import time
 import shlex
 from datetime import timedelta
 from credo.modelresult import ModelResult, getSimInfoFromFreqOutput
-from credo.jobrunner.api import JobRunner, ModelRunError, ModelRunTimeoutError
+from credo.jobrunner.api import *
 from credo.io import stgpath
 
 # Default amount of time to wait (sec) between polling model results
@@ -104,8 +104,13 @@ class MPIJobRunner(JobRunner):
         # "shell mode":- this allows us to kill all sub-processes properly if
         # necessary.
         runAsArgs = shlex.split(runCommand)
-        p = subprocess.Popen(runAsArgs, shell=False, stdout=stdOutFile,
-            stderr=stdErrFile)
+        try:
+            p = subprocess.Popen(runAsArgs, shell=False, stdout=stdOutFile,
+                stderr=stdErrFile)
+        except OSError:
+            raise ModelRunLaunchError(modelRun.name, runAsArgs[0],
+                "You can set the MPI_RUN_COMMAND env. variable to control"
+                " the MPI command used.")
 
         if maxRunTime == None or maxRunTime <= 0:    
             timeOut = False
@@ -134,7 +139,7 @@ class MPIJobRunner(JobRunner):
             raise ModelRunTimeoutError(modelRun.name, stdOutFilename,
                 stdErrFilename, maxRunTime)
         if retCode != 0:
-            raise ModelRunError(modelRun.name, retCode, stdOutFilename,
+            raise ModelRunRegularError(modelRun.name, retCode, stdOutFilename,
                 stdErrFilename)
         else:
             # Taking advantage of os.path.join functionality to automatically
