@@ -25,9 +25,7 @@
 import getopt
 import sys
 import os
-
-#from credo.modelrun import SuiteRunner
-from credo.systest.analytic import AnalyticTest
+from credo.systest import *
 
 # Temporary input processing
 opts, args = getopt.getopt(sys.argv[1:], "h", ["help"])
@@ -38,18 +36,7 @@ modelName, ext = os.path.splitext(args[0])
 modelName += "-analyticTest"
 outputPath = 'output/'+modelName
 
-anTest = AnalyticTest(inputFiles, outputPath, nproc=1)
-anTest.writePreRunXML()
+anTest = AnalyticTest(inputFiles, outputPath, nproc=1, basePath=os.getcwd())
 
-# Generate a suite of models to run as part of the test
-mSuite = anTest.genSuite()
-
-#jobRunner = mpich2JobRunner()
-mSuite.writeAllModelRunXMLs()
-suiteResults = mSuite.runAll() # pass in jobRunner
-testResult = anTest.getStatus(suiteResults)
-mSuite.writeAllModelResultXMLs()
-
-print "Test result was %s" % testResult
-savedFile = anTest.updateXMLWithResult(suiteResults)
-print "(Wrote record of result to %s)" % (savedFile)
+testRunner = SysTestRunner()
+testRunner.runTest(anTest)

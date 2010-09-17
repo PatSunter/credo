@@ -25,9 +25,7 @@
 import getopt
 import sys
 import os
-
-#from credo.modelrun import SuiteRunner
-from credo.systest.reference import ReferenceTest
+from credo.systest import *
 
 # Temporary input processing
 opts, args = getopt.getopt(sys.argv[1:], "hs", ["help","setup"])
@@ -44,7 +42,7 @@ modelName, ext = os.path.splitext(args[0])
 modelName += "-referenceTest"
 outputPath = 'output/'+modelName
 
-refTest = ReferenceTest(inputFiles, outputPath, nproc=1)
+refTest = ReferenceTest(inputFiles, outputPath, nproc=1, basePath=os.getcwd())
 
 if setupMode == True:
     print "Running in setup mode only:"
@@ -52,18 +50,5 @@ if setupMode == True:
     print "Setup completed, exiting."
     sys.exit()
 
-refTest.writePreRunXML()
-
-# Generate a suite of models to run as part of the test
-mSuite = refTest.genSuite()
-
-#jobRunner = mpich2JobRunner()
-mSuite.writeAllModelRunXMLs()
-suiteResults = mSuite.runAll() # pass in jobRunner
-print "Checking test result:"
-testResult = refTest.getStatus(suiteResults)
-mSuite.writeAllModelResultXMLs()
-
-print "Test result was %s" % testResult
-savedFile = refTest.updateXMLWithResult(suiteResults)
-print "(Wrote record of result to %s)" % (savedFile)
+testRunner = SysTestRunner()
+testRunner.runTest(refTest)
