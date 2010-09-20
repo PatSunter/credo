@@ -34,18 +34,32 @@ class ModelRunTestCase(unittest.TestCase):
 
     def setUp(self):
         self.basedir = os.path.realpath(tempfile.mkdtemp())
-        #os.makedirs(os.path.join(self.basedir,self.results_dir,'StGermain'))
-            #self.results_xml = open(os.path.join(self.basedir, self.results_dir, 'StGermain', 'TEST-FooSuite.xml'), 'w')
+        self.inputFiles = [os.path.join('input', 'testModel.xml')]
+        self.outputPath = os.path.join('output', 'testModel')
 
     def tearDown(self):
         shutil.rmtree(self.basedir)
 
     def test_writeModelRunXML(self):
         nproc = 2
-        modelRun = mrun.ModelRun('TestModel', ["testModel.xml"], \
-            'output/testModel', nproc=nproc)
+        modelRun = mrun.ModelRun('TestModel', self.inputFiles,
+            self.outputPath, nproc=nproc)
         modelRun.simParams = mrun.SimParams(nsteps=5, cpevery=10)
         modelRun.writeInfoXML(prettyPrint=True)
+
+    def test_genFlattenedXML(self):
+        modelRun = mrun.ModelRun('TestModel', self.inputFiles,
+            self.outputPath)
+        modelRun.simParams = mrun.SimParams(nsteps=5, cpevery=10)
+        modelRun.paramOverrides['allowUnbalancing'] = False
+        modelRun.paramOverrides['defaultDiffusivity'] = 1.0e-5
+        flatFilename=os.path.join("output", "testFlat.xml")
+        modelRun.genFlattenedXML(flatFilename=flatFilename)
+        os.unlink(modelRun.analysisXML)
+        self.assertTrue(os.path.exists(flatFilename))
+        # TODO: Some extra tests would be good here of the newly created
+        # flattened file
+
 
 def suite():
     suite = unittest.TestSuite()

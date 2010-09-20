@@ -373,6 +373,17 @@ class ModelRun:
         stgxml.writeStgDataDocToFile(xmlDoc, filename)
         self.analysisXML = filename
         return filename
+    
+    def genFlattenedXML(self, cmdLineOverrides=None, flatFilename=None):
+        self.analysisXMLGen()
+        xmls = self.modelInputFiles + [self.analysisXML]
+        overridesStr = getParamOverridesAsStr(self.paramOverrides)
+        if cmdLineOverrides != None:
+            overridesStr = " ".join([overridesStr, cmdLineOverrides])
+
+        fFilename = stgxml.createFlattenedXML(xmls, overridesStr,
+            flatFilename=flatFilename)
+        return fFilename
 
 
 class JobParams:

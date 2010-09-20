@@ -31,7 +31,8 @@ representative of an element in an open Stg XML document.
 """
 
 import os
-from subprocess import *
+import shlex
+import subprocess as subp
 from xml.etree import ElementTree as etree
 import credo
 
@@ -445,7 +446,10 @@ def _getNamedElementNode_elTag(elNode, elName, elType=None):
 
 def createNewStgDataDoc():
     """Create a new empty StGermain model XML file (can be merged with other
-    model files)."""
+    model files).
+    
+    :returns: a tuple of the new xml doc (Element Tree), and the root node
+      of the new doc."""
     nsMap = {None: STG_NS}
     # For the Python 2.5 version xml.etree, namespace mapping is simplified
     root = etree.Element(STG_ROOT_TAG, xmlns=STG_NS)
@@ -537,13 +541,20 @@ def writeStgDataDocToFile(xmlDoc, filename):
     writeXMLDoc(xmlDoc, outFile)
     outFile.close()
 
-def createFlattenedXML(inputFiles, cmdLineOverrides=""):
+def createFlattenedXML(inputFiles, cmdLineOverrides="",
+        flatFilename="output.xml"):
     '''Flatten a list of provided XML files and optionally also
-    cmdLineOverrides (string), using the StGermain FlattenXML tool'''
-    flattenExe=credo.io.stgpath.getVerifyStgExePath('FlattenXML')
+    cmdLineOverrides (string), using the StGermain FlattenXML tool.
+    
+    :returns: the file name of the newly created flattened file.'''
+
+    flattenExe = credo.io.stgpath.getVerifyStgExePath('FlattenXML')
+    outFileArg = "-output_file=%s" % (flatFilename)
 
     try:
-        p = Popen([flattenExe]+inputFiles+cmdLineOverrides.split(), stdout=PIPE, stderr=PIPE)
+        argsList = [flattenExe, outFileArg] + inputFiles \
+            + shlex.split(cmdLineOverrides)
+        p = subp.Popen(argsList, stdout=subp.PIPE, stderr=subp.PIPE)
         (stdout, stderr) = p.communicate()
         # The 2nd clause necessary because FlattenXML doesn't return 
         # proper error codes (ie always returns 0) up to 1.4.2 release
@@ -556,5 +567,4 @@ def createFlattenedXML(inputFiles, cmdLineOverrides=""):
             " on input files %s. Error msg was:\n%s"\
             % (flattenExe, inputFiles,str(e)))
 
-    ffile='output.xml'
-    return ffile
+    return flatFilename
