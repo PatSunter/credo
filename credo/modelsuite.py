@@ -37,6 +37,7 @@ This class also performs a key role in the System tests provided in the
 import copy
 import os, glob
 import itertools
+import operator
 
 import credo
 from credo import modelrun as mrun
@@ -98,6 +99,23 @@ class StgXMLVariant:
     def varStr(self, ii):
         """Return a string version of the ii-th parameter value."""
         return str(self.paramRange[ii])
+
+def getVariantsDicts(iterator, modelVariants):
+    """Generates a list of dictionaries of parameters to be modified for each
+    model run, based on an iterator, and a list of :class:`StgXMLVariant`.
+
+    .. note:: Currently doesn't need to be called directly, user can just use
+       the generateRuns function directly on the ModelSuite class. So this
+       function is more for documentation/debugging currently.
+    """
+    paramIter = iterator(*map(operator.attrgetter('paramRange'), modelVariants))
+    paramDicts = []
+    for tuple in paramIter:
+        newDict = {}
+        for ii, pVal in enumerate(tuple):
+            newDict[modelVariants[ii].paramPath] = pVal
+        paramDicts.append(newDict)
+    return paramDicts    
 
 
 class ModelSuite:
@@ -219,18 +237,29 @@ class ModelSuite:
         template run. See :attr:`.modelVariants`."""
         self.modelVariants[name] = modelVariant
 
-    def generateRuns(self):        
-        '''When using a template modelRun, will generate runs for the suite
-        based on it, and any model run variants set, and save these to 
-        the :attr:`.runs` attribute ready to be run using :meth:`.runAll`.'''
+    def generateRuns(self, iterator=productCalc):        
+        """When using a template modelRun, will generate runs for the suite
+        based on it. The generated runs are saved to 
+        the :attr:`.runs` attribute ready to be run using :meth:`.runAll`.
+        
+        This requires that there are one or more :class:`.StgXMLVariant`
+        recorded on the class already.
 
-        # TODO: exception check
+        :param iterator: this determines what iterator strategy should be
+          used to generate the runs. Defaults to a product, but a simple
+          "zip" style can be achieved using the itertools.izip iterator.
+          See the Python :mod:`itertools` module for more.
+        """
+
         assert self.templateMRun
 
-        variantLens = [variant.varLen() for variant in
-            self.modelVariants.itervalues()]
+        # Strategy used below is instead of iterating directly over the 
+        # parameters we are applying to each run, create indices into the
+        # modelVariants lists to work out which to apply for each run.
+        variantLens = [var.varLen() for var in self.modelVariants.itervalues()]
+        indexIterator = iterator(*map(range, variantLens))
 
-        for paramIndices in productCalc(*map(range, variantLens)):
+        for paramIndices in indexIterator:
             # First create a copy of the template model run
             newMRun = copy.deepcopy(self.templateMRun)
             # Now, apply each variant to it as appropriate
@@ -238,22 +267,27 @@ class ModelSuite:
                 paramI = paramIndices[varI]
                 variantGen.applyToModel(newMRun, paramI)
 
-            # Now build the output path for this modelRun
             if self.subOutputPathGenFunc:
                 subPath = self.subOutputPathGenFunc(modelRun)
             else:    
-                subPath = ""
-                for varI, variantEntry in enumerate(
-                        self.modelVariants.iteritems()):    
-                    varName, variantGen = variantEntry
-                    paramI = paramIndices[varI]
-                    if subPath != "": subPath += "-"
-                    subPath += "%s_%s" % (varName, variantGen.varStr(paramI))
+                subPath = self.getOutputSubPath(paramIndices)
 
             newMRun.outputPath = os.path.join(self.outputPathBase, subPath)  
             self.runs.append(newMRun)
             self.runDescrips.append(subPath)
             self.runCustomOptSets.append(None)
+
+    def getOutputSubPath(self, paramIndices):
+        """Generate the standard output directory for a run with given
+        paramIndices into the :attr:`.modelVariants` to be applied."""
+        varTexts = []
+        for varI, variantEntry in enumerate(
+                self.modelVariants.iteritems()):    
+            varName, variantGen = variantEntry
+            paramI = paramIndices[varI]
+            varTexts.append("%s_%s" % (varName, variantGen.varStr(paramI)))
+        subPath = "-".join(varTexts)
+        return subPath
 
     def writeAllModelRunXMLs(self):
         """Save an XML record of each ModelRun currently in :attr:`.runs`."""
