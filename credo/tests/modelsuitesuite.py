@@ -81,15 +81,6 @@ class ModelSuiteTestCase(unittest.TestCase):
                 self.assertEqual(varDict['minY'], self.yRange[ii])
                 self.assertEqual(varDict['maxZ'], self.zRange[jj])
 
-    def test_variantsDict(self):    
-        mSuite = ModelSuite(os.path.join("output","genSuiteTest"),
-            templateMRun = self.mRun1)
-        mSuite.addVariant("depthVary", self.stgI1)
-        mSuite.addVariant("ZVary", self.stgI2)
-        import pdb
-        pbd.set_trace()
-        varDict = mSuite.getVariantsDict(0)
-
     def test_generateRuns_product(self):        
         mSuite = ModelSuite(os.path.join("output","genSuiteTest"),
             templateMRun = self.mRun1)
