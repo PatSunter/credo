@@ -37,6 +37,5 @@ modelName += "-analyticTest"
 outputPath = 'output/'+modelName
 
 anTest = AnalyticTest(inputFiles, outputPath, nproc=1, basePath=os.getcwd())
-
 testRunner = SysTestRunner()
 testRunner.runTest(anTest)
