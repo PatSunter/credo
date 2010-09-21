@@ -12,6 +12,13 @@ IO (Input Output functions) API
    :undoc-members:
    :show-inheritance:
 
+:mod:`credo.io.stgcmdline`
+==========================
+
+.. automodule:: credo.io.stgcmdline
+   :members:
+   :undoc-members:
+
 :mod:`credo.io.stgfreq`
 ==========================
 
