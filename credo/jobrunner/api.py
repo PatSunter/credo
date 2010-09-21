@@ -24,6 +24,7 @@
 from datetime import timedelta
 import credo.modelrun
 import credo.modelresult
+from credo.io import stgcmdline
 
 class JobRunner:
     def __init__(self):
@@ -50,8 +51,7 @@ class JobRunner:
         stgRunStr += credo.modelrun.getParamOverridesAsStr(
             modelRun.paramOverrides)
         if modelRun.solverOpts:
-            #TODO: perhaps encapsulate this using OO in a solverOpts class
-            stgRunStr += " -options_file %s" % modelRun.solverOpts
+            stgRunStr += " "+stgcmdline.solverOptsStr(modelRun.solverOpts)
         if extraCmdLineOpts:
             stgRunStr += " "+extraCmdLineOpts
         return stgRunStr 

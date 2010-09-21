@@ -29,6 +29,7 @@ import os
 import glob
 import shutil
 import inspect
+from credo.io import stgcmdline
 
 STG_BASEDIRKEY = 'STG_BASEDIR'
 STG_BINDIRKEY = 'STG_BINDIR'
@@ -49,7 +50,12 @@ def getVerifyStgExePath(exeName):
             " exist/not valid in StGermain binary path (%s)." % \
             (inspect.stack()[0][3], exeName, stgPath))
 
-    return fullExePath    
+    return fullExePath
+
+def getVerifyStgMainExecutablePath():
+    """return the full path to the main StGermain executable (in the path
+    given by the STG_BINDIR env variable)"""
+    return getVerifyStgExePath(stgcmdline.STGERMAIN_EXE_NAME)
 
 def _getStgPath(pathDescription, pathEnviroVarKey, keySubDir=None,
         testFile=None):

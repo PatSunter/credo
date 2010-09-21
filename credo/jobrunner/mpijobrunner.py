@@ -50,7 +50,7 @@ class MPIJobRunner(JobRunner):
         pass
 
     def getStGermainExeStr(self):
-        return stgpath.getVerifyStgExePath("StGermain")
+        return stgpath.getVerifyStgMainExecutablePath()
 
     def runModel(self, modelRun, extraCmdLineOpts=None, dryRun=False,
             maxRunTime=None):

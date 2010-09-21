@@ -37,6 +37,7 @@ from credo.io.stgxml import writeXMLDoc
 import credo.modelresult
 from credo.io import stgxml
 from credo.io import stgpath
+from credo.io import stgcmdline
 from credo.analysis import fields
 
 # Global list of allowed Python types that can be saved as StGermain SimParams
@@ -577,9 +578,11 @@ def getParamOverridesAsStr(paramOverrides):
     #create the string in sorted order, for tidiness and user-friendliness
     modelPaths = paramOverrides.keys()
     modelPaths.sort()
+    overrideStrs = []
     for modelPath in modelPaths:
         paramVal = paramOverrides[modelPath]
-        paramOverridesStr += " --%s=%s" % (modelPath, str(paramVal))
+        overrideStrs.append(stgcmdline.paramStr(modelPath, paramVal))
+    paramOverridesStr = " ".join(overrideStrs)
     return paramOverridesStr
 
 def writeParamOverridesInfoXML(paramOverrides, parentNode):    
@@ -601,13 +604,6 @@ def writeSolverOptsInfoXML(solverOpts, parentNode):
 
 ##################
 
-# First some helper functions to help set up the run
-# Should probably go into io sub-package
-def stgCmdLineParam(paramName, val):
-    '''Format a given parameter and it's value correctly for passing to
-     StGermain on the command line, to over-ride something in a model XML'''
-    return "--%s=%s" % (paramName, str(val))
-
 def strRes(resTuple):
     '''Turn a given tuple of resolutions into a string, suitable for using
      as an output dir'''
@@ -626,12 +622,9 @@ def generateResOpts(resTuple):
     assert len(resTuple) in range(2,4)
     resOptsStr=""
     for ii in range(len(resTuple)):
-        resOptsStr+=stgCmdLineParam(resParams[ii],resTuple[ii])+" "
+        resOptsStr += stgcmdline.paramStr(resParams[ii],resTuple[ii]) + " "
 
     # This is to ensure, since we're overriding, if only 2D model is being
     # run, it ignores any 3rd dimension spec set in the original model file
-    resOptsStr+=stgCmdLineParam("dim",len(resTuple))
+    resOptsStr += stgcmdline.paramStr("dim",len(resTuple))
     return resOptsStr
-
-
-
