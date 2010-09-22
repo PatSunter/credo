@@ -45,33 +45,35 @@ class ModelSuiteTestCase(unittest.TestCase):
         self.zRange = [10000, 11000]
         self.stgI1 = StgXMLVariant("minY", self.yRange)
         self.stgI2 = StgXMLVariant("maxZ", self.zRange)
+        self.varDict = {"Y":self.stgI1, "Z":self.stgI2}
 
     def tearDown(self):
         # TODO: tear down lxml document?
         shutil.rmtree(self.basedir)
 
     def test_variantGen(self):
-        for paramI in range(self.stgI1.varLen()):
+        for paramI in range(self.stgI1.valLen()):
             self.stgI1.applyToModel(self.mRun1, paramI)
             self.assertEqual(self.mRun1.paramOverrides['minY'],
                 self.yRange[paramI])
 
-        for paramI in range(self.stgI2.varLen()):
+        for paramI in range(self.stgI2.valLen()):
             self.stgI2.applyToModel(self.mRun1, paramI)
             self.assertEqual(self.mRun1.paramOverrides['maxZ'],
                 self.zRange[paramI])
 
-    def test_getVariantsDicts(self):
-        varDicts = msuite.getVariantsDicts(itertools.izip,
-            [self.stgI1, self.stgI2])
+    def test_getVariantParamPathDicts(self):
+        indicesIt = msuite.getVariantIndicesIter(self.varDict, itertools.izip)
+        varDicts = msuite.getVariantParamPathDicts(self.varDict, indicesIt)
         self.assertEqual(len(varDicts), min(
             map(len, [self.yRange, self.zRange])))
         for ii, varDict in enumerate(varDicts):
             self.assertEqual(varDict['minY'], self.yRange[ii])
             self.assertEqual(varDict['maxZ'], self.zRange[ii])
             
-        varDicts = msuite.getVariantsDicts(msuite.productCalc,
-            [self.stgI1, self.stgI2])
+        indicesIt = msuite.getVariantIndicesIter(self.varDict,
+            msuite.product)
+        varDicts = msuite.getVariantParamPathDicts(self.varDict, indicesIt)
         self.assertEqual(len(varDicts), (len(self.yRange) * len(self.zRange)))
         # Loop through and check the product has worked.
         for ii in range(len(self.yRange)):
