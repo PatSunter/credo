@@ -95,6 +95,8 @@ class SysTestRunner:
             mSuite.writeAllModelResultXMLs()
 
         print "Test result was %s" % testResult
+        if isinstance(testResult, CREDO_ERROR):
+            print "Error msg: %s" % (testResult.detailMsg)
         outFilePath = sysTest.updateXMLWithResult(suiteResults)
         testResult.setRecordFile(outFilePath)
         print "Saved test result to %s" % (outFilePath)
