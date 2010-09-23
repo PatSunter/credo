@@ -59,6 +59,12 @@ import linecache
 CVG_EXT='cvg'
 CVG_HEADER_LINESTART='#'
 
+class CVGReadError(IOError):
+    """An exception for specifying problems reading an Underworld
+    convergence file."""
+    pass
+
+
 class CvgFileInfo:
     '''A simple class to store info about what fields map to what 
      convergence files. Currently implicit is the name of the Field,
@@ -193,7 +199,16 @@ def getDofErrorsForStep(cvgFileInfo, stepNum):
 
     dofErrorsForStep = []
     for dof, colIndex in cvgFileInfo.dofColMap.iteritems():
-        dofErrorsForStep.append(colVals[colIndex])
+        try:
+            dofError = colVals[colIndex]
+        except IndexError:
+            raise CVGReadError("Error, couldn't read expected error in"
+                " column %d"\
+                " from CVG file '%s'. Perhaps the model run had a parallel"\
+                " I/O problem (see CREDO FAQ online for advice)." \
+                % (colIndex, cvgFileInfo.filename))
+        else:
+            dofErrorsForStep.append(dofError)
     
     return dofErrorsForStep
 
