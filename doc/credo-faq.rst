@@ -14,12 +14,13 @@ This problem is usually because you haven't add the directory containing
 the CREDO Python source to your PYTHONPATH. See :ref:`environment_setup`
 for the various ways to do this.
 
-Problem with parallel system tests failing "IndexError: list index out of range"
---------------------------------------------------------------------------------
+Problem with parallel system tests, a CVGReadError occurs trying to read CVGs
+-----------------------------------------------------------------------------
 
 Q: I have a problem running parallel CREDO system tests, along the lines
 of being unable to parse Field convergence results, where it brings up an
-exception message ending with "IndexError: list index out of range".
+exception message along the lines of:
+"credo.io.stgcvg.CVGReadError: Error, couldn't read expected error" ...
 
 A: This problem is often caused by using an "mpirun" or "mpiexec"
 not corresponding to the MPI library you compiled the code with. Not doing
