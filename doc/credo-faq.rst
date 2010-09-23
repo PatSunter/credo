@@ -14,11 +14,12 @@ This problem is usually because you haven't add the directory containing
 the CREDO Python source to your PYTHONPATH. See :ref:`environment_setup`
 for the various ways to do this.
 
-Problem with parallel system tests failing when reading output files
---------------------------------------------------------------------
+Problem with parallel system tests failing "IndexError: list index out of range"
+--------------------------------------------------------------------------------
 
 Q: I have a problem running parallel CREDO system tests, along the lines
-of being unable to parse Field convergence results.
+of being unable to parse Field convergence results, where it brings up an
+exception message ending with "IndexError: list index out of range".
 
 A: This problem is often caused by using an "mpirun" or "mpiexec"
 not corresponding to the MPI library you compiled the code with. Not doing
