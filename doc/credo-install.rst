@@ -152,6 +152,19 @@ STG_XMLDIR  needs to specify the path that StGermain standard XMLs are stored
             and CREDO will work out the XMLs location within that.
 =========== ==================================================================
 
+There are also several environment variables specific to different 'job
+launchers' that you can use with CREDO, starting with the default MPI one:
+
+**MPI Jobrunner (default)**
+
+================== ===========================================================
+Variable           Value to set to
+================== ===========================================================
+MPI_RUN_COMMAND    (Optional) this will set the command used to run parallel
+                   jobs using MPI. Otherwise the default of "mpirun" will be
+                   used.
+================== ===========================================================
+
 The sections below will advise you how to set these up correctly.
 
 Modifying the shell variables directly

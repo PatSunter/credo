@@ -29,6 +29,7 @@ Contents:
    credo-pythonlinks.rst
    credo-developer-notes.rst
    credo-whatsnew.rst
+   credo-faq.rst
    credo-glossary.rst
 
 Indices and tables
