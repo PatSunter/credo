@@ -38,6 +38,7 @@ import copy
 import os, glob
 import itertools
 import operator
+import csv
 
 import credo
 from credo import modelrun as mrun
@@ -370,3 +371,40 @@ class ModelSuite:
     # of various properties of the suite, e.g. memory usage? Or should
     # this be a capability of some sort of uber-results list?
 
+def writeInputsOutputsToCSV(mSuite, iterGen, observablesDict, fname):
+    """Write a CSV file, containing all the ModelVariants defined for a 
+    ModelSuite, and also all the observables in the observablesDict.
+
+    :param observablesDict: a dictionary of 'observables', each entry in
+      the form 'obsName':[obsVals for each run], e.g. "vrms":[0.6, 0.8, 0.9].
+    :param fname: file name of the CSV file to create, inside the model
+      suite's base output path.
+    
+    .. note:: Could be a function on the ModelSuite?
+    """  
+    target = open(os.path.join(mSuite.outputPathBase, fname), "w" )
+    wtr = csv.writer(target)
+    wtr.writerow(mSuite.modelVariants.keys()+observablesDict.keys())
+    indexIt = getVariantIndicesIter(mSuite.modelVariants, iterGen)
+    varDicts = getVariantNameDicts(mSuite.modelVariants, indexIt)
+    for varDict, observs in zip(varDicts, zip(*observablesDict.itervalues())):
+        wtr.writerow(varDict.values()+list(observs))
+    target.close()
+
+def getModelResultsArray(baseName, baseDir):
+    """Post-processing: given a base model name and base output directory,
+    search this directory for model results, and read into a list of
+    :class:`~credo.modelresult.ModelResult` . 
+
+    .. note:: Needs more checking added.
+    """
+    modelResults = []
+    for fName in os.listdir(baseDir):
+        fullPath = os.path.join(baseDir, fName)
+        if os.path.isdir(os.path.join(baseDir, fName)):
+            dirName = fName
+            modelResults.append(
+                # TODO: Simtime of 0 is a hack here.
+                mres.ModelResult("%s-%s" % (baseName, dirName), fullPath, 0))
+                # TODO: other job meta info if possible?
+    return modelResults
