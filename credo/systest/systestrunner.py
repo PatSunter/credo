@@ -376,9 +376,9 @@ class SysTestRunner:
         print "All XML summary files saved to dir '%s'." % outputSummaryDir
 
 
-def runSuitesFromModules(suiteModNames, outputSummaryDir):
-    """Runs a set of System test suites, where suiteModNames is a list of 
-    suites to import and run."""
+def getSuitesFromModules(suiteModNames):
+    """Gets a list of suites from the list of suites to import given in
+    suiteModNames."""
     suites = []
     for modName in suiteModNames:
         print "Importing suite for %s:" % modName
@@ -386,5 +386,11 @@ def runSuitesFromModules(suiteModNames, outputSummaryDir):
         imp = __import__(modName)
         mod = sys.modules[modName]
         suites.append(mod.suite())
+    return suites
+
+def runSuitesFromModules(suiteModNames, outputSummaryDir):
+    """Runs a set of System test suites, where suiteModNames is a list of 
+    suites to import and run."""
+    suites = getSuitesFromModules(suiteModNames)
     testRunner = SysTestRunner()
     testRunner.runSuites(suites, outputSummaryDir)
