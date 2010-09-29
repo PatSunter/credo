@@ -221,14 +221,21 @@ class ModelRun:
         shutil.move(self.analysisXML, 
             os.path.join(absOutputPath, self.analysisXML))
 
-        for opName, analysisOp in self.analysisOps.iteritems(): 
-            analysisOp.postRun(self, self.basePath)
-
         # Keep a record of any solver options used.
         if self.solverOpts:
             soCopyPath = os.path.join(absOutputPath,
                 SOLVER_OPTS_RECORD_FILENAME)
             shutil.copy(self.solverOpts, soCopyPath)
+
+        # Allow all analysis operators to do any post-run cleanup
+        for opName, analysisOp in self.analysisOps.iteritems(): 
+            analysisOp.postRun(self, self.basePath)
+    
+        try:
+            self.customPostRunCleanup(self)
+        except AttributeError:
+            # If this hook isn't implemented, keep going.
+            pass
 
     def checkSolverOptsFile(self):
         if self.solverOpts == None: return
