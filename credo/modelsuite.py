@@ -281,6 +281,18 @@ class ModelSuite:
         # Return the index of the newly added run.
         return len(self.runs) - 1
 
+    def getRunByName(self, runName):
+        """Get a modelRun instance from the suite with a particular name."""
+        for modelRun in self.runs:
+            if modelRun.name == runName:
+                return modelRun
+
+    def getRunIndex(self, runName):
+        """Get the index within the suite of a run with the given name."""
+        for runI, modelRun in enumerate(self.runs):
+            if modelRun.name == runName:
+                return runI
+
     def cleanAllOutputPaths(self):
         '''Remove all files in each model's output path. Useful to get rid of
         results still there from previous jobs. Doesn't delete sub-directories,
@@ -345,6 +357,7 @@ class ModelSuite:
             else:
                 subPath = self.getOutputSubPath(paramIndices)
 
+            newMRun.name += "-%s" % (subPath)
             newMRun.outputPath = os.path.join(self.outputPathBase, subPath)  
             self.runs.append(newMRun)
             self.runDescrips.append(subPath)
@@ -396,15 +409,17 @@ def getModelResultsArray(baseName, baseDir):
     search this directory for model results, and read into a list of
     :class:`~credo.modelresult.ModelResult` . 
 
-    .. note:: Needs more checking added.
+    .. note:: Needs more checking added, and ability to recover metadata
+       about the ModelRuns.
     """
     modelResults = []
     for fName in os.listdir(baseDir):
         fullPath = os.path.join(baseDir, fName)
         if os.path.isdir(os.path.join(baseDir, fName)):
             dirName = fName
-            modelResults.append(
-                # TODO: Simtime of 0 is a hack here.
-                mres.ModelResult("%s-%s" % (baseName, dirName), fullPath, 0))
-                # TODO: other job meta info if possible?
+            modelName = "%s-%s" % (baseName, dirName)
+            # TODO: Simtime of 0 is a hack here.
+            # TODO: other job meta info if possible?
+            mResult = mres.ModelResult(modelName, fullPath, 0)
+            modelResults.append(mResult)
     return modelResults
