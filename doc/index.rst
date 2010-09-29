@@ -12,6 +12,10 @@ The examples should be self-explanatory, but if you're not familiar
 with the Python programming and scripting language, you might like
 to check out the :ref:`credo-pythonlinks` section.
 
+CREDO is currently being used as the Testing and workflow support tool of the 
+`Underworld <http://www.underworldproject.org>`_ Geodynamics modelling project:-
+the manual of which is `available online <http://www.underworldproject.org/documentation.html>`_.
+
 **For developers of CREDO:**, you'll likely want to jump straight to the
 :ref:`credo-apidocs`, informed by the overall description in
 :ref:`credo-architecture`.
