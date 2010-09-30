@@ -66,8 +66,8 @@ class ReferenceTest(SysTest):
     failMsg = "A Field was not within tolerance of reference soln."
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
-            fieldsToTest = ['VelocityField','PressureField'], runSteps=20,
-            defFieldTol=1e-2, fieldTols=None, paramOverrides=None,
+            fieldsToTest = ['VelocityField','PressureField'],
+            runSteps=20, defFieldTol=1e-2, fieldTols=None, paramOverrides=None,
             solverOpts=None, basePath=None, expPathPrefix="expected",
             nameSuffix=None, timeout=None):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,

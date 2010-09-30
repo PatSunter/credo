@@ -73,8 +73,8 @@ class HighResReferenceTest(SysTest):
     failMsg = "A Field was not within tolerance of the high res reference soln."
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
-            fieldsToTest = ['VelocityField','PressureField'], runSteps=1,
-            defFieldTol=1e-2, fieldTols=None, paramOverrides=None,
+            fieldsToTest = ['VelocityField','PressureField'],
+            runSteps=1, defFieldTol=1e-2, fieldTols=None, paramOverrides=None,
             solverOpts=None, basePath=None, expPathPrefix="HRexpected",
             nameSuffix=None, timeout=None, highResRatio=4):
         SysTest.__init__(self, inputFiles, outputPathBase, nproc,
