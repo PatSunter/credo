@@ -30,6 +30,7 @@ or Test components need to inherit.
 
 import os
 import inspect
+import copy
 from datetime import timedelta
 from xml.etree import ElementTree as etree
 import credo.modelrun as mrun
@@ -353,8 +354,8 @@ class SysTest:
         the ModelRun interface.)"""
         return mrun.ModelRun(modelName,
             self.inputFiles, outputPath, basePath=self.basePath,
-            nproc=self.nproc, paramOverrides=self.paramOverrides,
-            solverOpts=self.solverOpts)
+            nproc=self.nproc, paramOverrides=copy.copy(self.paramOverrides),
+            solverOpts=copy.copy(self.solverOpts))
 
     def writePreRunXML(self, outputPath="", filename="", prettyPrint=True):
         """Write the SysTest XML with as much information before the run as
@@ -572,7 +573,8 @@ class SysTestSuite:
           System test when instantiated.
         :param `**testOpts`: any other keyword arguments the user wishes to
           passed through to the System test when it's instantiated.
-          Can be used to customise a test."""
+          Can be used to customise a test.
+        :returns: a reference to the newly created and added SysTest."""
 
         if not inspect.isclass(testClass):
             raise TypeError("The testClass argument must be a type that's"\
@@ -599,6 +601,7 @@ class SysTestSuite:
         newSysTest = testClass(inputFiles, outputPath, basePath=callingPath, 
             **testOpts)
         self.sysTests.append(newSysTest)
+        return newSysTest
 
     def addSubSuite(self, subSuite):
         """Adds a single sub-suite to the list of sub-suites."""
