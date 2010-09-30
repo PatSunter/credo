@@ -48,5 +48,6 @@ from credo.systest.restart import RestartTest
 from credo.systest.analytic import AnalyticTest
 from credo.systest.analyticMultiRes import AnalyticMultiResTest
 from credo.systest.reference import ReferenceTest
+from credo.systest.highResReference import HighResReferenceTest
 # Import the benchmark
 from credo.systest.scibenchmark import SciBenchmarkTest

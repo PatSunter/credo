@@ -43,6 +43,9 @@ class FieldWithinTolTest(TestComponent):
     * useReference: determines whether the fields are compared against
       a reference, or analytic solution. See 
       :meth:`credo.analysis.fields.FieldComparisonList.useReference`
+    * useHighResReference: determines whether the fields are compared against
+      a high resolution reference field, or analytic solution. See 
+      :meth:`credo.analysis.fields.FieldComparisonList.useHighResReference`
     * referencePath: See   
       :meth:`credo.analysis.fields.FieldComparisonList.referencePath`
     * referencePath: See   
@@ -89,6 +92,7 @@ class FieldWithinTolTest(TestComponent):
             defFieldTol=0.01,
             fieldTols=None,
             useReference=False,
+            useHighResReference= False,
             referencePath=None,
             testTimestep=0
             ):
@@ -98,6 +102,10 @@ class FieldWithinTolTest(TestComponent):
         self.fieldTols = fieldTols
         self.fComps = fields.FieldComparisonList()
         self.fComps.useReference = useReference
+        self.fComps.useHighResReference = useHighResReference
+        if useReference and useHighResReference:
+            raise ValueError("Don't define both regular reference and high "\
+               "res reference solution mode - choose one or the other.")
         self.fComps.referencePath = referencePath
         self.fComps.testTimestep = testTimestep
         self.fieldResults = {}
@@ -168,7 +176,12 @@ class FieldWithinTolTest(TestComponent):
             value=str(self.fComps.testTimestep))
         etree.SubElement(specNode, 'useReference',
             value=str(self.fComps.useReference))
+        etree.SubElement(specNode, 'useHighResReference',
+            value=str(self.fComps.useHighResReference))
         if self.fComps.useReference:
+            etree.SubElement(specNode, 'referencePath',
+                value=self.fComps.referencePath)
+        if self.fComps.useHighResReference:
             etree.SubElement(specNode, 'referencePath',
                 value=self.fComps.referencePath)
         fListNode = etree.SubElement(specNode, 'fields')
