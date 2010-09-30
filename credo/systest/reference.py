@@ -27,7 +27,7 @@ from xml.etree import ElementTree as etree
 
 from credo.modelsuite import ModelSuite
 from credo.modelrun import SimParams
-import credo.modelrun as modelrun
+import credo.jobrunner
 from credo.systest.api import SysTest, CREDO_PASS, CREDO_FAIL, getStdTestNameBasic
 from credo.systest.fieldWithinTolTest import FieldWithinTolTest
 
@@ -44,8 +44,8 @@ class ReferenceTest(SysTest):
        * runSteps: number of steps the reference solution should run for.
        * fieldsToTest: Which fields in the model should be compared with the
          reference solution.
-       * defFieldTol: The default tolerance to be applied when comparing fields of
-         interest to the reference solution.
+       * defFieldTol: The default tolerance to be applied when comparing
+         fields of interest to the reference solution.
          See also the FieldWithinTolTest's
          :attr:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
        * fieldTols: a dictionary of tolerances to use when testing particular
@@ -96,12 +96,11 @@ class ReferenceTest(SysTest):
             dumpevery=0)
         mRun.cpFields = self.fieldsToTest
         mRun.writeInfoXML()
-        mRun.analysisXMLGen()
-        result = modelrun.runModel(mRun)
+        jobRunner = credo.jobrunner.defaultRunner()
+        result = jobRunner.runModel(mRun)
         # It's conceivable this could be useful, if we store results about
         # e.g. solver solution times etc.
-        import credo.modelresult as modelresult
-        modelresult.writeModelResultsXML(result, path=mRun.outputPath)
+        result.writeRecordXML()
 
     # TODO: a pre-check phase - check the reference dir exists?
 
