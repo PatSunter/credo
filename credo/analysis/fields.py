@@ -247,6 +247,16 @@ class FieldComparisonList(AnalysisOperation):
        must also specify :attr:`.referencePath` so that the appropriate
        StGermain XML for the operation can be written.
 
+    .. attribute:: useHighResReference
+
+       Determines whether fields are compared against a high-res reference
+       solution (if True), or analytic (if False). If useHighResReference
+       is true, user must also specify :attr:`.referencePath` so that
+       the appropriate StGermain XML for the operation can be written.
+
+       .. note:: Don't also specify :attr:`useReference`, choose one or the
+          other.
+
     .. attribute:: referencePath
 
        (Relative or absolute) path to the reference solutions for the 
@@ -274,6 +284,7 @@ class FieldComparisonList(AnalysisOperation):
         if fieldsList == None:
             self.fields = {}
         self.useReference = False
+        self.useHighResReference = False
         self.referencePath = None
         self.testTimestep = 0
 
@@ -282,6 +293,8 @@ class FieldComparisonList(AnalysisOperation):
         of the fields being compared - i.e. either reference or analytic."""
         if self.useReference == True:
             return "reference"
+        elif self.useHighResReference == True:
+            return "highResReference"
         else:
             return "analytic"
 
@@ -305,6 +318,7 @@ class FieldComparisonList(AnalysisOperation):
         ftNode = etree.SubElement(parentNode, 'fieldComparisonList')
         ftNode.attrib['fromXML']=str(self.fromXML)
         ftNode.attrib['useReference']=str(self.useReference)
+        ftNode.attrib['useHighResReference']=str(self.useHighResReference)
         ftNode.attrib['referencePath']=str(self.referencePath)
         ftNode.attrib['testTimestep']=str(self.testTimestep)
         fListNode = etree.SubElement(ftNode, 'fields')
@@ -340,15 +354,18 @@ class FieldComparisonList(AnalysisOperation):
                 xmlFieldTestsList.insert(index, str(ii))
                 ii+=1
 
-            stgxml.writeParamList(pluginDataElt, self.stgXMLSpecFList,
-                xmlFieldTestsList)
-
-            if self.useReference:
+            if self.useReference or self.useHighResReference:
                 stgxml.writeParamSet(pluginDataElt, {
                     'referenceSolutionFilePath':self.referencePath,
-                    'useReferenceSolutionFromFile':self.useReference })
+                    'useReferenceSolutionFromFile':self.useReference,
+                    'useHighResReferenceSolutionFromFile':self.useHighResReference })
                 stgxml.writeParamList(pluginDataElt, self.stgXMLSpecRList,
                     self.fields.keys())
+            
+            # Current plugin seems to require using a numeric fields list
+            # For both analytic and ref solns.
+            stgxml.writeParamList(pluginDataElt, self.stgXMLSpecFList,
+                xmlFieldTestsList)
 
             stgxml.writeParamSet(pluginDataElt, {
                 'IntegrationSwarm':'gaussSwarm',
