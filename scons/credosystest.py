@@ -41,7 +41,6 @@ def generate(env, **kw):
     stgBaseDir = os.path.abspath('.')
     credoPath = os.path.abspath('credo')
     sys.path.insert(0, credoPath)
-    import credo.systest.systestrunner
     os.environ['STG_BASEDIR'] = stgBaseDir
     # Set up the environment for sub-scripts
     env['ENV']['STG_BASEDIR'] = stgBaseDir
@@ -118,8 +117,15 @@ SCons-Check Options:
         xmlOutputDir = str(target[0])
         suiteFiles = map(str, source)
         suiteModNames = map(pathToPyModuleName, suiteFiles)
-        credo.systest.systestrunner.runSuitesFromModules(suiteModNames,
-            xmlOutputDir)
+        try:
+    	    import credo.systest.systestrunner
+        except Exception, e:
+            raise ImportError("Failed to import the CREDO package required to"\
+            " run System tests. Check you have the appropriate Python version "\
+            " installed (2.5 or greater). Error message was:\n%s" % e)
+        else:
+            credo.systest.systestrunner.runSuitesFromModules(suiteModNames,
+                xmlOutputDir)
         return None
 
     # Define a builder for a cvg suite: should be dependent on a project
