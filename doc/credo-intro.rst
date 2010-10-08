@@ -54,7 +54,6 @@ but it's role is to:
 This is summarised in the diagram below.
 
 .. image:: _static/CREDO-architecture-detail.*
-   :scale: 70 %
 
 As such, it currently explicity doesn't provide run-time access to the
 StGermain objects (written in a custom framework implemented in the C language).
