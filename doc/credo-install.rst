@@ -65,7 +65,8 @@ tests and doing basic analysis.
 
 * **Matplotlib**: http://matplotlib.sourceforge.net:  A good plotting Library
   available in Python. CREDO has several functions/options to auto-create plots 
-  of things of interest using Matplotlib.
+  of things of interest using Matplotlib. On Mac Os X, this is available via
+  Macports for different Python versions, such as `py26-matplotlib`.
 * **NumPy** and **SciPy**: http://numpy.scipy.org/ and http://www.scipy.org/.
   These libraries are mature and provide efficient and effective interfaces for
   operating on Numerical data. CREDO doesn't use either explicitly
