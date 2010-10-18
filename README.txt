@@ -68,7 +68,9 @@ as "updatePathsCREDO.sh".
 
 After that, you should be good to go!
 
-If you wish to build a local copy of the CREDO documentation:
+If you wish to build a local copy of the CREDO documentation, you will need
+to first install the 'Sphinx' documentation tool, and the 'Graphviz' plotting
+library (for more on these see the doc appendix). Then:
 1. cd doc
 2. make html
 3. make latex; pushd _build/latex; make all-pdf; popd

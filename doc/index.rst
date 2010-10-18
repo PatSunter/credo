@@ -33,6 +33,7 @@ Contents:
    credo-pythonlinks.rst
    credo-developer-notes.rst
    credo-whatsnew.rst
+   credo-appendix.rst
    credo-faq.rst
    credo-glossary.rst
 
