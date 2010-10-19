@@ -395,7 +395,7 @@ def writeInputsOutputsToCSV(mSuite, iterGen, observablesDict, fname):
     
     .. note:: Could be a function on the ModelSuite?
     """  
-    target = open(os.path.join(mSuite.outputPathBase, fname), "w" )
+    target = open(os.path.join(mSuite.runs[0].basePath, mSuite.outputPathBase, fname), "w" )
     wtr = csv.writer(target)
     wtr.writerow(mSuite.modelVariants.keys()+observablesDict.keys())
     indexIt = getVariantIndicesIter(mSuite.modelVariants, iterGen)
