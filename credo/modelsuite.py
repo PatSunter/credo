@@ -379,10 +379,63 @@ class ModelSuite:
         :attr:`.resultsList`."""
         for runI, mResult in enumerate(self.resultsList):
             mResult.writeRecordXML()
+    
+    def readResultsFromPath(self, basePath, overrideOutputPath=None,
+            checkAllPresent=True):
+        """Read the results generated for a given ModelSuite located off the 
+        given basePath where the suite was run, and return the list of results.
+
+        This will ignore results in the directory not related to this suite.
+
+        :arg overrideOutputPath: if specified, this path overrides the default
+          outputPath of the suite itself to search for the results.
+          (I.e. useful if you are reading from a previous suite with different
+          output path.)
+        :arg checkAllPresent: if True this will check that all runs expected
+          for the suite were found in the list of results.
+
+        .. note:
+           Currently this just relies on model result names for the suite
+           matching up correctly. In future, should really scan the ModelResult
+           XMLs and check they match correctly.
+        """ 
+        if overrideOutputPath is not None:
+            outputPathBase = overrideOutputPath
+        else:
+            outputPathBase = self.outputPathBase
+        # First read all results
+        readResults = getModelResultsArray(self.templateMRun.name,
+            os.path.join(basePath, outputPathBase))
+        # Now check through, and build a new list only contained in this index
+        sResults = []
+        for result in readResults:
+            runIndex = self.getRunIndex(result.modelName)
+            if runIndex == None: continue
+            else:
+                sResults.append((runIndex, result))
+        mResults = [None] * len(sResults)
+        # Now put them in the right order
+        for runIndex, result in sResults:
+            mResults[runIndex] = result
+        # Finally, check each run in the suite is present in the returned list
+        if checkAllPresent:
+            resultNames = [res.modelName for res in mResults]
+            for runI, mRun in enumerate(self.runs):
+                if mRun.name not in resultNames:
+                    raise ValueError(" Error, given basePath for reading model"\
+                        " results from, %s, with output path %s, is missing"\
+                        " result for suite's run '%s' (index %d)." %
+                        (basePath, outputPathBase, mRun.name, runI))
+        return mResults  
             
-    # TODO: here perhaps would be where we have tools to generate stats/plots
-    # of various properties of the suite, e.g. memory usage? Or should
-    # this be a capability of some sort of uber-results list?
+# TODO: here perhaps would be where we have tools to generate stats/plots
+# of various properties of the suite, e.g. memory usage? Or should
+# this be a capability of some sort of uber-results list? Or profiling
+# tools?
+
+
+              
+
 
 def writeInputsOutputsToCSV(mSuite, iterGen, observablesDict, fname):
     """Write a CSV file, containing all the ModelVariants defined for a 
