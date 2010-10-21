@@ -31,3 +31,11 @@ Analysis API
    :members:
    :undoc-members:
    :show-inheritance:
+
+:mod:`credo.analysis.images`
+============================
+
+.. automodule:: credo.analysis.images
+   :members:
+   :undoc-members:
+   :show-inheritance:
