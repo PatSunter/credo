@@ -79,7 +79,9 @@ def pixelDiff2x2(img1, img2):
 
 def compare(imgFilename1, imgFilename2, tol):
     """Compare two image files.
-    :returns: True if differences less than tolerance value (as a ratio)"""
+    :returns: A tuple containing a (Bool, diffsTuple), where the first Bool
+       is True if differences less than tolerance value (as a ratio),
+       and the diffsTuple is a tuple containing the diffs for each component."""
     img1 = Image.open(imgFilename1)
     img2 = Image.open(imgFilename2)
     #Check size and components match
@@ -93,10 +95,12 @@ def compare(imgFilename1, imgFilename2, tol):
     dist2 = pixelDiff2x2(img1, img2)
     print "Difference on 4 pixel subsample: %f" % dist2
     #Test fails if either value outside tolerance
-    if (dist1 < tol and dist2 < tol):
-        return True
+    distTuple = dist1, dist2
+    results = [dist < tol for dist in distTuple]
+    if False in results:
+        return False, distTuple
     else:
-        return False
+        return True, distTuple
 
 
 if __name__ == "__main__":
