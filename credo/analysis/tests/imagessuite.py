@@ -42,17 +42,12 @@ class AnalysisImagesTestCase(unittest.TestCase):
         shutil.rmtree(self.basedir)
 
     def test_compare(self):
-        self.assertTrue(imageOps.compare(self.imageFname1,
-            self.imageFname1_dup, tol=1e-12)[0])
-        self.assertTrue(imageOps.compare(self.imageFname1,
-            self.imageFname2, tol=0.1)[0])
-        self.assertTrue(imageOps.compare(self.imageFname1,
-            self.imageFname2, tol=0.02)[0])
-        # Test if one metric inside tol, the other outside
-        self.assertFalse(imageOps.compare(self.imageFname1,
-            self.imageFname2, tol=0.01)[0])
-        self.assertFalse(imageOps.compare(self.imageFname1,
-            self.imageFname2, tol=1e-8)[0])
+        diffs = imageOps.compare(self.imageFname1, self.imageFname1_dup)
+        self.assertAlmostEqual(diffs[0], 0)
+        self.assertAlmostEqual(diffs[1], 0)
+        diffs = imageOps.compare(self.imageFname1, self.imageFname2)
+        self.assertTrue(0 < diffs[0] < 0.011)
+        self.assertTrue(0 < diffs[1] < 0.002)
 
 def suite():
     suite = unittest.TestSuite()

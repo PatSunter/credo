@@ -77,11 +77,10 @@ def pixelDiff2x2(img1, img2):
     return dist / maxdist
 
 
-def compare(imgFilename1, imgFilename2, tol):
+def compare(imgFilename1, imgFilename2, verbose=False):
     """Compare two image files.
-    :returns: A tuple containing a (Bool, diffsTuple), where the first Bool
-       is True if differences less than tolerance value (as a ratio),
-       and the diffsTuple is a tuple containing the diffs for each component."""
+    :returns: A tuple containing the diffs for each component
+      (colour space, 4 pixel subsample)."""
     img1 = Image.open(imgFilename1)
     img2 = Image.open(imgFilename2)
     #Check size and components match
@@ -89,25 +88,15 @@ def compare(imgFilename1, imgFilename2, tol):
         return False
     #Colour comparison
     dist1 = colourDiff(img1, img2)
-    print "Colour space difference: %f" % dist1
+    if verbose: print "Colour space difference: %f" % dist1
     #Colour compare is not sensitive to flip/rotate so do 
     #a simple pixel by pixel compare as well
     dist2 = pixelDiff2x2(img1, img2)
-    print "Difference on 4 pixel subsample: %f" % dist2
+    if verbose: print "Difference on 4 pixel subsample: %f" % dist2
     #Test fails if either value outside tolerance
-    distTuple = dist1, dist2
-    results = [dist < tol for dist in distTuple]
-    if False in results:
-        return False, distTuple
-    else:
-        return True, distTuple
+    return dist1, dist2
 
 
 if __name__ == "__main__":
     #Example usage, compare two images passed on command line
-    tol = 0.1
-    if compare(sys.argv[1], sys.argv[2], tol):
-        print "Images match at %f tolerance" % tol
-    else:
-        print "Images differ at %f tolerance" % tol
-
+    diffs = compare(sys.argv[1], sys.argv[2])
