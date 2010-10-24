@@ -184,6 +184,46 @@ The 2 key aspects to keep in mind are:
 
 .. seealso:: http://docs.python.org/tutorial/modules.html#executing-modules-as-scripts
 
+Example: modifying an existing test suite to test with Multigrid options
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Suppose you want to run a pre-defined test suite, but with some non-standard
+options applied to test a particular feature or algorithm, such as Multigrid.
+
+While it'd be fine to make a copy of the original script and just modify
+each system test case as it's added to the suite, to reduce the amount of
+typing and also possibly ease long-term challenge of keeping the scripts
+in Synch, with CREDO you can modify the tests in a system test-suite 
+*after* they are defined but *before* they are run.
+
+For example, suppose for each test in a suite we want to do several things
+to test how they perform with Multigrid:
+ 
+* Add an extra XML file to be applied
+* Define a PETSc solver options file
+* Get the test directory record and log file to append "-mg" to the end.
+
+This can be done by modifying the :class:`~credo.systest.api.SysTest` objects
+that are kept in the :attr:`~credo.systest.api.SysTestSuite.sysTests` attribute of test suites, in a `for` loop::
+
+  # Customise to run each test with Multigrid options
+  mgSetup = "MultigridEXPERI.xml"
+  mgOpts = "options-uzawa-mg.opt"
+  for sysTest in testSuite.sysTests:
+      sysTest.testName += "-mg"
+      sysTest.outputPathBase += "-mg"
+      sysTest.inputFiles.append(mgSetup)
+      sysTest.solverOpts = mgOpts
+
+Perhaps an even better way to achieve this would be to run our modified script as a totally different file that *imports* the existing test suite.
+
+For example if the existing test suite is in a file `testAll.py`, and we
+want to run the Multigrid-extended version as `testAll-mg.py`, then the 
+contents of the latter file would be:
+
+.. include:: ./MiscScripts/testAll-mg.py
+   :literal:
+
 Alternative: Running a single test from the command-line
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
