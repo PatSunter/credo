@@ -33,10 +33,11 @@ class AnalysisImagesTestCase(unittest.TestCase):
 
     def setUp(self):
         self.basedir = os.path.realpath(tempfile.mkdtemp())
-        imgPath = os.path.join("input", "testImages")
-        self.imageFname1 = os.path.join(imgPath, "window.00001.png")
-        self.imageFname1_dup = os.path.join(imgPath, "window.00001_dup.png")
-        self.imageFname2 = os.path.join(imgPath, "window.00002.png")
+        self.imgPath = os.path.join("input", "testImages")
+        self.imageFname1 = os.path.join(self.imgPath, "window.00001.png")
+        self.imageFname1_dup = os.path.join(self.imgPath,
+            "window.00001_dup.png")
+        self.imageFname2 = os.path.join(self.imgPath, "window.00002.png")
 
     def tearDown(self):
         shutil.rmtree(self.basedir)
@@ -48,6 +49,29 @@ class AnalysisImagesTestCase(unittest.TestCase):
         diffs = imageOps.compare(self.imageFname1, self.imageFname2)
         self.assertTrue(0 < diffs[0] < 0.011)
         self.assertTrue(0 < diffs[1] < 0.002)
+
+    def test_compare_rayTay(self):
+        """Added as a result of unexpected high error results when
+        comparing images from multiple procs in Underworld."""
+        imgNp1_10 = os.path.join(self.imgPath, 'rayTay', 'window.00010_np1.png')
+        imgNp1_11 = os.path.join(self.imgPath, 'rayTay', 'window.00011_np1.png')
+        imgNp2_10 = os.path.join(self.imgPath, 'rayTay', 'window.00010_np2.png')
+        imgNp2_11 = os.path.join(self.imgPath, 'rayTay', 'window.00011_np2.png')
+        diffs = imageOps.compare(imgNp1_10, imgNp1_11)
+        self.assertTrue(0 < diffs[0] < 0.1)
+        self.assertTrue(0 < diffs[1] < 0.1)
+        diffs = imageOps.compare(imgNp2_10, imgNp2_11)
+        self.assertTrue(0 < diffs[0] < 0.1)
+        self.assertTrue(0 < diffs[1] < 0.1)
+        diffs = imageOps.compare(imgNp1_10, imgNp2_10)
+        #import pdb
+        #pdb.set_trace()
+        self.assertTrue(0 < diffs[0] < 0.1)
+        self.assertTrue(0 < diffs[1] < 0.1)
+        diffs = imageOps.compare(imgNp1_10, imgNp2_11)
+        self.assertTrue(0 < diffs[0] < 0.2)
+        self.assertTrue(0 < diffs[1] < 0.2)
+
 
 def suite():
     suite = unittest.TestSuite()
