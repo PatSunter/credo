@@ -215,14 +215,21 @@ that are kept in the :attr:`~credo.systest.api.SysTestSuite.sysTests` attribute 
       sysTest.inputFiles.append(mgSetup)
       sysTest.solverOpts = mgOpts
 
-Perhaps an even better way to achieve this would be to run our modified script as a totally different file that *imports* the existing test suite.
+Perhaps an even better way to achieve this would be to run our modified script
+as a totally different file that *imports* the existing test suite.
 
 For example if the existing test suite is in a file `testAll.py`, and we
 want to run the Multigrid-extended version as `testAll-mg.py`, then the 
 contents of the latter file would be:
 
-.. include:: ./MiscScripts/testAll-mg.py
+.. include:: ./MiscScripts/testAll_mg.py
    :literal:
+
+The only significant change in this imported script from the lines of Python
+earlier is we've used the "deep copy" functionality of Python to create a
+new TestSuite that is a copy of the one we imported. In this case it's not
+essential as our changes here wouldn't permanently affect the old suite,
+but it's good practice to get in to for this sort of activity.
 
 Alternative: Running a single test from the command-line
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
