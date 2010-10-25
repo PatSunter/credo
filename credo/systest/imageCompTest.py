@@ -32,30 +32,30 @@ class ImageCompTest(TestComponent):
     is within a given "tolerance" of an expected image, using
     functionality of :mod:`credo.analysis.images` module.
 
-    .. attribute: imageFilename
+    .. attribute:: imageFilename
 
        Filename of the image to be tested.
 
-    .. attribute: tol
+    .. attribute:: tol
 
        Tolerance tuple that the resultant image compared to the reference
        image must be within. In form required by
        :func:`credo.analysis.images.compare` .
     
-    .. attribute: refPath
+    .. attribute:: refPath
 
        Path to look for reference images.
 
-    .. attribute: genPath
+    .. attribute:: genPath
 
        Path to look for generated images (if left as `None`, will default to
        ModelRun's specified output path.)
 
-    .. attribute: imageResults
+    .. attribute:: imageResults
 
        List, indexed by run number, of result of comparison test for each run.
 
-    .. attribute: imageErrors
+    .. attribute:: imageErrors
 
        List, indexed by run number, containing errors between reference and
        generated images after comparison.
