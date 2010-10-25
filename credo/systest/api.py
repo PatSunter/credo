@@ -37,6 +37,9 @@ import credo.modelrun as mrun
 import credo.io.stgxml
 import credo.io.stgpath as stgpath
 
+class SysTestSetupError(Exception):
+    """An exception for when a System test fails to set up correctly."""
+
 class SysTestResult:
     """Class to represent an CREDO system test result.
 
