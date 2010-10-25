@@ -78,6 +78,7 @@ def pixelDiff2x2(img1, img2):
 
 def compare(imgFilename1, imgFilename2, verbose=False):
     """Compare two image files.
+
     :returns: A tuple containing the diffs for each component
       (colour space, 4 pixel subsample)."""
     img1 = Image.open(imgFilename1)
