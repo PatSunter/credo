@@ -21,6 +21,13 @@
 ##  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 ##  MA  02110-1301  USA
 
+"""Provides a :class:`.ReferenceTest` for use in system testing.
+
+.. attribute:: DEF_TEST_FIELDS
+
+   Default fields that will be tested, if not explicitly provided
+   as a constructor keyword argument to :class:`~.ReferenceTest` instantiations.
+"""
 
 import os
 from xml.etree import ElementTree as etree
@@ -31,31 +38,37 @@ import credo.jobrunner
 from credo.systest.api import SysTest, CREDO_PASS, CREDO_FAIL, getStdTestNameBasic
 from credo.systest.fieldWithinTolTest import FieldWithinTolTest
 
+
+DEF_TEST_FIELDS = ['VelocityField','PressureField']
+
 class ReferenceTest(SysTest):
     '''A Reference System test.
-       This case simply runs a given model for a set number of steps,
-       then checks the resultant solution matches within a tolerance
-       of a previously-generated reference solution. Uses a
-       :class:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest`
-       test component to perform the check.
+    This case simply runs a given model for a set number of steps,
+    then checks the resultant solution matches within a tolerance
+    of a previously-generated reference solution. Uses a
+    :class:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest`
+    test component to perform the check.
 
-       Optional constructor keywords:
+    Optional constructor keywords:
 
-       * runSteps: number of steps the reference solution should run for.
-       * fieldsToTest: Which fields in the model should be compared with the
-         reference solution.
-       * defFieldTol: The default tolerance to be applied when comparing
-         fields of interest to the reference solution.
-         See also the FieldWithinTolTest's
-         :attr:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
-       * fieldTols: a dictionary of tolerances to use when testing particular
-         fields, rather than the default tolerance as set in the defFieldTol
-         argument.
-          
-       .. attribute:: fTestName
+    * runSteps: number of steps the reference solution should run for.
+    * fieldsToTest: Which fields in the model should be compared with the
+      reference solution, as a list. If not provided, will default to
+      :attr:`.DEF_TEST_FIELDS`.
+    * defFieldTol: The default tolerance to be applied when comparing
+      fields of interest to the reference solution.
+      See also the FieldWithinTolTest's
+      :attr:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
+    * fieldTols: a dictionary of tolerances to use when testing particular
+      fields, rather than the default tolerance as set in the defFieldTol
+      argument.
+       
+    .. attribute:: fTestName
 
-          Standard name to use for this test's field comparison TestComponent
-          in the :attr:`~credo.systest.api.SysTest.testComponents` list.'''
+       Standard name to use for this test's field comparison TestComponent
+       in the :attr:`~credo.systest.api.SysTest.testComponents` list.
+       
+    '''
 
     fTestName = 'Reference Solution compare'
     description = '''Runs a Model for a set number of timesteps,
@@ -66,7 +79,7 @@ class ReferenceTest(SysTest):
     failMsg = "A Field was not within tolerance of reference soln."
 
     def __init__(self, inputFiles, outputPathBase, nproc=1,
-            fieldsToTest = ['VelocityField','PressureField'],
+            fieldsToTest = None,
             runSteps=20, defFieldTol=1e-2, fieldTols=None, paramOverrides=None,
             solverOpts=None, basePath=None, expPathPrefix="expected",
             nameSuffix=None, timeout=None):
@@ -75,7 +88,11 @@ class ReferenceTest(SysTest):
             basePath, nameSuffix, timeout)
         testNameBasic = getStdTestNameBasic(self.testType+"Test", inputFiles)
         self.expectedSolnPath = os.path.join(expPathPrefix, testNameBasic)
-        self.fieldsToTest = fieldsToTest
+        if fieldsToTest == None:
+            # Set default fields to test.
+            self.fieldsToTest = DEF_TEST_FIELDS
+        else:    
+            self.fieldsToTest = fieldsToTest
         self.runSteps = runSteps
         self.testComponents[self.fTestName] = FieldWithinTolTest(
             fieldsToTest=self.fieldsToTest, defFieldTol=defFieldTol,
