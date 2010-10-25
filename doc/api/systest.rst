@@ -40,7 +40,9 @@ of the other tests using the sysTestRunner's
 :meth:`~credo.systest.systestrunner.SysTestRunner.addStdTest` method).
 
 .. inheritance-diagram:: credo.systest.analytic
-    credo.systest.restart credo.systest.reference credo.systest.analyticMultiRes
+    credo.systest.restart credo.systest.reference 
+    credo.systest.analyticMultiRes credo.systest.highResReference
+    credo.systest.imageReference
     credo.systest.scibenchmark
 
 :mod:`credo.systest.analytic`
@@ -69,6 +71,14 @@ of the other tests using the sysTestRunner's
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: credo.systest.analyticMultiRes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+:mod:`credo.systest.imageReference`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: credo.systest.imageReference
    :members:
    :undoc-members:
    :show-inheritance:
@@ -111,3 +121,10 @@ Core TestComponent implementations
    :undoc-members:
    :show-inheritance:
 
+:mod:`credo.systest.imageCompTest`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: credo.systest.imageCompTest
+   :members:
+   :undoc-members:
+   :show-inheritance:

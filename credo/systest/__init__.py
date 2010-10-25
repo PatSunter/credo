@@ -49,5 +49,6 @@ from credo.systest.analytic import AnalyticTest
 from credo.systest.analyticMultiRes import AnalyticMultiResTest
 from credo.systest.reference import ReferenceTest
 from credo.systest.highResReference import HighResReferenceTest
+from credo.systest.imageReference import ImageReferenceTest
 # Import the benchmark
 from credo.systest.scibenchmark import SciBenchmarkTest

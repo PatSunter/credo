@@ -29,8 +29,36 @@ import credo.analysis.images as imageAnalysis
 
 class ImageCompTest(TestComponent):
     """Checks whether an image produced by the run (eg by gLucifer)
-    is within a given "tolerance" of an expected image.
+    is within a given "tolerance" of an expected image, using
+    functionality of :mod:`credo.analysis.images` module.
 
+    .. attribute: imageFilename
+
+       Filename of the image to be tested.
+
+    .. attribute: tol
+
+       Tolerance tuple that the resultant image compared to the reference
+       image must be within. In form required by
+       :func:`credo.analysis.images.compare` .
+    
+    .. attribute: refPath
+
+       Path to look for reference images.
+
+    .. attribute: genPath
+
+       Path to look for generated images (if left as `None`, will default to
+       ModelRun's specified output path.)
+
+    .. attribute: imageResults
+
+       List, indexed by run number, of result of comparison test for each run.
+
+    .. attribute: imageErrors
+
+       List, indexed by run number, containing errors between reference and
+       generated images after comparison.
     """
     DEFAULT_TOLS = (0.01, 0.01)
     DEFAULT_REFPATH = os.path.join('.', 'expected')
@@ -73,13 +101,14 @@ class ImageCompTest(TestComponent):
         overallResult = True
         for runI, mResult in enumerate(resultsSet):
             refImageFname = os.path.join(self.refPath, self.imageFilename)
+            assert os.path.exists(refImageFname)
             if self.genPath is not None:
                 genPath = self.genPath
             else:
                 genPath = mResult.outputPath
             genImageFname = os.path.join(genPath, self.imageFilename)
-            imageErrors = imageAnalysis.compare(
-                refImageFname, genImageFname)
+            assert os.path.exists(genImageFname)
+            imageErrors = imageAnalysis.compare(refImageFname, genImageFname)
             imageResult = [diff <= tol for diff, tol in \
                 zip(imageErrors, self.tol)]
             if False in imageResult:
@@ -107,9 +136,11 @@ class ImageCompTest(TestComponent):
 
     def _writeXMLCustomSpec(self, specNode):
         etree.SubElement(specNode, 'imageFilename').text = self.imageFilename
-        tolNode = etree.SubElement(specNode, 'tol')
-        for ii, tolComp in enumerate(self.tol):
-            etree.SubElement(tolNode, str(ii)).text = str(tolComp)
+        tolsNode = etree.SubElement(specNode, 'tolerances')
+        for tolI, tolVal in enumerate(self.tol):
+            tolNode = etree.SubElement(tolsNode, 'tol')
+            tolNode.attrib['comp'] = str(tolI)
+            tolNode.attrib['value'] = str(tolVal)
         etree.SubElement(specNode, 'refPath').text = self.refPath
         if self.genPath is not None:
             etree.SubElement(specNode, 'genPath').text = self.genPath

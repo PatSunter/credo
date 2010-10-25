@@ -61,10 +61,11 @@ class ImageCompTestTestCase(unittest.TestCase):
         self.imageCompTest._writeXMLCustomSpec(testNode)
         self.assertEqual(testNode.find('imageFilename').text,
             self.imageCompTest.imageFilename)
-        tolNode = testNode.find('tol')
+        tolNode = testNode.find('tolerances')
         self.assertTrue(tolNode != None)
         for ii, tolCompNode in enumerate(tolNode.getchildren()):
-            self.assertAlmostEqual(float(tolCompNode.text), 
+            self.assertEqual(int(tolCompNode.attrib['comp']), ii)
+            self.assertAlmostEqual(float(tolCompNode.attrib['value']), 
                 self.imageCompTest.tol[ii])
         self.assertEqual(testNode.find('refPath').text,
             str(self.imageCompTest.refPath))
