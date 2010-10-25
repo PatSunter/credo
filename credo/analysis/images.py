@@ -21,8 +21,7 @@
 ##  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 ##  MA  02110-1301  USA
 
-"""
-Utilities for basic image analysis and testing in relation to CREDO.
+"""Utilities for basic image analysis and testing in relation to CREDO.
 Original image test comparison scripts contributed by Owen Kaluza.
 You will need the Python Imaging Library (PIL) installed to use."""
 
