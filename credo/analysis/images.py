@@ -27,13 +27,13 @@ You will need the Python Imaging Library (PIL) installed to use."""
 
 import sys
 from math import sqrt
+from math import fabs
 import Image
 import ImageChops
 
-def normalise(array):
-    maxval = float(max([x for x in array]))
-    norm = [float(x) / maxval for x in array]
-    return norm
+def normalise(array, maxval):
+   norm = [float(x) / maxval for x in array]
+   return norm
 
 def colourDiff(img1, img2):
     """Calculate image difference by colour histogram.
@@ -41,25 +41,48 @@ def colourDiff(img1, img2):
     :arg img1: open PIL image
     :arg img2: open PIL image
     :returns: float representing euclidian distance between images
-      in colour space
+      in colour histogram space
     """
 
+    #Calculate image difference by colour histogram 
+    width, height = img1.size
+    pixels = width * height
+
     #Normalise values to [0,1]
-    hist1 = normalise(img1.histogram())
-    hist2 = normalise(img2.histogram())
+    hist1 = normalise(img1.histogram(), pixels)
+    hist2 = normalise(img2.histogram(), pixels)
+
+    #Reduce from 256 to 64 bins per component
+    hist_1 = [0] * (len(hist1) / 4)
+    hist_2 = [0] * (len(hist2) / 4)
+    for x in range(len(hist1)):
+        hist_1[x/4] += hist1[x]
+        hist_2[x/4] += hist2[x]
+
     #Subtract normalised histograms to get a distance vector
-    dist = [a - b for a, b in zip(hist1, hist2)]
-    #Calculate euclidean distance between images in colour space
+    dist = [fabs(a - b) for a, b in zip(hist_1, hist_2)]
+
+    #Calculate euclidean distance between images in colour histogram space
     dist = sqrt(sum([x*x for x in (dist)]))
-    return dist
+
+    #Return value in range [0,1]
+    return dist / sqrt(6)
 
 def pixelDiff2x2(img1, img2):
     """Compare two open images on a 2x2 basis."""
     #Simple check for transforms: resize to 2x2 and compare pixel by pixel
     img1b = img1.resize((2, 2), Image.ANTIALIAS)
     img2b = img2.resize((2, 2), Image.ANTIALIAS)
+
+    return pixelDiff(img1b, img2b)
+
+def pixelDiff(img1, img2):
+    """Compare two open images on a pixel by pixel basis."""
+    width, height = img1.size
+    pixels = width * height
+
     #This subtracts each pixel value from the other
-    diff = ImageChops.difference(img1b, img2b)
+    diff = ImageChops.difference(img1, img2)
     #Create an image vector
     components = []
     pix = diff.load()
@@ -68,13 +91,14 @@ def pixelDiff2x2(img1, img2):
         for y in range(height):
             for z in pix[x,y]:
                 components.append(z)
+
     #Calculate euclidean distance 
     dist = sqrt(sum([x*x for x in (components)]))
+
     #Scale to [0,1] by dividing by maximum possible difference
     n = len(img1.getbands())
-    maxdist = sqrt(4 * n * (255*255))    #4 pixels, n components, 255 possible values
+    maxdist = sqrt(pixels * n * (255*255))   #pixels * components * (255 possible values)^2
     return dist / maxdist
-
 
 def compare(imgFilename1, imgFilename2, verbose=False):
     """Compare two image files.
