@@ -42,8 +42,11 @@ of the other tests using the sysTestRunner's
 .. inheritance-diagram:: credo.systest.analytic
     credo.systest.restart credo.systest.reference 
     credo.systest.analyticMultiRes credo.systest.highResReference
-    credo.systest.imageReference
     credo.systest.scibenchmark
+
+depending on whether you have the Python Imaging Library (PIL) installed,
+you can also use the :class:`credo.systest.imageReference.ImageReferenceTest`
+system test.
 
 :mod:`credo.systest.analytic`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
