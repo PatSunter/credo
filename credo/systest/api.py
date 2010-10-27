@@ -177,6 +177,11 @@ class SysTest:
        individual Model Runs performed as part of running the test may also
        be stored in that directory, or in subdirectories of it.
     
+    .. attribute:: mSuite
+
+       The suite of Models that will be run as part of the test. Initially
+       None, must be filled in as part of calling :attr:`.genSuite`.
+
     .. attribute:: testStatus
 
        Status of the test. Initially `None`, once the test has been run
@@ -243,6 +248,7 @@ class SysTest:
             self.basePath)
         stgpath.checkAllXMLInputFilesExist(absInputFiles)
         self.outputPathBase = outputPathBase
+        self.mSuite = None
         self.testStatus = None
         self.testComponents = {}
         self.nproc = nproc 
@@ -260,9 +266,18 @@ class SysTest:
         pass
 
     def genSuite(self):
-        """Virtual method: must return a :class:`credo.modelsuite.ModelSuite`
-        containing all models that need to be run to perform the test."""
-        raise NotImplementedError("Error, base class")
+        """Must return a :class:`credo.modelsuite.ModelSuite`
+        containing all models that need to be run to perform the test.
+        
+        .. note:: most standard system tests should override this function
+           with their own suite generator, and save the suite as 
+           :attr:`.mSuite` in the process. """
+        if self.mSuite:
+            self.mSuite.generateRuns()
+            return self.mSuite
+        else:    
+            raise NotImplementedError("Error, base class, and no mSuite"\
+                " attribute set.")
 
     def checkResultValid(self, resultsSet):
         """Check that the given result set is "valid", i.e. exists, has 
