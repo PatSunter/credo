@@ -16,11 +16,14 @@ and run Underworld runs using CREDO, and analyse/post-process the results.
 This is for custom analysis, rather than for addition to the automated
 testing system.
 
-Finally the :ref:`credo-examples-scibenchmarking` section shows the more complex
+The :ref:`credo-examples-scibenchmarking` section shows the more complex
 use-case of the code, where scientific benchmarks are set up:
 generally requiring
 both analysis-style set-up of models to run, while also using the system
 testing features to allow automated regular running of this benchmark.
+
+The :ref:`credo-examples-joblaunch` section gives examples of how to run CREDO
+scripts in different ways, including via PBS.
 
 .. Note::
    CREDO is designed in such a manner that it should be possible to readily
@@ -58,3 +61,13 @@ Scientific Benchmarking using CREDO
    :maxdepth: 1
 
    examples/configure-scibenchmark.rst
+
+.. _credo-examples-joblaunch:
+
+Different ways to launch CREDO scripts
+======================================
+
+.. toctree::
+   :maxdepth: 1
+   
+   examples/joblaunch-pbs.rst

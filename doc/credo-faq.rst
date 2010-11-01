@@ -14,6 +14,17 @@ This problem is usually because you haven't add the directory containing
 the CREDO Python source to your PYTHONPATH. See :ref:`environment_setup`
 for the various ways to do this.
 
+Can I get CREDO to submit PBS jobs, or run it via PBS?
+------------------------------------------------------
+
+The answer to the first of these is: no, not currently. The ability to get
+CREDO to create and submit PBS scripts is a possible future feature.
+
+You can however submit a Python CREDO script in parallel on a HPC system
+running PBS by writing the appropriate PBS script.
+
+See :ref:`credo-examples-joblaunch` for an example.
+
 Problem with parallel system tests, a CVGReadError occurs trying to read CVGs
 -----------------------------------------------------------------------------
 
