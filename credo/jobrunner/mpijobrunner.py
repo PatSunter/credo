@@ -50,28 +50,6 @@ class MPIJobRunner(JobRunner):
         # TODO: check mpd is running, if necessary
         pass
 
-    def checkModelRunValid(self, modelRun):
-        """Check the given modelRun is valid and ready to go."""
-        stgpath.checkAllXMLInputFilesExist(modelRun.modelInputFiles)
-
-        # Pre-run checks for validity - e.g. at least one input file,
-        # nproc is sensible value
-        if modelRun.simParams:
-            modelRun.simParams.checkValidParams()
-            modelRun.simParams.checkNoDuplicates(modelRun.paramOverrides.keys())
-        if modelRun.solverOpts:
-            modelRun.checkSolverOptsFile()
-        # TODO: should there be a convention to return anything here, or more
-        # explicit Exception handling?
-
-    def preRunPreparation(self, modelRun):    
-        """Do any preparation necessary before the run itself proceeds."""
-        # Do necessary pathing preparation
-        modelRun.prepareOutputLogDirs()
-
-        # Now create the XML file for custom analysis commands
-        modelRun.analysisXMLGen()
-
     def runModel(self, modelRun, prefixStr=None, extraCmdLineOpts=None,
             dryRun=False, maxRunTime=None):
         """See :meth:`credo.jobrunner.api.JobRunner.runModel`."""     
@@ -83,11 +61,10 @@ class MPIJobRunner(JobRunner):
                 (modelRun.basePath)
             os.chdir(modelRun.basePath)
 
-        self.checkModelRunValid(modelRun)
-        self.preRunPreparation(modelRun)
+        modelRun.checkValidRunConfig()
+        modelRun.preRunPreparation()
 
-        modelRunCommand = self.constructModelRunCommand(modelRun,
-            extraCmdLineOpts)
+        modelRunCommand = modelRun.constructModelRunCommand(extraCmdLineOpts)
         stdOutFilename = modelRun.getStdOutFilename()
         stdErrFilename = modelRun.getStdErrFilename()
 

@@ -37,28 +37,6 @@ class JobRunner:
         By default, does nothing - sub-classes need to override."""
         pass
 
-    def getModelRunAppExeCommand(self):
-        """Return the full path of the executable of the modelling program.
-        (e.g. "/usr/local/bin/StGermain") """
-        return stgpath.getVerifyStgMainExecutablePath()
-
-    def constructModelRunCommand(self, modelRun, extraCmdLineOpts=None):
-        """Given a model run, construct the command needed to run that model."""
-        runExe = self.getModelRunAppExeCommand()
-        stgRunStr = "%s " % (runExe)
-        for inputFile in modelRun.modelInputFiles:    
-            stgRunStr += inputFile+" "
-        if modelRun.analysisXML:
-            stgRunStr += modelRun.analysisXML+" "
-
-        stgRunStr += credo.modelrun.getParamOverridesAsStr(
-            modelRun.paramOverrides)
-        if modelRun.solverOpts:
-            stgRunStr += " "+stgcmdline.solverOptsStr(modelRun.solverOpts)
-        if extraCmdLineOpts:
-            stgRunStr += " "+extraCmdLineOpts
-        return stgRunStr 
-
     def runModel(self, modelRun, prefixStr=None, extraCmdLineOpts=None,
             dryRun=False, maxRunTime=None):
         """Run the specified modelRun, and return a 

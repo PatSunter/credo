@@ -209,6 +209,50 @@ class ModelRun:
         self.cpFields = []
         self.analysisXML = None
 
+    def checkValidRunConfig(self):
+        """Check the given modelRun is valid and ready to be run."""
+        stgpath.checkAllXMLInputFilesExist(self.modelInputFiles)
+
+        # Pre-run checks for validity - e.g. at least one input file,
+        # nproc is sensible value
+        if self.simParams:
+            self.simParams.checkValidParams()
+            self.simParams.checkNoDuplicates(self.paramOverrides.keys())
+        if self.solverOpts:
+            self.checkSolverOptsFile()
+        # TODO: should there be a convention to return anything here, or more
+        # explicit Exception handling?
+
+    def preRunPreparation(self):    
+        """Do any preparation necessary before the run itself proceeds."""
+        # Do necessary pathing preparation
+        self.prepareOutputLogDirs()
+        # Now create the XML file for custom analysis commands
+        self.analysisXMLGen()
+
+    def getModelRunAppExeCommand(self):
+        """Return the full path of the executable of the modelling program.
+        (e.g. "/usr/local/bin/StGermain") """
+        return stgpath.getVerifyStgMainExecutablePath()
+
+    def constructModelRunCommand(self, extraCmdLineOpts=None):
+        """Given a model run, construct the command needed to run that model,
+        and return as a string."""
+        runExe = self.getModelRunAppExeCommand()
+        stgRunStr = "%s " % (runExe)
+        for inputFile in self.modelInputFiles:    
+            stgRunStr += inputFile+" "
+        if self.analysisXML:
+            stgRunStr += self.analysisXML+" "
+
+        stgRunStr += credo.modelrun.getParamOverridesAsStr(
+            self.paramOverrides)
+        if self.solverOpts:
+            stgRunStr += " "+stgcmdline.solverOptsStr(self.solverOpts)
+        if extraCmdLineOpts:
+            stgRunStr += " "+extraCmdLineOpts
+        return stgRunStr 
+
     def postRunCleanup(self):
         """function designed to be run after a modelRun has completed, and will
         do any post-run cleanup to get ready for analysis - e.g. moving files 
