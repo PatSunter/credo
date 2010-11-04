@@ -25,6 +25,7 @@ from datetime import timedelta
 import credo.modelrun
 import credo.modelresult
 from credo.io import stgcmdline
+from credo.io import stgpath
 
 class JobRunner:
     def __init__(self):
@@ -36,12 +37,14 @@ class JobRunner:
         By default, does nothing - sub-classes need to override."""
         pass
 
-    def getStGermainExeStr(self):
-        """Get the string used to execute StGermain."""
-        raise NotImplementedError("Error, virtual func on base class")   
+    def getModelRunAppExeCommand(self):
+        """Return the full path of the executable of the modelling program.
+        (e.g. "/usr/local/bin/StGermain") """
+        return stgpath.getVerifyStgMainExecutablePath()
 
-    def constructStGermainRunCommand(self, modelRun, extraCmdLineOpts=None):
-        runExe = self.getStGermainExeStr()
+    def constructModelRunCommand(self, modelRun, extraCmdLineOpts=None):
+        """Given a model run, construct the command needed to run that model."""
+        runExe = self.getModelRunAppExeCommand()
         stgRunStr = "%s " % (runExe)
         for inputFile in modelRun.modelInputFiles:    
             stgRunStr += inputFile+" "
@@ -56,13 +59,15 @@ class JobRunner:
             stgRunStr += " "+extraCmdLineOpts
         return stgRunStr 
 
-    def runModel(self, modelRun, extraCmdLineOpts=None, dryRun=False,
-            maxRunTime=None):
+    def runModel(self, modelRun, prefixStr=None, extraCmdLineOpts=None,
+            dryRun=False, maxRunTime=None):
         """Run the specified modelRun, and return a 
         :class:`~credo.modelresult.ModelResult` recording the results of
         the run.
 
         :param modelRun: the :class:`~credo.modelrun.ModelRun` to be run.
+        :keyword prefixStr: optional precursor string for running the model,
+           e.g. for timing.
         :keyword extraCmdLineOpts: if specified, these extra cmd line opts will
            be passed through on the command line to the run, extra to any
            :attr:`.ModelRun.simParams` or :attr:`.ModelRun.paramOverrides`.

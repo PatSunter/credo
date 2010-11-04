@@ -37,32 +37,21 @@ DEF_WAIT_TIME = 2
 
 # Allow MPI command to be overriden by env var.
 MPI_RUN_COMMAND = "MPI_RUN_COMMAND"
+DEFAULT_MPI_RUN_COMMAND = "mpiexec"
 
 class MPIJobRunner(JobRunner):
     def __init__(self):
         if MPI_RUN_COMMAND in os.environ:
             self.mpiRunCommand = os.environ[MPI_RUN_COMMAND]
         else:
-            self.mpiRunCommand = "mpirun"
+            self.mpiRunCommand = DEFAULT_MPI_RUN_COMMAND
 
     def setup(self):
         # TODO: check mpd is running, if necessary
         pass
 
-    def getStGermainExeStr(self):
-        return stgpath.getVerifyStgMainExecutablePath()
-
-    def runModel(self, modelRun, extraCmdLineOpts=None, dryRun=False,
-            maxRunTime=None):
-        """See :meth:`credo.jobrunner.api.JobRunner.runModel`."""     
-
-        # Navigate to the model's base directory
-        startDir = os.getcwd()
-        if modelRun.basePath != startDir:
-            print "Changing to ModelRun's specified base path '%s'" % \
-                (modelRun.basePath)
-            os.chdir(modelRun.basePath)
-
+    def checkModelRunValid(self, modelRun):
+        """Check the given modelRun is valid and ready to go."""
         stgpath.checkAllXMLInputFilesExist(modelRun.modelInputFiles)
 
         # Pre-run checks for validity - e.g. at least one input file,
@@ -72,23 +61,46 @@ class MPIJobRunner(JobRunner):
             modelRun.simParams.checkNoDuplicates(modelRun.paramOverrides.keys())
         if modelRun.solverOpts:
             modelRun.checkSolverOptsFile()
+        # TODO: should there be a convention to return anything here, or more
+        # explicit Exception handling?
 
+    def preRunPreparation(self, modelRun):    
+        """Do any preparation necessary before the run itself proceeds."""
         # Do necessary pathing preparation
         modelRun.prepareOutputLogDirs()
 
         # Now create the XML file for custom analysis commands
         modelRun.analysisXMLGen()
-        stgRunStr = self.constructStGermainRunCommand(modelRun,
-            extraCmdLineOpts)
 
+    def runModel(self, modelRun, prefixStr=None, extraCmdLineOpts=None,
+            dryRun=False, maxRunTime=None):
+        """See :meth:`credo.jobrunner.api.JobRunner.runModel`."""     
+
+        # Navigate to the model's base directory
+        startDir = os.getcwd()
+        if modelRun.basePath != startDir:
+            print "Changing to ModelRun's specified base path '%s'" % \
+                (modelRun.basePath)
+            os.chdir(modelRun.basePath)
+
+        self.checkModelRunValid(modelRun)
+        self.preRunPreparation(modelRun)
+
+        modelRunCommand = self.constructModelRunCommand(modelRun,
+            extraCmdLineOpts)
         stdOutFilename = modelRun.getStdOutFilename()
         stdErrFilename = modelRun.getStdErrFilename()
+
         stdOutFile = open(stdOutFilename, "w+")
         stdErrFile = open(stdErrFilename, "w+")
 
         # Construct full run line
-        mpiPart = "%s -np %d " % (self.mpiRunCommand, modelRun.jobParams.nproc)
-        runCommand = mpiPart + stgRunStr
+        mpiPart = "%s -np %d" % (self.mpiRunCommand, modelRun.jobParams.nproc)
+        runCommand = " ".join([mpiPart, modelRunCommand])
+        if prefixStr is not None:
+            # NB: in the case of MPI runs, we prefix the prefixStr before MPI command
+            #  and args ... appropriate for things like timing stuff.
+            runCommand = " ".join([prefixStr, runCommand])
 
         # Run the run command, sending stdout and stderr to defined log paths
         print "Running model '%s' via MPI with command '%s' ..."\
