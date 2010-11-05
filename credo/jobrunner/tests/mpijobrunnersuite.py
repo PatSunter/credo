@@ -39,7 +39,8 @@ class MPIJobRunnerTestCase(unittest.TestCase):
         pass
 
     def test_runSuite(self):
-        #TODO
+        #TODO ... perhaps ideally will split into several classes,
+        #  and be able to have some useful exceptions as well.
         self.fail()
 
 def suite():
