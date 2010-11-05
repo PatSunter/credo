@@ -39,9 +39,7 @@ class JobRunner:
 
     def runModel(self, modelRun, prefixStr=None, extraCmdLineOpts=None,
             dryRun=False, maxRunTime=None):
-        """Run the specified modelRun, and return a 
-        :class:`~credo.modelresult.ModelResult` recording the results of
-        the run.
+        """Run the specified modelRun, and return the ModelResult.
 
         :param modelRun: the :class:`~credo.modelrun.ModelRun` to be run.
         :keyword prefixStr: optional precursor string for running the model,
@@ -50,7 +48,11 @@ class JobRunner:
            be passed through on the command line to the run, extra to any
            :attr:`.ModelRun.simParams` or :attr:`.ModelRun.paramOverrides`.
         :keyword dryRun: If set to True, just print out what *would* be run,
-           but don't actually run anything."""
+           but don't actually run anything.
+        :keyword maxRunTime: maximum time (in seconds) a model should be
+          allowed to run for before killing the job.
+        :returns: A :class:`~credo.modelresult.ModelResult` recording
+          the results of the run."""
 
         raise NotImplementedError("Error, virtual func on base class")   
 

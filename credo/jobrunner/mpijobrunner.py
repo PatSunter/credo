@@ -75,8 +75,8 @@ class MPIJobRunner(JobRunner):
         mpiPart = "%s -np %d" % (self.mpiRunCommand, modelRun.jobParams.nproc)
         runCommand = " ".join([mpiPart, modelRunCommand])
         if prefixStr is not None:
-            # NB: in the case of MPI runs, we prefix the prefixStr before MPI command
-            #  and args ... appropriate for things like timing stuff.
+            # NB: in the case of MPI runs, we prefix the prefixStr before MPI
+            # command and args ... appropriate for things like timing stuff.
             runCommand = " ".join([prefixStr, runCommand])
 
         # Run the run command, sending stdout and stderr to defined log paths
