@@ -33,23 +33,54 @@ from credo import modelresult as mres
 class ModelRunTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.basedir = os.path.realpath(tempfile.mkdtemp())
+        #self.basedir = os.path.realpath(tempfile.mkdtemp())
+        self.basedir = 'modelRunWorking'
+        if not os.path.exists(self.basedir):
+            os.makedirs(self.basedir)
         self.inputFiles = [os.path.join('input', 'testModel.xml')]
         self.outputPath = os.path.join('output', 'testModel')
 
     def tearDown(self):
         shutil.rmtree(self.basedir)
 
-    def test_writeModelRunXML(self):
+    def test_checkValidRunConfig(self):
+        #TODO
+        self.fail()
+
+    def test_checkPreRunPreparation(self):
+        #TODO
+        self.fail()
+
+    def test_getModelRunAppExeCommand(self):
+        #TODO
+        self.fail()
+
+    def test_constructModelRunCommand(self):
+        #TODO
+        self.fail()
+
+    def test_postRunCleanup(self):
+        #TODO
+        self.fail()
+
+    def test_checkSolverOptsFile(self):
+        #TODO
+        self.fail()
+
+    def test_writeInfoXML(self):
         nproc = 2
         modelRun = mrun.ModelRun('TestModel', self.inputFiles,
-            self.outputPath, nproc=nproc)
+            self.outputPath, nproc=nproc, basePath=self.basedir)
         modelRun.simParams = mrun.SimParams(nsteps=5, cpevery=10)
         modelRun.writeInfoXML(prettyPrint=True)
 
+    def test_analysisXMLGen(self):
+        #TODO
+        self.fail()
+
     def test_genFlattenedXML(self):
         modelRun = mrun.ModelRun('TestModel', self.inputFiles,
-            self.outputPath)
+            self.outputPath, basePath=self.basedir)
         modelRun.simParams = mrun.SimParams(nsteps=5, cpevery=10)
         modelRun.paramOverrides['allowUnbalancing'] = False
         modelRun.paramOverrides['defaultDiffusivity'] = 1.0e-5
