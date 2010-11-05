@@ -184,6 +184,8 @@ The 2 key aspects to keep in mind are:
 
 .. seealso:: http://docs.python.org/tutorial/modules.html#executing-modules-as-scripts
 
+.. _credo-examples-run-systest-direct-modifyExistingSuite:
+
 Example: modifying an existing test suite to test with Multigrid options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
