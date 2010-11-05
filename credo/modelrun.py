@@ -85,8 +85,8 @@ class ModelRun:
 
     .. attribute:: outputPath
     
-       Output path that all model results will be saved to (is passed through to
-       StGermain).
+       Output path that all model results will be saved to (is passed
+       through to StGermain).
 
     .. attribute:: cpReadPath
     
@@ -223,6 +223,17 @@ class ModelRun:
         # TODO: should there be a convention to return anything here, or more
         # explicit Exception handling?
 
+    def checkSolverOptsFile(self):
+        if self.solverOpts == None: return
+        if not isinstance(self.solverOpts, str):
+            raise TypeError("Solver options must be specified as a filename"\
+                " string, not type %s." % type(self.solverOpts))
+        solverOptsAbs = os.path.join(self.basePath, self.solverOpts)
+        if not os.path.exists(solverOptsAbs):
+            raise IOError("Solver options file specified, '%s', doesn't"\
+                " exist relative to base path %s." % \
+                (self.solverOpts, self.basePath))
+
     def preRunPreparation(self):    
         """Do any preparation necessary before the run itself proceeds."""
         # Do necessary pathing preparation
@@ -280,17 +291,6 @@ class ModelRun:
         except AttributeError:
             # If this hook isn't implemented, keep going.
             pass
-
-    def checkSolverOptsFile(self):
-        if self.solverOpts == None: return
-        if not isinstance(self.solverOpts, str):
-            raise TypeError("Solver options must be specified as a filename"\
-                " string, not type %s." % type(self.solverOpts))
-        solverOptsAbs = os.path.join(self.basePath, self.solverOpts)
-        if not os.path.exists(solverOptsAbs):
-            raise IOError("Solver options file specified, '%s', doesn't"\
-                " exist relative to base path %s." % \
-                (self.solverOpts, self.basePath))
 
     def defaultModelRunFilename(self):
         """Calculates and returns a default filename for the ModelRun's XML
