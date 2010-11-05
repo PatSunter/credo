@@ -1,8 +1,8 @@
 CREDO Readme
 ============
 
-CREDO is a toolkit for running, analysing and benchmarking computational models
-based on the StGermain framework, primarily Underworld.
+CREDO is a toolkit for running, analysing and benchmarking computational models:
+currently those based on the StGermain framework such as Underworld.
 
 The current CREDO website with links to documentation, release info etc is:
 https://www.mcc.monash.edu.au/trac/AuScopeEngineering/wiki/CREDO
@@ -14,8 +14,8 @@ For more details about the design of CREDO and how to run it, see the
 documentation in the "doc" sub-directory.
 
 The CREDO docs are re-generated daily from the repository and placed online at
-https://www.mcc.monash.edu.au/uwa-doc/ - for a downloadable PDF version, go to
-https://www.mcc.monash.edu.au/uwa-doc/UWAUnderWorldAnalysis.pdf.
+https://www.mcc.monash.edu.au/credo-doc/ - for a downloadable PDF version, go to
+https://www.mcc.monash.edu.au/credo-doc/CREDO.pdf.
 
 License and authors
 -------------------
@@ -33,9 +33,12 @@ The main contributors to CREDO's coding, design and development thus far are:
 Acknowledgements
 ----------------
 
-We kindly acknowledge the funding support of AuScope Limited, part of the 
-Australian Federal Government's National Collaborative Research Infrastructure
-Strategy (NCRIS) program.
+We kindly acknowledge the funding support of the Monash University 
+Simulation And Modelling (SAM) node by AuScope Limited in facilitating the
+development of CREDO.
+
+AuScope is part of the Australian Federal Government's National
+Collaborative Research Infrastructure Strategy (NCRIS) program.
 
 Change logs
 -----------
