@@ -9,6 +9,57 @@ This page summarises what's new in each CREDO version.
 (See the files in the "changelogs" sub-directory of the CREDO distribution for
 full ChangeLogs based on Mercurial commits.)
 
+new in credo-0.1.3
+==================
+
+An incremental release, the main changes of interest were:
+
+* Improvements to management of timeouts in ModelRuns and Tests
+* Added the :mod:`credo.jobrunner` package to handle the mechanics of
+  running Models, and refactored the appropiate parts out of ModelRun class.
+
+  * This includes the capability to run models in directories other than
+    where the CREDO script is invoked using the "basePath" parameter.
+  * And a small hierarchy of :class:`credo.jobrunner.api.ModelRunError`
+    exceptions.  
+  * Default MPI command used by the MPIJobRunner is `mpiexec`.  
+
+* Improving capabilities of ModelSuite (:mod:`credo.modelsuite`):
+
+  * to generate new sorts of suites based on iterators and
+    :class:`credo.modelsuite.StgXMLVariant` classes.
+  * to post-process existing ModelSuite results, using
+    new funcs :attr:`~credo.modelsuite.ModelSuite.readResultsFromPath`
+* Added a :mod:`credo.io.stgcmdline` module to handle simple command-line
+  issues.
+* Improved the reporting of model run errors from the command line.
+* General improvements to ModelRun class:
+
+  * Added a hook to do post-run cleanup
+  * Added functions to do pre-run validation in various ways
+* :mod:`credo.systest` package improvements:
+
+  * added function to import and run a given set of tests based on test names-
+    useful for integration into scons test suites.
+  * Added a new System test, HighResReference, based on code Wendy Sharples
+    sent through.  
+  * New system test and test components to compare images based on Owen
+    Kaluza's work.
+
+* Bugfixes:
+
+  * Fixed an issue in _createDefaultModelRun so paramOverride lists are
+    not accidentally modified.
+  * In the CREDO SCons module, changing to avoid problems compiling
+    code on systems with old Python.
+
+* Documentation:
+
+  * More examples/howtos, such as :ref:`credo-examples-joblaunch-pbs` and
+    :ref:`credo-examples-run-systest-direct-modifyExistingSuite`
+  * Several notes in the FAQ about errors that come up running tests
+    occasionally.
+
 new in credo-0.1.2
 ==================
 
