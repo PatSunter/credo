@@ -31,7 +31,6 @@ Contents:
    credo-examples.rst
    credo-apidocs.rst
    credo-pythonlinks.rst
-   credo-developer-notes.rst
    credo-whatsnew.rst
    credo-appendix.rst
    credo-faq.rst
