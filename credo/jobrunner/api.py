@@ -56,8 +56,8 @@ class JobRunner:
 
         raise NotImplementedError("Error, virtual func on base class")   
 
-    def runSuite(self, modelSuite, extraCmdLineOpts=None, dryRun=False,
-            maxRunTime=None):
+    def runSuite(self, modelSuite, prefixStr=None, extraCmdLineOpts=None,
+            dryRun=False, maxRunTime=None):
         '''Run each ModelRun in the suite - with optional extra cmd line opts.
         Will also write XML records of each ModelRun and ModelResult in the 
         suite.
@@ -89,7 +89,8 @@ class JobRunner:
                 if customOpts == None: customOpts = ""
                 customOpts += extraCmdLineOpts
 
-            result = self.runModel(modelRun, customOpts, dryRun, maxRunTime)
+            result = self.runModel(modelRun, prefixStr, customOpts,
+                dryRun, maxRunTime)
 
             if dryRun == True: continue
             assert isinstance(result, credo.modelresult.ModelResult)
