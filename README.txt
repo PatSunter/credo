@@ -27,6 +27,7 @@ The main contributors to CREDO's coding, design and development thus far are:
  * Wendy Sharples (wendy.sharples@monash.edu)
  * Jerico Revote (jerico.revote@monash.edu)
  * Julian Giordani (julian.giordani@monash.edu)
+ * Owen Kaluza (owen.kaluza@monash.edu)
  * Louis Moresi (louis.moresi@monash.edu)
  * Steve Quenette (steve.quenette@monash.edu)
 
