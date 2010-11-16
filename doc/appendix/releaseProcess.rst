@@ -22,6 +22,13 @@ these versions and releases in the Mercurial repository:
 * That way, patches/fixes can be ported across to the release branch lines
   from the 'default' trunk branch if necessary.
 
+.. note:: The following websites are useful references for how named branches, 
+   especially w.r.t. releases, can be managed in Mercurial:
+
+   * http://hgbook.red-bean.com/read/managing-releases-and-branchy-development.html
+   * http://mercurial.selenic.com/wiki/NamedBranches
+   * http://stackoverflow.com/questions/890723/mercurial-named-branches-vs-multiple-repositories (especially Geoffrey Zheng's answer).
+
 Release Process Steps
 ---------------------
 
@@ -102,6 +109,17 @@ Follow these steps when creating a CREDO release:
 
 #. Update links and upload the just-created tarball in the release table at
    https://www.mcc.monash.edu.au/trac/AuScopeEngineering/wiki/CREDO
+
+#. Now make sure you commit all the changes you just made on the release branch
+   back to the default trunk development branch::
+
+     hg update default
+     hg merge RELEASE_BRANCH
+     hg commit
+     hg push
+   
+   .. note:: This will mark your release branch as (inactive), but this is
+      fine: if it's needed you can hg update to it and reactivate it later.
 
 #. TODO: in future we should perhaps have a process to create a copy of
    the documentation of each release (PDF/html) and put online.
