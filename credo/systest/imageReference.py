@@ -56,7 +56,7 @@ class ImageReferenceTest(api.SysTest):
     failMsg = "An image was not within tolerance of reference version."
 
     def __init__(self, inputFiles, outputPathBase,
-            imagesToTest, nproc=1, runSteps=20, defImageTol=(1e-2, 1e-2),
+            imagesToTest, nproc=1, runSteps=20, defImageTol=(5e-3, 1e-2),
             imageTols=None, paramOverrides=None,
             solverOpts=None, basePath=None, expPathPrefix="expected",
             nameSuffix=None, timeout=None):
@@ -92,7 +92,7 @@ class ImageReferenceTest(api.SysTest):
         mRun = self._createDefaultModelRun(self.testName+"-createReference",
             self.expectedSolnPath)
         mRun.simParams = SimParams(nsteps=self.runSteps, cpevery=0,
-            dumpevery=self.runSteps)
+            dumpevery=1)
         for imageComp in self.testComponents.itervalues():
             imageComp.attachOps(mRun)
         mRun.writeInfoXML()
@@ -124,7 +124,7 @@ class ImageReferenceTest(api.SysTest):
         # Normal mode
         mRun = self._createDefaultModelRun(self.testName, self.outputPathBase)
         mRun.simParams = SimParams(nsteps=self.runSteps,
-            cpevery=0, dumpevery=self.runSteps)
+            cpevery=0, dumpevery=1)
         for imageComp in self.testComponents.itervalues():
             imageComp.attachOps(mRun)
         mSuite.addRun(mRun, "Run the model, and check images against "\

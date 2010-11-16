@@ -68,11 +68,11 @@ def colourDiff(img1, img2):
     #Return value in range [0,1]
     return dist / sqrt(6)
 
-def pixelDiff2x2(img1, img2):
-    """Compare two open images on a 2x2 basis."""
-    #Simple check for transforms: resize to 2x2 and compare pixel by pixel
-    img1b = img1.resize((2, 2), Image.ANTIALIAS)
-    img2b = img2.resize((2, 2), Image.ANTIALIAS)
+def pixelDiff20x20(img1, img2):
+    """Compare two open images on a 20x20 basis."""
+    #Simple check for transforms: resize to 20x20 and compare pixel by pixel
+    img1b = img1.resize((20, 20), Image.ANTIALIAS)
+    img2b = img2.resize((20, 20), Image.ANTIALIAS)
 
     return pixelDiff(img1b, img2b)
 
@@ -104,7 +104,7 @@ def compare(imgFilename1, imgFilename2, verbose=False):
     """Compare two image files.
 
     :returns: A tuple containing the diffs for each component
-      (colour space, 4 pixel subsample)."""
+      (colour space, 400 pixel subsample)."""
     img1 = Image.open(imgFilename1)
     img2 = Image.open(imgFilename2)
     #Check size and components match
@@ -115,7 +115,7 @@ def compare(imgFilename1, imgFilename2, verbose=False):
     if verbose: print "Colour space difference: %f" % dist1
     #Colour compare is not sensitive to flip/rotate so do 
     #a simple pixel by pixel compare as well
-    dist2 = pixelDiff2x2(img1, img2)
+    dist2 = pixelDiff20x20(img1, img2)
     if verbose: print "Difference on 4 pixel subsample: %f" % dist2
     #Test fails if either value outside tolerance
     return dist1, dist2
