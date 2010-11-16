@@ -10,3 +10,4 @@ This is for appendix topics, such as notes for CREDO developers.
 
    appendix/developerNotes.rst
    appendix/buildDocs.rst
+   appendix/releaseProcess.rst
