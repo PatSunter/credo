@@ -60,7 +60,7 @@ class ImageCompTest(TestComponent):
        List, indexed by run number, containing errors between reference and
        generated images after comparison.
     """
-    DEFAULT_TOLS = (0.01, 0.01)
+    DEFAULT_TOLS = (0.005, 0.01)
     DEFAULT_REFPATH = os.path.join('.', 'expected')
 
     def __init__(self, imageFilename,
@@ -101,20 +101,21 @@ class ImageCompTest(TestComponent):
         overallResult = True
         for runI, mResult in enumerate(resultsSet):
             refImageFname = os.path.join(self.refPath, self.imageFilename)
+            #print refImageFname
             assert os.path.exists(refImageFname)
             if self.genPath is not None:
                 genPath = self.genPath
             else:
                 genPath = mResult.outputPath
             genImageFname = os.path.join(genPath, self.imageFilename)
+            #print genImageFname
             assert os.path.exists(genImageFname)
             imageErrors = imageAnalysis.compare(refImageFname, genImageFname)
-            imageResult = [diff <= tol for diff, tol in \
-                zip(imageErrors, self.tol)]
+            imageResult = [diff <= tol for diff, tol in zip(imageErrors, self.tol)]
             if False in imageResult:
                 if numRuns > 1:
                     statusMsg += "For run %d out of %d: " % (runI, numRuns)
-                statusMsg += "Image comp for image file '%s' errors %s not "\
+                statusMsg += "Image comp for image file '%s' errors %s not"\
                     " within tol %s of reference image\n"\
                     % (self.imageFilename, imageErrors, self.tol)
                 overallResult = False    
@@ -122,15 +123,14 @@ class ImageCompTest(TestComponent):
             self.imageResults.append(imageResult)
             self.imageErrors.append(imageErrors)
 
-        if False not in self.imageResults:
-            statusMsg += "Image comp error within tolerances %s"\
-                " of ref image for all runs.\n"\
-                % (str(self.tol))
-
-        print statusMsg
+        #print statusMsg
         if overallResult == False:
+            print statusMsg
             self.tcStatus = CREDO_FAIL(statusMsg)
         else:
+            statusMsg = "Image comp error within tolerances %s"\
+                " of ref image for all runs.\n"\
+                % (str(self.tol))
             self.tcStatus = CREDO_PASS(statusMsg)
         return overallResult
 
