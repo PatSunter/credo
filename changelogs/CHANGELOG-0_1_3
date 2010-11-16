@@ -746,4 +746,16 @@ files:       credo/jobrunner/tests/mpijobrunnersuite.py
 description:
 Just initial comments for mpijobrunnersuite.
 
+changeset:   405:e9ffc96482fd
+user:        Patrick Sunter <patdevelop@gmail.com>
+date:        Tue Nov 09 23:52:30 2010 +1100
+summary:     Updated a small bug where jobrunner runSuite() func didn't follow a
+n interface update in runModel().
 
+changeset:   407:1aac8754384d
+parent:      405:e9ffc96482fd
+user:        Owen Kaluza <Owen.Kaluza@monash.edu>
+date:        Thu Nov 11 16:09:14 2010 +1100
+summary:     Updated image comparison to compare based on a 20x20 subsample for 
+higher sensitivity. Changed default tolerances. Adjusted to always dump images n
+ot just the first and last as gLucifer tests require this.
