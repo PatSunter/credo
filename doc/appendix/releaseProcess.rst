@@ -30,6 +30,14 @@ Follow these steps when creating a CREDO release:
 #. Review the README.txt file, and if necessary make any updates (eg updating
    the list of contributors, or web links).
 
+#. Create/switch to the release branch:
+
+   * In the cases where the release branch doesn't exist, you need to create it
+     by using a "hg branch BRANCHNAME" command.
+
+   * In cases where it does exist, just switch to the branch using 
+     "hg update -C BRANCHNAME".
+
 #. Create a CHANGELOG file for the release:
 
    * use Mercurial command to select all changes since last release tag made,
@@ -76,12 +84,25 @@ Follow these steps when creating a CREDO release:
      # The full version, including alpha/beta/rc tags.
      release = '0.1.2'
 
-#. At this stage you should commit all the changes made above, and save to the
-   appropriate release branch, and tag it.
+#. At this stage you should commit all the changes made above to the release
+   branch, and also tag the release code::
 
-#. Re-create source tarball
+     hg commit
+     hg tag TAGNAME
+     hg push
 
-#. Update links at https://www.mcc.monash.edu.au/trac/AuScopeEngineering/wiki/CREDO
+#. Create a source tarball of this release:
+ 
+   Make sure you are in the root directory of your CREDO checkout and type::
 
-#. TODO: create doc PDF/tarball and put online somewhere?
+     hg archive -t tgz ../credo-X.Y.Z.tar.gz
+     
+   ... where `X.Y.Z` is the release number, e.g. `0.1.3`. This will create
+   the tarball in the parent directory.
+
+#. Update links and upload the just-created tarball in the release table at
+   https://www.mcc.monash.edu.au/trac/AuScopeEngineering/wiki/CREDO
+
+#. TODO: in future we should perhaps have a process to create a copy of
+   the documentation of each release (PDF/html) and put online.
 
