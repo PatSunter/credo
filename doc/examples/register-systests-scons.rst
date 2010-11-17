@@ -3,28 +3,31 @@
 Registering CREDO Test suites with SCons
 ----------------------------------------
 
-For CREDO tests to be able to be registered with and work with SCons, it currently
-requires several things to be done.
+For CREDO tests to be able to be registered with and work with SCons, it
+currently requires several things to be done.
 
-To set up your initial links between the SCons configuration for your project and CREDO:
+To set up your initial links between the SCons configuration for your
+project and CREDO:
 
-* Use of the CREDO SCons-related functions distributed with CREDO in the `scons` folder;
-* Addition of several targets to your project's main SCons config file, e.g. `SConstruct`.
+* Use of the CREDO SCons-related functions distributed with CREDO in the
+  `scons` folder;
+* Addition of several targets to your project's main SCons config file,
+  e.g. `SConstruct`.
 
 Then to register particular CREDO test suites with SCons just requires:
 
-* Calling the CREDO functions on your environment in your project configuration files,
-  e.g. `Underworld/SConscript`.
+* Calling the CREDO functions on your environment in your project
+  configuration files, e.g. `Underworld/SConscript`.
 
 These sections will be explained in turn - if you are working on an existing
 project that already has CREDO system testing integrated into the project's
 SCons build system, you can safely jump ahead to 
 :ref:`credo-examples-register-systests-scons-register`.
 
-.. note:: for the instructions in this section to work, it requires the CREDO system
-   test suite files to follow the conventions in 
-   :ref:`credo-examples-run-systest-direct-importingReqs`, as this convention allows
-   suites to be easily imported from other files.
+.. note:: for the instructions in this section to work, it requires the
+   CREDO system test suite files to follow the conventions in 
+   :ref:`credo-examples-run-systest-direct-importingReqs`, as this
+   convention allows suites to be easily imported from other files.
 
 .. _credo-examples-register-systests-scons-setup:
 
