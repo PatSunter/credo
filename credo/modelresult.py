@@ -54,7 +54,8 @@ class ModelResult:
      .. attribute:: jobMetaInfo
 
         A :class:`.JobMetaInfo`, recording information about the run such as
-        time taken, Memory usage etc.
+        time taken, Memory usage etc (generally attached by a 
+        :class:`credo.jobrunner.api.JobRunner` soon after the ModelResult created).
 
      .. attribute:: fieldResults
 
@@ -74,12 +75,10 @@ class ModelResult:
 
     XML_INFO_TAG = 'StgModelResult'
 
-    def __init__(self, modelName, outputPath, simtime):
+    def __init__(self, modelName, outputPath):
         self.modelName = modelName
         self.outputPath = outputPath
-        # TODO: ideally should the jobrunner pass this in?
-        # TODO: Sim time not really a job meta info
-        self.jobMetaInfo = JobMetaInfo(simtime)
+        self.jobMetaInfo = None
         self.fieldResults = []
         self.freqOutput = None
 
@@ -100,10 +99,15 @@ class ModelResult:
         self.fieldResults.append(fieldResult)
         return fieldResult
     
+    def defaultRecordFilename(self):
+        """Get the default filename to use, based on the model name of a
+        particular model."""
+        return 'ModelResult-' + self.modelName + '.xml'
+
     def writeRecordXML(self, outputDir="", filename="", prettyPrint=True):
         """Write an XML record of a :class:`.ModelResult`."""
         if filename == "":
-            filename = defaultModelResultFilename(self.modelName)
+            filename = self.defaultRecordFilename()
         if outputDir == "":
             outputDir = self.outputPath
 
@@ -155,6 +159,31 @@ class JobMetaInfo:
         jmNode = etree.SubElement(xmlNode, self.XML_INFO_TAG)
         etree.SubElement(jmNode, 'simtime').text = str(self.simtime)
 
+#####
+
+
+def getSimInfoFromFreqOutput(outputPath):
+    """utility function to get basic information about the simulation
+    from the FrequentOutput.dat, given a particular output Path.
+    
+    .. seealso:: :mod:`credo.io.stgfreq`."""
+
+    freqOut = stgfreq.FreqOutput(path=outputPath)
+    freqOut.populateFromFile()
+    recordDict = freqOut.getRecordDictAtStep(freqOut.finalStep())
+    tSteps = freqOut.finalStep()
+    try:
+        simTime = recordDict['Time']
+    except KeyError:
+        # For now, allow none as simTime
+        simTime = None
+    return tSteps, simTime
+
+######
+
+# TODO: not sure if below approach to operate on ModelResult XML directly is best ....
+#  Maybe it would be better to "unpickle" a ModelResult from XML, and then modify
+#  directly, then write out to file again.
 
 def updateModelResultsXMLFieldInfo(filename, newFieldResult, prettyPrint=True):
     """Update an existing XML record of a :class:`.ModelResult` with info
@@ -170,7 +199,8 @@ def updateModelResultsXMLFieldInfo(filename, newFieldResult, prettyPrint=True):
     # It may not exist, if there were no field results already,
     # in which case grab existing
     if fieldResultsNode is None:
-        fieldResultsNode = etree.SubElement(root, fields.FieldComparisonResult.XML_INFO_LIST_TAG)
+        fieldResultsNode = etree.SubElement(root,
+            fields.FieldComparisonResult.XML_INFO_LIST_TAG)
     else:
         # TODO: Check the field to add is not in the list already
         pass
@@ -181,24 +211,3 @@ def updateModelResultsXMLFieldInfo(filename, newFieldResult, prettyPrint=True):
     outFile = open(filename, 'w')
     writeXMLDoc(xmlDoc, outFile, prettyPrint)
     outFile.close()
-
-def defaultModelResultFilename(modelName):
-    """Get the default filename to use, based on the model name of a
-    particular model."""
-    return 'ModelResult-'+modelName+'.xml'
-
-def getSimInfoFromFreqOutput(outputPath):
-    """Get necessary information to create a :class:`.SimInfo` from
-    the FrequentOutput.dat, given a particular output Path.
-    
-    .. seealso:: :mod:`credo.io.stgfreq`."""
-    freqOut = stgfreq.FreqOutput(path=outputPath)
-    freqOut.populateFromFile()
-    recordDict = freqOut.getRecordDictAtStep(freqOut.finalStep())
-    tSteps = freqOut.finalStep()
-    try:
-        simTime = recordDict['Time']
-    except KeyError:
-        # For now, allow none as simTime
-        simTime = None
-    return tSteps, simTime

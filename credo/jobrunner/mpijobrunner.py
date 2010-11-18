@@ -27,13 +27,13 @@ import subprocess
 import time
 import shlex
 from datetime import timedelta
-from credo.modelresult import ModelResult, getSimInfoFromFreqOutput
 from credo.jobrunner.api import *
-from credo.io import stgpath
+from credo.modelresult import ModelResult, JobMetaInfo
+from credo.modelresult import getSimInfoFromFreqOutput
 
 # Default amount of time to wait (sec) between polling model results
 # when timeout active
-DEF_WAIT_TIME = 2
+DEF_WAIT_TIME = 1
 
 # Allow MPI command to be overriden by env var.
 MPI_RUN_COMMAND = "MPI_RUN_COMMAND"
@@ -145,15 +145,18 @@ class MPIJobRunner(JobRunner):
         modelRun.postRunCleanup()
 
         # Construct a modelResult
-        # TODO: Maybe should construct just a basic ModelResult, and provide
-        # a function on it to populate data structures from file.
+        mResult = ModelResult(modelRun.name, absOutPath)
+        # Now attach appropriate Job meta info
         try:
             tSteps, simTime = getSimInfoFromFreqOutput(modelRun.outputPath)
         except ValueError:
             # For now, allow runs that didn't create a freq output
             tSteps, simTime = None, None
-
-        mResult = ModelResult(modelRun.name, absOutPath, simTime)
+        # get provenance info
+        # attach provenance info
+        # get performance info
+        # attach performance info
+        mResult.jobMetaInfo = JobMetaInfo(simTime)    
 
         if modelRun.basePath != startDir:
             print "Restoring initial path '%s'" % \
