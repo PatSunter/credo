@@ -41,6 +41,7 @@ Using CREDO for System Testing of StGermain-based codes such as Underworld
    examples/run-systest-scons.rst
    examples/register-systests-scons.rst
    examples/run-modify-systest-direct.rst
+   examples/write-new-test-component.rst
 
 .. _credo-examples-analysis:
 
