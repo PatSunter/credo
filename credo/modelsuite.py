@@ -471,8 +471,9 @@ def getModelResultsArray(baseName, baseDir):
         if os.path.isdir(os.path.join(baseDir, fName)):
             dirName = fName
             modelName = "%s-%s" % (baseName, dirName)
-            # TODO: Simtime of 0 is a hack here.
-            # TODO: other job meta info if possible?
-            mResult = mres.ModelResult(modelName, fullPath, 0)
+            mResult = mres.ModelResult(modelName, fullPath)
+            # TODO: When func ready, search for an XML file containing
+            #  job meta info, and attach here
+            # mResult.jobMetaInfo = ...
             modelResults.append(mResult)
     return modelResults

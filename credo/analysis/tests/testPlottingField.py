@@ -29,7 +29,7 @@ fComps = FieldComparisonList()
 fComp = FieldComparisonOp('VelocityField')
 fComps.add(fComp)
 # TODO: perhaps should be an interface that doesn't require a full mRes?
-mRes = ModelResult("testMod", "./output/realistic", 0.0)
+mRes = ModelResult("testMod", "./output/realistic")
 results = fComps.getAllResults(mRes)
 
 fr = results[0]

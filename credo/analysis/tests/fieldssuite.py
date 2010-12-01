@@ -42,14 +42,14 @@ class AnalysisFieldsTestCase(unittest.TestCase):
         shutil.rmtree(self.basedir)
 
     def test_getResult(self):
-        mRes = ModelResult("test", './output/', 0)
+        mRes = ModelResult("test", './output/')
         fComp = FieldComparisonOp('TemperatureField')
         fRes = fComp.getResult(mRes)
         self.assertEqual(fRes.fieldName, fComp.name)
         self.assertEqual(fRes.dofErrors[0], 0.00612235812)
 
     def test_getAllResults(self):
-        mRes = ModelResult("test", './output', 0)
+        mRes = ModelResult("test", './output')
         fieldComps = FieldComparisonList()
         fComp = FieldComparisonOp('TemperatureField')
         fieldComps.add(fComp)

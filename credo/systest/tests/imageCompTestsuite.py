@@ -36,8 +36,8 @@ class ImageCompTestTestCase(unittest.TestCase):
         # Set up a skeleton model run.
         self.imageCompTest = ImageCompTest("window.00001.png", (0.1, 0.1),
             refPath=self.imageRefPath)
-        self.resultsSet1 = ModelResult('testModel1', self.resultsPath1, 0)
-        self.resultsSet2 = ModelResult('testModel2', self.resultsPath2, 0)
+        self.resultsSet1 = ModelResult('testModel1', self.resultsPath1)
+        self.resultsSet2 = ModelResult('testModel2', self.resultsPath2)
 
     def tearDown(self):
         pass
