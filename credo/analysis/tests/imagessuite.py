@@ -47,8 +47,8 @@ class AnalysisImagesTestCase(unittest.TestCase):
         self.assertAlmostEqual(diffs[0], 0)
         self.assertAlmostEqual(diffs[1], 0)
         diffs = imageOps.compare(self.imageFname1, self.imageFname2)
-        self.assertTrue(0 < diffs[0] < 0.011)
-        self.assertTrue(0 < diffs[1] < 0.002)
+        self.assertTrue(0 < diffs[0] < 0.005)
+        self.assertTrue(0 < diffs[1] < 0.02)
 
     def test_compare_rayTay(self):
         """Added as a result of unexpected high error results when
