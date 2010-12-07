@@ -73,7 +73,11 @@ class MPIJobRunner(JobRunner):
 
         # Construct full run line
         mpiPart = "%s -np %d" % (self.mpiRunCommand, modelRun.jobParams.nproc)
-        runCommand = " ".join([mpiPart, modelRunCommand])
+        if modelRun.pbs == None:
+            runCommand = " ".join([mpiPart, modelRunCommand])
+        #If creating the pbs script, don't need to specify the nprocs etc
+        else:
+            runCommand = modelRunCommand
         if prefixStr is not None:
             # NB: in the case of MPI runs, we prefix the prefixStr before MPI
             # command and args ... appropriate for things like timing stuff.
