@@ -380,6 +380,16 @@ class ModelSuite:
         for runI, mResult in enumerate(self.resultsList):
             mResult.writeRecordXML()
     
+    def getCustomOpts(self, runI, extraCmdLineOpts):
+        """Get the custom opts (as a string) to apply for modelRun runI."""
+        customOpts = None
+        if self.runCustomOptSets[runI]:
+            customOpts = self.runCustomOptSets[runI]
+        if extraCmdLineOpts:
+            if customOpts == None: customOpts = ""
+            customOpts += extraCmdLineOpts
+        return customOpts    
+
     def readResultsFromPath(self, basePath, overrideOutputPath=None,
             checkAllPresent=True):
         """Read the results generated for a given ModelSuite located off the 
