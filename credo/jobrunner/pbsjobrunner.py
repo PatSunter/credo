@@ -59,6 +59,9 @@ class PBSJobMetaInfo(JobMetaInfo):
 
 class PBSJobRunner(JobRunner):
     def __init__(self):
+        JobRunner.__init__(self)
+        # PBS Job Runners should by default submit all jobs first
+        self.runSuiteNonBlockingDefault = True
         if MPI_RUN_COMMAND in os.environ:
             self.mpiRunCommand = os.environ[MPI_RUN_COMMAND]
         else:
@@ -67,6 +70,59 @@ class PBSJobRunner(JobRunner):
     def setup(self):
         # TODO: check pbs available and running, if necessary
         pass
+
+    def submitRun(self, modelRun, prefixStr=None, extraCmdLineOpts=None,
+            dryRun=False, maxRunTime=None):
+        """See :meth:`credo.jobrunner.api.JobRunner.submit`."""     
+
+        # Navigate to the model's base directory
+        startDir = os.getcwd()
+        if modelRun.basePath != startDir:
+            print "Changing to ModelRun's specified base path '%s'" % \
+                (modelRun.basePath)
+            os.chdir(modelRun.basePath)
+
+        modelRun.checkValidRunConfig()
+        modelRun.preRunPreparation()
+        modelRunCommand = modelRun.constructModelRunCommand(extraCmdLineOpts)
+
+        # Construct full run line
+        mpiPart = "%s" % (self.mpiRunCommand)
+        runCommand = " ".join([mpiPart, modelRunCommand])
+        if prefixStr is not None:
+            # NB: in the case of MPI runs, we prefix the prefixStr before MPI
+            # command and args ... appropriate for things like timing stuff.
+            runCommand = " ".join([prefixStr, runCommand])
+        
+        # TODO: fill out a dictionary of PBS commands with defaults ...
+        # TODO: Create the PBS script
+        pbsFilename = self._writePBSFile(modelRun, runCommand)        
+        pbsSubCmd = "qsub "+pbsFilename
+
+        # Run the run command, sending stdout and stderr to defined log paths
+        print "Running model '%s' via PBS, using job name %s,"
+            " with underlying MPI command '%s' ..."\
+            % (modelRun.name, runCommand)
+
+        # If we're only doing a dry run, return here.
+        if dryRun == True:
+            os.chdir(startDir)
+            return None
+
+        # Do the actual run
+        # TODO: create PBS Stdout and pbsStdErr
+        try:
+            retCode = subprocess.call(pbsSubCmd, shell=False,
+                stdout=qsubStdOut, stderr=qsubStdErr)
+        except OSError:
+            raise ModelRunLaunchError(modelRun.name, runAsArgs[0],
+                "Error submitting PBS job, with command %s" % (pbsSubCmd))
+        
+        #TODO:
+        # Parse the result, get the job number
+        jobMetaInfo = PBSJobMetaInfo()
+        jobMetaInfo.jobId = jobId
+        return jobMetaInfo
 
     def _writePBSFile(self, modelRun, runCommand):
         jobParams = modelRun.jobParams
@@ -108,59 +164,6 @@ class PBSJobRunner(JobRunner):
         f.write(runCommand+"\n")
         f.close()
         return pbsFileName
-
-    def submitRun(self, modelRun, prefixStr=None, extraCmdLineOpts=None,
-            dryRun=False, maxRunTime=None):
-        """See :meth:`credo.jobrunner.api.JobRunner.submit`."""     
-
-        # Navigate to the model's base directory
-        startDir = os.getcwd()
-        if modelRun.basePath != startDir:
-            print "Changing to ModelRun's specified base path '%s'" % \
-                (modelRun.basePath)
-            os.chdir(modelRun.basePath)
-
-        modelRun.checkValidRunConfig()
-        modelRun.preRunPreparation()
-
-        modelRunCommand = modelRun.constructModelRunCommand(extraCmdLineOpts)
-
-        # Construct full run line
-        mpiPart = "%s" % (self.mpiRunCommand)
-        runCommand = " ".join([mpiPart, modelRunCommand])
-        if prefixStr is not None:
-            # NB: in the case of MPI runs, we prefix the prefixStr before MPI
-            # command and args ... appropriate for things like timing stuff.
-            runCommand = " ".join([prefixStr, runCommand])
-        
-        # TODO: Create the PBS script
-        pbsFilename = self._writePBSFile(modelRun, runCommand)        
-        pbsSubCmd = "qsub "+pbsFilename
-
-        # Run the run command, sending stdout and stderr to defined log paths
-        print "Running model '%s' via PBS, using job name %s,"
-            " with underlying MPI command '%s' ..."\
-            % (modelRun.name, runCommand)
-
-        # If we're only doing a dry run, return here.
-        if dryRun == True:
-            os.chdir(startDir)
-            return None
-
-        # Do the actual run
-        # TODO: create PBS Stdout and pbsStdErr
-        try:
-            retCode = subprocess.call(pbsSubCmd, shell=False,
-                stdout=qsubStdOut, stderr=qsubStdErr)
-        except OSError:
-            raise ModelRunLaunchError(modelRun.name, runAsArgs[0],
-                "Error submitting PBS job, with command %s" % (pbsSubCmd))
-        
-        #TODO:
-        # Parse the result, get the job number
-        jobMetaInfo = PBSJobMetaInfo()
-        jobMetaInfo.jobId = jobId
-        return jobMetaInfo
 
     def blockResult(self, modelRun, jobMetaInfo):        
         # TODO

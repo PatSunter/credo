@@ -29,7 +29,7 @@ from credo.io import stgpath
 
 class JobRunner:
     def __init__(self):
-        pass
+        self.runSuiteNonBlockingDefault = False
 
     def setup(self):
         """Does any necessary setup checks to run models.
@@ -72,65 +72,82 @@ class JobRunner:
         # TODO: handle dryRun at this level...?
         jobMetaInfo = self.submitRun(modelRun, prefixStr,
             extraCmdLineOpts, dryRun, maxRunTime)
-        modelResult = self.blockResult(modelRun, jobMetaInfo)
-        return modelResult
+        if dryRun is False:
+            modelResult = self.blockResult(modelRun, jobMetaInfo)
+            return modelResult
+        else:
+            return None
 
     def submitSuite(self, modelSuite, prefixStr=None, extraCmdLineOpts=None,
             dryRun=False, maxRunTime=None):
-        # First submit all the suites
+        """Submits each modelRun in a suite to be run, and returns a list
+        of all jobMetaInfos for the submitted jobs."""
+        jobMetaInfos = []
         for runI, modelRun in enumerate(modelSuite.runs):
-            runHandles[modelRun.name] = self.submitRun(modelRun)    
+            customOpts = modelSuite.getCustomOpts(runI, extraCmdLineOpts)
+            jobMetaInfo = self.submitRun(modelRun, prefixStr, customOpts,
+                dryRun, maxRunTime)    
+            if jobMetaInfo:
+                jobMetaInfos.append(jobMetaInfo)
+        return jobMetaInfos
         
     def blockSuite(self, modelSuite, jobMetaInfos):    
-        '''Blocks on each ModelRun in a Suite, given a list of
-        JobMetaInfos for each run.'''
-        # Then a control loop to periodically check suite completion ...
+        """Blocks on each ModelRun in a Suite, given a list of
+        JobMetaInfos for each run."""
+        modelSuite.resultsList = []
         for modelRun, jobMetaInfo in zip(modelSuite.runs, jobMetaInfos):
             # TODO: ideally if we implemented a "testResult" func, could
             #  loop through and poll/report as they complete,
             #  rather than just in sequential order ...
-            self.blockResult(modelRun, jobMetaInfo)
+            result = self.blockResult(modelRun, jobMetaInfo)
             print "ModelRun '%s' complete." % modelRun.name
+            assert isinstance(result, credo.modelresult.ModelResult)
+            modelSuite.resultsList.append(result)
+        return modelSuite.resultsList
     
     def runSuite(self, modelSuite, prefixStr=None, extraCmdLineOpts=None,
-            dryRun=False, maxRunTime=None):
-        '''Run each ModelRun in the suite - with optional extra cmd line opts.
+            dryRun=False, maxRunTime=None, runSuiteNonBlocking=None):
+        """Run each ModelRun in the suite - with optional extra cmd line opts.
         Will also write XML records of each ModelRun and ModelResult in the 
         suite.
 
         Input arguments same as for :meth:`.runModel`.
 
         :returns: a reference to the :attr:`.resultsList` containing all
-           the ModelResults generated.'''
+           the ModelResults generated."""
 
         print "Running the %d modelRuns specified in the suite" % \
             (len(modelSuite.runs))
+    
+        if runSuiteNonBlocking is None:
+            runSuiteNonBlocking = self.runSuiteNonBlockingDefault
 
-        for runI, modelRun in enumerate(modelSuite.runs):
-            if not isinstance(modelRun, credo.modelrun.ModelRun):
-                raise TypeError("Error, stored run %d not an instance of a"\
-                    " ModelRun" % runI)
-            print "Doing run %d/%d (index %d), of name '%s':"\
-                % (runI+1, len(modelSuite.runs), runI, modelRun.name)
-            print "ModelRun description: \"%s\"" % \
-                (modelSuite.runDescrips[runI])
+        if runSuiteNonBlocking:
+            jobMetaInfos = self.submitSuite(modelSuite, prefixStr,
+                extraCmdLineOpts, dryRun, maxRunTime)
+            resultsList = self.blockSuite(modelSuite, jobMetaInfos)
+            return resultsList
+        else:
+            modelSuite.resultsList = []
+            for runI, modelRun in enumerate(modelSuite.runs):
+                if not isinstance(modelRun, credo.modelrun.ModelRun):
+                    raise TypeError("Error, stored run %d not an instance of a"\
+                        " ModelRun" % runI)
+                print "Doing run %d/%d (index %d), of name '%s':"\
+                    % (runI+1, len(modelSuite.runs), runI, modelRun.name)
+                print "ModelRun description: \"%s\"" % \
+                    (modelSuite.runDescrips[runI])
 
-            print "Running the Model (saving results in %s):"\
-                % (modelRun.outputPath)
+                print "Running the Model (saving results in %s):"\
+                    % (modelRun.outputPath)
 
-            customOpts = None
-            if modelSuite.runCustomOptSets[runI]:
-                customOpts = modelSuite.runCustomOptSets[runI]
-            if extraCmdLineOpts:
-                if customOpts == None: customOpts = ""
-                customOpts += extraCmdLineOpts
+                customOpts = modelSuite.getCustomOpts(runI, extraCmdLineOpts)
+                result = self.runModel(modelRun, prefixStr, customOpts,
+                    dryRun, maxRunTime)
 
-            result = self.runModel(modelRun, prefixStr, customOpts,
-                dryRun, maxRunTime)
-
-            if dryRun == True: continue
-            assert isinstance(result, credo.modelresult.ModelResult)
-            modelSuite.resultsList.append(result)
+                if dryRun == True: continue
+                assert isinstance(result, credo.modelresult.ModelResult)
+                modelSuite.resultsList.append(result)
 
         return modelSuite.resultsList
 

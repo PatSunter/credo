@@ -48,6 +48,7 @@ class MPIJobMetaInfo(JobMetaInfo):
 
 class MPIJobRunner(JobRunner):
     def __init__(self):
+        JobRunner.__init__(self)
         if MPI_RUN_COMMAND in os.environ:
             self.mpiRunCommand = os.environ[MPI_RUN_COMMAND]
         else:
@@ -70,21 +71,8 @@ class MPIJobRunner(JobRunner):
 
         modelRun.checkValidRunConfig()
         modelRun.preRunPreparation()
-
-        modelRunCommand = modelRun.constructModelRunCommand(extraCmdLineOpts)
-        stdOutFilename = modelRun.getStdOutFilename()
-        stdErrFilename = modelRun.getStdErrFilename()
-
-        stdOutFile = open(stdOutFilename, "w+")
-        stdErrFile = open(stdErrFilename, "w+")
-
-        # Construct full run line
-        mpiPart = "%s -np %d" % (self.mpiRunCommand, modelRun.jobParams.nproc)
-        runCommand = " ".join([mpiPart, modelRunCommand])
-        if prefixStr is not None:
-            # NB: in the case of MPI runs, we prefix the prefixStr before MPI
-            # command and args ... appropriate for things like timing stuff.
-            runCommand = " ".join([prefixStr, runCommand])
+        runCommand = self._getMPIRunCommandLine(modelRun, prefixStr,
+            extraCmdLineOpts)
 
         # Run the run command, sending stdout and stderr to defined log paths
         print "Running model '%s' via MPI with command '%s' ..."\
@@ -100,7 +88,11 @@ class MPIJobRunner(JobRunner):
         # "shell mode":- this allows us to kill all sub-processes properly if
         # necessary.
         runAsArgs = shlex.split(runCommand)
+        stdOutFilename = modelRun.getStdOutFilename()
+        stdErrFilename = modelRun.getStdErrFilename()
         try:
+            stdOutFile = open(stdOutFilename, "w+")
+            stdErrFile = open(stdErrFilename, "w+")
             procHandle = subprocess.Popen(runAsArgs, shell=False,
                 stdout=stdOutFile, stderr=stdErrFile)
         except OSError:
@@ -120,11 +112,23 @@ class MPIJobRunner(JobRunner):
             os.chdir(startDir)
         return jobMetaInfo
 
+    def _getMPIRunCommandLine(self, modelRun, prefixStr, extraCmdLineOpts):
+        modelRunCommand = modelRun.constructModelRunCommand(extraCmdLineOpts)
+        # Construct full run line
+        mpiPart = "%s -np %d" % (self.mpiRunCommand, modelRun.jobParams.nproc)
+        runCommand = " ".join([mpiPart, modelRunCommand])
+        if prefixStr is not None:
+            # NB: in the case of MPI runs, we prefix the prefixStr before MPI
+            # command and args ... appropriate for things like timing stuff.
+            runCommand = " ".join([prefixStr, runCommand])
+        return runCommand
+
     def blockResult(self, modelRun, jobMetaInfo):        
         # CHeck jobMetaInfo is of type MPI ...
         maxRunTime = modelRun.jobParams.maxRunTime
         pollInterval = modelRun.jobParams.pollInterval
         procHandle = jobMetaInfo.procHandle
+        # jobParams
 
         # Navigate to the model's base directory
         startDir = os.getcwd()
