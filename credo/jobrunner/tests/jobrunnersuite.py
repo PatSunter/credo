@@ -27,7 +27,7 @@ import tempfile
 import unittest
 
 from credo.modelrun import ModelRun
-from credo.modelresult import ModelResult
+from credo.modelresult import ModelResult, JobMetaInfo
 from credo.modelsuite import ModelSuite
 from credo.jobrunner.api import JobRunner
 #from skeletonClasses import SkeletonModelRun, SkeletonModelSuite
@@ -50,10 +50,11 @@ class SkeletonModelSuite(ModelSuite):
 
 class TestJobRunner(JobRunner):
     """A basic JobRunner, but with the runModel overridden to just print info."""
-    def runModel(self, modelRun, prefixStr=None,
+    def submitRun(self, modelRun, prefixStr=None,
             extraCmdLineOpts=None, dryRun=False, maxRunTime=None):
         if dryRun is True:
-            print "Called to run modelRun %s" % (modelRun.name)
+            print "Called to submit modelRun %s in dryRun mode" \
+                % (modelRun.name)
             runOptsDict = {
                 'prefixStr':prefixStr,
                 'extraCmdLineOpts':extraCmdLineOpts,
@@ -61,7 +62,14 @@ class TestJobRunner(JobRunner):
                 'maxRunTime':maxRunTime}
             return None
         else:
-            return SkeletonModelResult(modelRun.name)
+            print "Called to submit modelRun %s" % (modelRun.name)
+            jobMetaInfo = JobMetaInfo(0)
+            jobMetaInfo.modelName = modelRun.name
+            return jobMetaInfo
+
+    def blockResult(self, modelRun, jobMetaInfo):
+        print "Blocking in modelRun %s" % (modelRun.name)
+        return SkeletonModelResult(modelRun.name)
 
 class JobRunnerTestCase(unittest.TestCase):
     def setUp(self):
@@ -79,6 +87,44 @@ class JobRunnerTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
+    def test_runModel(self):
+        extraCmdLineOpts = "extraCmdLineOpts=1"
+        result = self.jobRunner.runModel(self.skelMRun1,
+            extraCmdLineOpts=extraCmdLineOpts, dryRun=True, maxRunTime=200)
+        self.assertEqual(result, None)   
+        result = self.jobRunner.runModel(self.skelMRun1,
+            extraCmdLineOpts=extraCmdLineOpts, dryRun=False, maxRunTime=200)
+        self.assertTrue(isinstance(result, ModelResult))
+        self.assertEqual(result.modelName, self.skelMRun1.name)
+
+    def test_submitSuite(self):
+        extraCmdLineOpts = "extraCmdLineOpts=1"
+        # Try with dryRun set to True, should be no results
+        jobMetaInfos = self.jobRunner.submitSuite(self.skelMSuite,
+            extraCmdLineOpts=extraCmdLineOpts, dryRun=True, maxRunTime=200)
+        self.assertEqual(len(jobMetaInfos), 0)    
+        # Try with dryRun set to False
+        jobMetaInfos = self.jobRunner.submitSuite(self.skelMSuite,
+            extraCmdLineOpts=extraCmdLineOpts, dryRun=False, maxRunTime=200)
+        self.assertEqual(len(jobMetaInfos), len(self.skelMSuite.runs))    
+        for runI, jobMetaInfo in enumerate(jobMetaInfos):
+            self.assertTrue(isinstance(jobMetaInfo, JobMetaInfo))
+            self.assertEqual(jobMetaInfo.modelName,
+                self.skelMSuite.runs[runI].name)
+
+    def test_blockSuite(self):
+        # Set up some fake jobMetaInfos
+        jobMetaInfos = [JobMetaInfo(0) for run in self.skelMSuite.runs]
+        for jmInfo, run in zip(jobMetaInfos, self.skelMSuite.runs):
+            jmInfo.modelName = run.name
+        # Now test
+        results = self.jobRunner.blockSuite(self.skelMSuite, jobMetaInfos)
+        self.assertEqual(len(results), len(self.skelMSuite.runs))    
+        for runI, res in enumerate(results):
+            self.assertTrue(isinstance(res, ModelResult))
+            self.assertEqual(res.modelName,
+                self.skelMSuite.runs[runI].name)
+
     def test_runSuite(self):
         # Try with dryRun set to True, should be no results
         extraCmdLineOpts = "extraCmdLineOpts=1"
@@ -88,6 +134,14 @@ class JobRunnerTestCase(unittest.TestCase):
         # Try with dryRun set to False
         results = self.jobRunner.runSuite(self.skelMSuite,
             extraCmdLineOpts=extraCmdLineOpts, dryRun=False, maxRunTime=200)
+        self.assertEqual(len(results), len(self.skelMSuite.runs))    
+        for resI, res in enumerate(results):
+            self.assertTrue(isinstance(res, ModelResult))
+            self.assertEqual(res.modelName, self.skelMSuite.runs[resI].name)
+        # Try with dryRun set to False, non-blocking mode
+        results = self.jobRunner.runSuite(self.skelMSuite,
+            extraCmdLineOpts=extraCmdLineOpts, dryRun=False, maxRunTime=200,
+            runSuiteNonBlocking=True)
         self.assertEqual(len(results), len(self.skelMSuite.runs))    
         for resI, res in enumerate(results):
             self.assertTrue(isinstance(res, ModelResult))
