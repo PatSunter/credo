@@ -37,6 +37,21 @@ class JobRunner:
         By default, does nothing - sub-classes need to override."""
         pass
 
+    def submitRun(self, modelRun, prefixStr=None, extraCmdLineOpts=None,
+            dryRun=False, maxRunTime=None):
+        """Submit the job to be run.
+        TODO: comment on parameters ...
+        Returns: a jobMetaInfo (that can later be attached ... )
+        """
+        raise NotImplementedError("Error, virtual func on base class")
+
+    def blockResult(self, modelRun, jobMetaInfo):
+        """Block on a modelRun until the result is completed ...
+        requires appropriate info to be passed in the jobMetaInfo object."""
+        raise NotImplementedError("Error, virtual func on base class")
+
+    # TODO: should the args be passed through as unnamed kwArgs,
+        # then interpreted by submitRun?
     def runModel(self, modelRun, prefixStr=None, extraCmdLineOpts=None,
             dryRun=False, maxRunTime=None):
         """Run the specified modelRun, and return the ModelResult.
@@ -54,8 +69,29 @@ class JobRunner:
         :returns: A :class:`~credo.modelresult.ModelResult` recording
           the results of the run."""
 
-        raise NotImplementedError("Error, virtual func on base class")   
+        # TODO: handle dryRun at this level...?
+        jobMetaInfo = self.submitRun(modelRun, prefixStr,
+            extraCmdLineOpts, dryRun, maxRunTime)
+        modelResult = self.blockResult(modelRun, jobMetaInfo)
+        return modelResult
 
+    def submitSuite(self, modelSuite, prefixStr=None, extraCmdLineOpts=None,
+            dryRun=False, maxRunTime=None):
+        # First submit all the suites
+        for runI, modelRun in enumerate(modelSuite.runs):
+            runHandles[modelRun.name] = self.submitRun(modelRun)    
+        
+    def blockSuite(self, modelSuite, jobMetaInfos):    
+        '''Blocks on each ModelRun in a Suite, given a list of
+        JobMetaInfos for each run.'''
+        # Then a control loop to periodically check suite completion ...
+        for modelRun, jobMetaInfo in zip(modelSuite.runs, jobMetaInfos):
+            # TODO: ideally if we implemented a "testResult" func, could
+            #  loop through and poll/report as they complete,
+            #  rather than just in sequential order ...
+            self.blockResult(modelRun, jobMetaInfo)
+            print "ModelRun '%s' complete." % modelRun.name
+    
     def runSuite(self, modelSuite, prefixStr=None, extraCmdLineOpts=None,
             dryRun=False, maxRunTime=None):
         '''Run each ModelRun in the suite - with optional extra cmd line opts.

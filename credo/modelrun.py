@@ -46,8 +46,6 @@ _allowedModelParamTypes = [int, float, long, bool, str]
 
 CREDO_ANALYSIS_RECORD_FILENAME = "credo-analysis.xml"
 SOLVER_OPTS_RECORD_FILENAME = "solverOptsUsed.opt"
-PBS_STRING = "#!/bin/bash"
-
 
 class ModelRun:
     """A class to keep records about a StgDomain/Underworld Model Run,
@@ -178,7 +176,8 @@ class ModelRun:
     def __init__(self, name, modelInputFiles, outputPath, basePath=None,
             logPath="log",
             cpReadPath=None, nproc=1, simParams=None,
-            paramOverrides=None, solverOpts=None, xmlExtras=None, pbs=None, inputFilePath=None, jobNameLine="# ", nodeLine="# ", wallTimeLine="# ", queueLine="# "):
+            paramOverrides=None, solverOpts=None, xmlExtras=None,
+            inputFilePath=None):
         self.name = name
         # Be forgiving if the user passes a single string input file, rather
         # than list
@@ -193,7 +192,6 @@ class ModelRun:
         else:
             self.basePath = basePath
         self.basePath = os.path.abspath(self.basePath)    
-
         self.outputPath = self.setPath(outputPath)
         self.cpReadPath = self.setPath(cpReadPath)
         self.logPath = self.setPath(logPath)
@@ -208,12 +206,7 @@ class ModelRun:
             self.simParams.checkNoDuplicates(self.paramOverrides.keys())
         self.solverOpts = solverOpts
         self.checkSolverOptsFile()
-        self.pbs = pbs
         self.inputFilePath = inputFilePath
-        self.jobNameLine = jobNameLine
-        self.nodeLine = nodeLine
-        self.wallTimeLine = wallTimeLine
-        self.queueLine = queueLine
         self.analysisOps = {}
         self.cpFields = []
         self.analysisXML = None
@@ -261,68 +254,29 @@ class ModelRun:
         runExe = self.getModelRunAppExeCommand()
         stgRunStr = "%s " % (runExe)
         for inputFile in self.modelInputFiles:  
-            if self.pbs == None:
-                stgRunStr += inputFile+" "
-            else:
+            stgRunStr += inputFile+" "
+            if False:
+                # TODO: fix what's going on here ...
                 pathtoUW = stgRunStr
                 pathtoUWSplit = pathtoUW.split('/')
                 length = len(pathtoUWSplit)
                 pathUW = ""
                 for i in range(1, length - 3):
                     if i != length - 4:
-                        pathUW += pathtoUWSplit[i]+"/"
+                        pathUW += pathtoUWSplit[i]+os.sep
                     else:
                         pathUW += pathtoUWSplit[i]					
                 inputPathStr = "%s" % (self.inputFilePath)
-                stgRunStr += "$UW/"+inputPathStr+"/"+inputFile+" "			
+                stgRunStr += "$UW/" + inputPathStr + os.sep + inputFile + " "			
         if self.analysisXML:
             stgRunStr += self.analysisXML+" "
 
-        stgRunStr += credo.modelrun.getParamOverridesAsStr(
-            self.paramOverrides)
+        stgRunStr += credo.modelrun.getParamOverridesAsStr(self.paramOverrides)
         if self.solverOpts:
-            stgRunStr += " "+stgcmdline.solverOptsStr(self.solverOpts)
+            stgRunStr += " " + stgcmdline.solverOptsStr(self.solverOpts)
         if extraCmdLineOpts:
-            stgRunStr += " "+extraCmdLineOpts
-        if self.pbs == None:
-			return stgRunStr
-        else:
-			#make the pbs file name
-			proc = "%s" % (self.nproc)
-			pbsFileName = inputFile+"_proc_"+proc+".pbs"
-			#add all necessary lines for a basic pbs- might need to modify this slightly depending on what needs to go in
-			f = open(pbsFileName, 'w') 
-			f.write(PBS_STRING+"\n")
-			#name line:
-			jobNameLine = "%s " % (self.jobNameLine)
-			f.write(jobNameLine+"\n")
-			#All the following can be rearranged to suit whatever cluster this is running on
-			#For example: vayu:
-			#PBS -l walltime=00:10:00,ncpus=16,vmem=32000mb
-			#The above can all be specified as the node line, the rest is just written as comments
-			#node line:
-			nodeLine = "%s " % (self.nodeLine)
-			f.write(nodeLine+"\n")
-			#wall time:
-			wallTimeLine = "%s " % (self.wallTimeLine)
-			f.write(wallTimeLine+"\n")
-			#queue:
-			queueLine = "%s " % (self.queueLine)
-			f.write(queueLine+"\n")
-			#export bash script vars:
-			f.write("#PBS -V\n")
-			#export UW
-			#This is because some clusters require the full path to be specified
-			#If this is the case, remember to specify the full path for the output dir
-			f.write("export UW="+pathUW+"\n")
-			#export UWPATH
-			f.write("export UWPATH=$UW\n")
-			#cmd line:
-			stgRunStr = "mpirun "+stgRunStr
-			f.write(stgRunStr+"\n")
-			#get the qsub command
-			pbsSubCmd = "qsub "+pbsFileName
-			return pbsSubCmd
+            stgRunStr += " " + extraCmdLineOpts
+        return stgRunStr
 
     def postRunCleanup(self):
         """function designed to be run after a modelRun has completed, and will
@@ -502,17 +456,23 @@ class JobParams:
     """Small class, to record parameters that specify job control of a ModelRun,
     such as numbers of processors used.
     
-    .. note::
-
-       Needs fleshing out, it's likely this could be expanded in future as the
-       ability to run Models via PBS or over the grid is developed.
-
     .. attribute:: nproc
 
        Number of processors to use in a parallel job.
+
+    .. attribute:: maxRunTime
+
+       Maximum amount of wall time the job should be allowed to run for
+       before terminating (if None, no maximum time)
+
+    .. attribute:: pollInterval
+
+       Interval determining how regularly the job is checked for completion.
     """
-    def __init__(self, nproc):
+    def __init__(self, nproc, maxRunTime=None, pollInterval=1):
         self.nproc = int(nproc)
+        self.maxRunTime = maxRunTime
+        self.pollInterval = pollInterval
 
     def writeInfoXML(self, parentNode):
         '''Writes information about this class into an existing, open XML

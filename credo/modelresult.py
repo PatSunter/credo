@@ -55,7 +55,8 @@ class ModelResult:
 
         A :class:`.JobMetaInfo`, recording information about the run such as
         time taken, Memory usage etc (generally attached by a 
-        :class:`credo.jobrunner.api.JobRunner` soon after the ModelResult created).
+        :class:`credo.jobrunner.api.JobRunner` soon after the
+        ModelResult created).
 
      .. attribute:: fieldResults
 
@@ -148,6 +149,7 @@ class JobMetaInfo:
     XML_INFO_TAG = "jobMetaInfo"
 
     def __init__(self, simtime):
+        self.runType = None
         if simtime is None:
             self.simtime = "unknown"
         else:     
