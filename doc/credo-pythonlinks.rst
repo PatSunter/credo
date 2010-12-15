@@ -28,6 +28,8 @@ Good intoductory tutorials for learning Python.
   * Includes a section on `writing CSV, XML and other file formats
     <http://homepage.mac.com/s_lott/books/python/html/p04/p04c07_file2.html>`_.
 
+* Michael Foord's `Python Articles page <http://www.voidspace.org.uk/python/articles.shtml>`_ - includes good articles on eg Testing, and Duck Typing in Python.
+  
 Tutorials particularly from the perspective of those with experience in Perl
 scripting, and Bash scripting:
 
