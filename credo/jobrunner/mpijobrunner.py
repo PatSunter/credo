@@ -36,10 +36,6 @@ from credo.modelresult import getSimInfoFromFreqOutput
 MPI_RUN_COMMAND = "MPI_RUN_COMMAND"
 DEFAULT_MPI_RUN_COMMAND = "mpiexec"
 
-class MPIJobParams(JobParams):
-    def __init__(self):
-        pass
-
 class MPIJobMetaInfo(JobMetaInfo):
     def __init__(self):
         JobMetaInfo.__init__(self, 0)
@@ -115,7 +111,8 @@ class MPIJobRunner(JobRunner):
     def _getMPIRunCommandLine(self, modelRun, prefixStr, extraCmdLineOpts):
         modelRunCommand = modelRun.constructModelRunCommand(extraCmdLineOpts)
         # Construct full run line
-        mpiPart = "%s -np %d" % (self.mpiRunCommand, modelRun.jobParams.nproc)
+        mpiPart = "%s -np %d" % (self.mpiRunCommand,
+            modelRun.jobParams['nproc'])
         runCommand = " ".join([mpiPart, modelRunCommand])
         if prefixStr is not None:
             # NB: in the case of MPI runs, we prefix the prefixStr before MPI
@@ -125,10 +122,9 @@ class MPIJobRunner(JobRunner):
 
     def blockResult(self, modelRun, jobMetaInfo):        
         # CHeck jobMetaInfo is of type MPI ...
-        maxRunTime = modelRun.jobParams.maxRunTime
-        pollInterval = modelRun.jobParams.pollInterval
+        maxRunTime = modelRun.jobParams['maxRunTime']
+        pollInterval = modelRun.jobParams['pollInterval']
         procHandle = jobMetaInfo.procHandle
-        # jobParams
 
         # Navigate to the model's base directory
         startDir = os.getcwd()

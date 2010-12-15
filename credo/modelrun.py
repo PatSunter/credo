@@ -47,6 +47,11 @@ _allowedModelParamTypes = [int, float, long, bool, str]
 CREDO_ANALYSIS_RECORD_FILENAME = "credo-analysis.xml"
 SOLVER_OPTS_RECORD_FILENAME = "solverOptsUsed.opt"
 
+# Global variables (defaults) used by the JobParams dict class.
+DEF_NPROC = 1
+DEF_MAX_RUN_TIME = None
+DEF_POLL_INTERVAL = 1
+
 class ModelRun:
     """A class to keep records about a StgDomain/Underworld Model Run,
     including access to the underlying XML of the actual model.
@@ -195,8 +200,7 @@ class ModelRun:
         self.outputPath = self.setPath(outputPath)
         self.cpReadPath = self.setPath(cpReadPath)
         self.logPath = self.setPath(logPath)
-        self.jobParams = JobParams(nproc)
-        self.nproc = nproc
+        self.jobParams = JobParams(nproc=nproc)
         self.simParams = simParams
         self.paramOverrides = paramOverrides
         if self.paramOverrides == None:
@@ -451,34 +455,39 @@ class ModelRun:
             flatFilename=flatFilename)
         return fFilename
 
-
-class JobParams:
+class JobParams(dict):
     """Small class, to record parameters that specify job control of a ModelRun,
     such as numbers of processors used.
     
-    .. attribute:: nproc
-
-       Number of processors to use in a parallel job.
-
-    .. attribute:: maxRunTime
-
-       Maximum amount of wall time the job should be allowed to run for
-       before terminating (if None, no maximum time)
-
-    .. attribute:: pollInterval
-
-       Interval determining how regularly the job is checked for completion.
+    All attributes are stored as regular dictionary parameters, to facilitate
+    easy updating.
     """
-    def __init__(self, nproc, maxRunTime=None, pollInterval=1):
-        self.nproc = int(nproc)
-        self.maxRunTime = maxRunTime
-        self.pollInterval = pollInterval
+    def __init__(self, **kwargs):
+        dict.__init__(self, kwargs)
+        if 'nproc' not in self.keys():
+            self['nproc'] = DEF_NPROC
+        if 'maxRunTime' not in self.keys():
+            self['maxRunTime'] = DEF_MAX_RUN_TIME
+        if 'pollInterval' not in self.keys():
+            self['pollInterval'] = DEF_POLL_INTERVAL
 
     def writeInfoXML(self, parentNode):
         '''Writes information about this class into an existing, open XML
          doc node, in a child list'''
+        # TODO: perhaps could change to a general function later
+        # for writing Python dicts to my preferred XML system
         jpNode = etree.SubElement(parentNode, 'jobParams')
-        etree.SubElement(jpNode, 'nproc').text = str(self.nproc)
+        self._writeInfoXML_Recurse(jpNode, self)
+    
+    def _writeInfoXML_Recurse(self, baseNode, paramDict):
+        for kw, value in paramDict.iteritems():
+            if isinstance(value, dict):
+                subDict = value
+                #Write a hierarchical sub-dict
+                dictNode = etree.SubElement(baseNode, kw)
+                self._writeInfoXML_Recurse(dictNode, subDict)
+            else:    
+                etree.SubElement(baseNode, kw).text = str(value)
 
 
 class StgParamInfo:

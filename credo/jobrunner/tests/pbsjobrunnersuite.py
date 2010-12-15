@@ -26,30 +26,33 @@ import shutil
 import tempfile
 import unittest
 
-from credo.modelrun import ModelRun
+from credo.modelrun import JobParams
 from credo.modelresult import ModelResult
-from credo.modelsuite import ModelSuite
-from credo.jobrunner.mpijobrunner import MPIJobRunner
+from credo.jobrunner.pbsjobrunner import PBSJobRunner
+from skeleton import SkeletonModelRun, SkeletonModelResult, SkeletonModelSuite
 
-class MPIJobRunnerTestCase(unittest.TestCase):
+class PBSJobRunnerTestCase(unittest.TestCase):
     def setUp(self):
-        self.jobRunner = MPIJobRunner()
+        self.jobRunner = PBSJobRunner()
 
     def tearDown(self):
         pass
 
-    def test_submitRun(self):
-        jobMetaInfo = self.jobRunner.submitRun(self, modelRun,
-            prefixStr, extraCmdLineOpts, dryRun=False, maxRunTime)    
+    def test_writePBSFile(self):
+        modelRun = SkeletonModelRun("skelMRun1", "output/test1")
+        modelRun.jobParams = JobParams(nproc=2, maxRunTime=1000,
+            pollInterval=10)
+        runCommand = "mpiexec ./someApp Input.xml"
+        self.jobRunner._writePBSFile(modelRun, runCommand)       
     
     def test_blockResult(self):
         self.fail()
-        # TODO: set up a fake MPI jobHandle
+        # TODO: set up a fake PBS jobHandle
         result = self.jobRunner.blockResult(self, modelRun, jobMetaInfo)
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(MPIJobRunnerTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(PBSJobRunnerTestCase, 'test'))
     return suite
 
 if __name__ == '__main__':

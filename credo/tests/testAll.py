@@ -29,7 +29,7 @@ def suite():
     #testMods = [fName.rstrip(".py") for fName in glob.glob("*suite.py")]
     # TODO: some tests like modelrunsuite are currently reliant on StGermain
     # ... really requires separating those classes first.
-    testMods = ['modelresultsuite', 'modelsuitesuite']
+    testMods = ['modelresultsuite', 'modelsuitesuite', 'jobparamssuite']
     alltests = unittest.TestSuite()
     for module in map(__import__, testMods):
         alltests.addTest(unittest.findTestCases(module))

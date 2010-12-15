@@ -21,35 +21,38 @@
 ##  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 ##  MA  02110-1301  USA
 
-import os
-import shutil
-import tempfile
 import unittest
 
-from credo.modelrun import ModelRun
-from credo.modelresult import ModelResult
-from credo.modelsuite import ModelSuite
-from credo.jobrunner.mpijobrunner import MPIJobRunner
+import credo.modelrun
+from xml.etree import ElementTree as etree
 
-class MPIJobRunnerTestCase(unittest.TestCase):
+class JobParamsTestCase(unittest.TestCase):
+
     def setUp(self):
-        self.jobRunner = MPIJobRunner()
-
-    def tearDown(self):
         pass
 
-    def test_submitRun(self):
-        jobMetaInfo = self.jobRunner.submitRun(self, modelRun,
-            prefixStr, extraCmdLineOpts, dryRun=False, maxRunTime)    
-    
-    def test_blockResult(self):
-        self.fail()
-        # TODO: set up a fake MPI jobHandle
-        result = self.jobRunner.blockResult(self, modelRun, jobMetaInfo)
+    def teatDown(self):
+        pass
+
+    def test_create(self):
+        jp = credo.modelrun.JobParams(nproc=1)
+        self.assertEqual(jp['nproc'], 1)
+        self.assertEqual(jp['maxRunTime'], credo.modelrun.DEF_MAX_RUN_TIME)
+        self.assertEqual(jp['pollInterval'], credo.modelrun.DEF_POLL_INTERVAL)
+        jp['PBS'] = {"queue":"run_1_week", "nameLine":"#PBS -n myJob"}
+        self.assertEqual(jp['PBS']['queue'], "run_1_week")
+
+    def test_writeInfoXML(self):
+        el = etree.Element('myElement')
+        jp = credo.modelrun.JobParams(nproc=1)
+        jp['PBS'] = {"queue":"run_1_week", "nameLine":"#PBS -n myJob"}
+        jp.writeInfoXML(el)
+        self.assertEqual(etree.tostring(el),
+            """<myElement><jobParams><maxRunTime>None</maxRunTime><pollInterval>1</pollInterval><PBS><queue>run_1_week</queue><nameLine>#PBS -n myJob</nameLine></PBS><nproc>1</nproc></jobParams></myElement>""")
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(MPIJobRunnerTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(JobParamsTestCase, 'test'))
     return suite
 
 if __name__ == '__main__':

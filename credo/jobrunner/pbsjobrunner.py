@@ -31,24 +31,12 @@ from credo.jobrunner.api import *
 from credo.modelresult import ModelResult, JobMetaInfo
 from credo.modelresult import getSimInfoFromFreqOutput
 
-# Default amount of time to wait (sec) between polling model results
-# when timeout active
-DEF_WAIT_TIME = 1
-
-# Allow MPI command to be used within PBS to be overriden by env var.
-MPI_RUN_COMMAND = "MPI_RUN_COMMAND"
+# For PBS, default to use mpiexec
 DEFAULT_MPI_RUN_COMMAND = "mpiexec"
 
-PBS_STRING = "#!/bin/bash"
-
-class PBSJobParams(JobParams):
-    def __init__(self, jobNameLine="# ",
-            nodeLine="# ", wallTimeLine="# ", queueLine="# "):
-        self.jobNameLine = jobNameLine
-        self.nodeLine = nodeLine
-        self.wallTimeLine = wallTimeLine
-        self.queueLine = queueLine
-
+PBS_SUB_COMMAND = "qsub"
+PBS_FIRSTLINE = "#!/bin/bash"
+PBS_PREFIX = "#PBS"
 
 class PBSJobMetaInfo(JobMetaInfo):
     def __init__(self):
@@ -62,10 +50,7 @@ class PBSJobRunner(JobRunner):
         JobRunner.__init__(self)
         # PBS Job Runners should by default submit all jobs first
         self.runSuiteNonBlockingDefault = True
-        if MPI_RUN_COMMAND in os.environ:
-            self.mpiRunCommand = os.environ[MPI_RUN_COMMAND]
-        else:
-            self.mpiRunCommand = DEFAULT_MPI_RUN_COMMAND
+        self.mpiRunCommand = DEFAULT_MPI_RUN_COMMAND
 
     def setup(self):
         # TODO: check pbs available and running, if necessary
@@ -94,15 +79,18 @@ class PBSJobRunner(JobRunner):
             # command and args ... appropriate for things like timing stuff.
             runCommand = " ".join([prefixStr, runCommand])
         
-        # TODO: fill out a dictionary of PBS commands with defaults ...
         # TODO: Create the PBS script
         pbsFilename = self._writePBSFile(modelRun, runCommand)        
-        pbsSubCmd = "qsub "+pbsFilename
+        try:
+            pbsQueueStr = "-q %s" % (modelRun.jobParams['PBS']['queue'])
+        except KeyError:
+            pbsQueueStr = ""
+        pbsSubCmd = "%s %s %s" % (PBS_SUB_COMMAND, pbsQueueStr, pbsFilename)
 
         # Run the run command, sending stdout and stderr to defined log paths
-        print "Running model '%s' via PBS, using job name %s,"
-            " with underlying MPI command '%s' ..."\
-            % (modelRun.name, runCommand)
+        print "Running model '%s' via PBS, submitted filename %s"\
+            " with command '%s', with underlying MPI command '%s' ..."\
+            % (modelRun.name, pbsFilename, PBS_SUB_COMMAND, runCommand)
 
         # If we're only doing a dry run, return here.
         if dryRun == True:
@@ -110,31 +98,49 @@ class PBSJobRunner(JobRunner):
             return None
 
         # Do the actual run
-        # TODO: create PBS Stdout and pbsStdErr
+        runAsArgs = shlex.split(pbsSubCmd)
         try:
-            retCode = subprocess.call(pbsSubCmd, shell=False,
+            qsubStdOut = open("%s.stdout" % pbsFilename, "w+")
+            qsubStdErr = open("%s.stderr" % pbsFilename, "w+")
+            retCode = subprocess.call(runAsArgs, shell=False,
                 stdout=qsubStdOut, stderr=qsubStdErr)
-        except OSError:
-            raise ModelRunLaunchError(modelRun.name, runAsArgs[0],
-                "Error submitting PBS job, with command %s" % (pbsSubCmd))
+        except OSError, ose:
+            raise ModelRunLaunchError(modelRun.name, pbsSubCmd,
+                "Check qsub working properly, OSError was %s" % (ose))
         
-        #TODO:
         # Parse the result, get the job number
+        qsubStdOut.seek(0)
+        qsubStdErr.seek(0)
+        jobId = self._parseQSubOutput(qsubStdOut.read(), qsubStdErr.read())
+        # TODO: create job meta info
         jobMetaInfo = PBSJobMetaInfo()
         jobMetaInfo.jobId = jobId
+        # TODO: record where the stdout and stderr were set?
+        qsubStdOut.close()
+        qsubStdErr.close()
+        # TODO: delete the qsub files if successful?
         return jobMetaInfo
+
+    def _parseQSubOutput(self, qsubStdOut, qsubStdErr):
+        #TODO
+        print "Going to parse qsub output '%s', stderr '%s'" % \
+            (qsubStdOut, qsubStdErr)
+        jobId = 0
+        return jobId
 
     def _writePBSFile(self, modelRun, runCommand):
         jobParams = modelRun.jobParams
         #make the pbs file name
-        proc = "%s" % (jobParams.nproc)
-        pbsFileName = modelRun.name+"_proc_"+proc+".pbs"
+        pbsFileName = "%s_proc_%d.pbs" % (modelRun.name, jobParams['nproc'])
         #add all necessary lines for a basic pbs- might need to modify
         # this slightly depending on what needs to go in
         f = open(pbsFileName, 'w') 
-        f.write(PBS_STRING+"\n")
+        f.write(PBS_FIRSTLINE+"\n")
         #name line:
-        jobNameLine = "%s " % (jobParams.jobNameLine)
+        try:
+            jobNameLine = jobParams['PBS']['jobNameLine']
+        except KeyError:
+            jobNameLine = "%s -N %s" % (PBS_PREFIX, modelRun.name)
         f.write(jobNameLine+"\n")
         # All the following can be rearranged to suit whatever cluster
         # this is running on
@@ -143,23 +149,31 @@ class PBSJobRunner(JobRunner):
         #The above can all be specified as the node line,
         # the rest is just written as comments
         #node line:
-        nodeLine = "%s " % (jobParams.nodeLine)
+        try:
+            nodeLine = jobParams['PBS']['nodeLine']
+        except KeyError:
+            nodeLine = "%s -l nodes=%d" % (PBS_PREFIX, jobParams['nproc'])
         f.write(nodeLine+"\n")
-        #wall time:
-        wallTimeLine = "%s " % (jobParams.wallTimeLine)
+        try:
+            wallTimeLine = jobParams['PBS']['wallTimeLine']
+        except KeyError:
+            if jobParams['maxRunTime'] is None:
+                # Allow no max wall time to be specified.
+                wallTimeLine = "# "
+            else:
+                wTimeFormatted = str(timedelta(seconds=jobParams['maxRunTime']))
+                wallTimeLine = "%s -l walltime=%s" % \
+                    (PBS_PREFIX, wTimeFormatted) 
         f.write(wallTimeLine+"\n")
-        #queue:
-        queueLine = "%s " % (jobParams.queueLine)
-        f.write(queueLine+"\n")
         #export bash script vars:
-        f.write("#PBS -V\n")
+        f.write("%s -V\n" % PBS_PREFIX)
         #export UW
         # This is because some clusters require the full path to be specified
         # If this is the case, remember to
         # specify the full path for the output dir
-        f.write("export UW="+pathUW+"\n")
+        #f.write("export UW="+pathUW+"\n")
         #export UWPATH
-        f.write("export UWPATH=$UW\n")
+        #f.write("export UWPATH=$UW\n")
         #cmd line:
         f.write(runCommand+"\n")
         f.close()
@@ -184,7 +198,7 @@ class PBSJobRunner(JobRunner):
         stdErrFilename = modelRun.getStdErrFilename()
         if timeOut == True:
             raise ModelRunTimeoutError(modelRun.name, stdOutFilename,
-                stdErrFilename, modelRun.jobParams.maxRunTime)
+                stdErrFilename, modelRun.jobParams['maxRunTime'])
         if retCode != 0:
             raise ModelRunRegularError(modelRun.name, retCode, stdOutFilename,
                 stdErrFilename)
