@@ -26,27 +26,9 @@ import shutil
 import tempfile
 import unittest
 
-from credo.modelrun import ModelRun
-from credo.modelresult import ModelResult, JobMetaInfo
-from credo.modelsuite import ModelSuite
 from credo.jobrunner.api import JobRunner
-#from skeletonClasses import SkeletonModelRun, SkeletonModelSuite
-
-class SkeletonModelRun(ModelRun):
-    def __init__(self, name, outputPath):
-        self.name = name
-        self.outputPath = outputPath
-    pass
-
-class SkeletonModelResult(ModelResult):
-    def __init__(self, modelName):
-        self.modelName = modelName
-    pass
-
-class SkeletonModelSuite(ModelSuite):
-    def __init__(self):
-        self.runs = []
-        self.resultsList = []
+from credo.modelresult import ModelResult, JobMetaInfo
+from skeleton import SkeletonModelRun, SkeletonModelResult, SkeletonModelSuite
 
 class TestJobRunner(JobRunner):
     """A basic JobRunner, but with the runModel overridden to just print info."""
