@@ -118,7 +118,8 @@ class ModelResult:
         xmlDoc = etree.ElementTree(mrNode)
         etree.SubElement(mrNode, 'modelName').text = self.modelName
         etree.SubElement(mrNode, 'outputPath').text = self.outputPath
-        self.jobMetaInfo.writeInfoXML(mrNode)
+        if self.jobMetaInfo is not None:
+            self.jobMetaInfo.writeInfoXML(mrNode)
         if (self.fieldResults):
             fieldResultsNode = etree.SubElement(mrNode,
                 fields.FieldComparisonResult.XML_INFO_LIST_TAG)
