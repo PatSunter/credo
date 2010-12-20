@@ -26,8 +26,7 @@ from credo.analysis.fields import FieldComparisonOp, FieldComparisonList
 from credo.io import stgcvg
 
 fComps = FieldComparisonList()
-fComp = FieldComparisonOp('VelocityField')
-fComps.add(fComp)
+fComps.add(FieldComparisonOp('VelocityField'))
 # TODO: perhaps should be an interface that doesn't require a full mRes?
 mRes = ModelResult("testMod", "./output/realistic")
 results = fComps.getAllResults(mRes)
