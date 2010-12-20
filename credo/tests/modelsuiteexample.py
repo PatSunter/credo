@@ -37,6 +37,14 @@ def testVarGenFuncs(iterGen):
     subDirsAndCmdLines = zip(subPaths, cmdLineOvers)
     for subDir, cmdLineStr in subDirsAndCmdLines:
         print "  %s: '%s'" % (subDir, cmdLineStr)
+    print "Indexes and results of a certain parameter"
+    gravRunIs = msuite.getVarRunIs('gravity', varDict, varNameDicts)
+    print "Run Indices of variant 'gravity':\n%s" % gravRunIs
+    surfValsMap = msuite.getOtherParamValsByVarRunIs(gravRunIs, varNameDicts,
+        'surfShape')
+    print "Run Indices of variant 'surfShape' sorted by 'gravity':\n%s" \
+        % (surfValsMap)
+
 
 print "Generating with a Zip iteration strategy"
 testVarGenFuncs(itertools.izip)
