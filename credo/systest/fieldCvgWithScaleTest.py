@@ -92,10 +92,7 @@ def testCvgWithScale(fieldName, fieldConvResults, fieldCvgCriterion):
         if dofTestStatus: print "  -Good"
         dofStatuses.append(dofTestStatus)
     
-    if False in dofStatuses:
-        return False
-    else: 
-        return True
+    return all(dofStatuses)
 
 def getNumDofs(fComp, mResult):
     '''Hacky utility function to get the number of dofs of an fComp, by
@@ -244,19 +241,19 @@ class FieldCvgWithScaleTest(TestComponent):
                     " not checking." % fName
                 self.fCvgMeetsReq[fName] = None
 
-        if False in self.fCvgResults.itervalues():
+        overallResult = all(self.fCvgResults.itervalues())
+        if not overallResult:
             # TODO: be more specific in statusMsg
             statusMsg = "The solution compared to the %s result didn't cvg"\
                 " as expected with increasing resolution for all fields."\
                 % (self.fComps.getCmpSrcString())
             self.tcStatus = CREDO_FAIL(statusMsg)
-            return False
         else:
             statusMsg = "The solution compared to the %s result converged"\
                 " as expected with increasing resolution for all fields."\
                 % (self.fComps.getCmpSrcString())
             self.tcStatus = CREDO_PASS(statusMsg)
-            return True
+        return overallResult
 
     def _writeXMLCustomSpec(self, specNode):
         if self.fComps == None:

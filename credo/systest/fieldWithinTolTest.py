@@ -158,7 +158,7 @@ class FieldWithinTolTest(TestComponent):
                         self.fComps.getCmpSrcString())
                     overallResult = False    
 
-            if False not in self.fieldResults[fComp.name]:
+            if all(self.fieldResults[fComp.name]):
                 statusMsg += "Field comp '%s' error within tol %g of %s"\
                     " solution for all runs.\n"\
                     % (fComp.name, fieldTol, self.fComps.getCmpSrcString())
@@ -198,7 +198,6 @@ class FieldWithinTolTest(TestComponent):
                 runNode = etree.SubElement(fieldNode, "run")
                 runNode.attrib['number'] = str(runI+1)
                 runNode.attrib['allDofsWithinTol'] = str(fieldRes)
-                #TODO run name? and overall result?
                 desNode = etree.SubElement(runNode, "dofErrors")
                 for dofI, dofError in enumerate(self.fieldErrors[fName][runI]):
                     deNode = etree.SubElement(desNode, "dofError")
