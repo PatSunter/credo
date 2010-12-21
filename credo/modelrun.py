@@ -29,7 +29,7 @@ configure and run a Model, and save records of this as an XML. This process will
 produce a :class:`credo.modelresult.ModelResult` class.
 """
 
-import os
+import os, sys
 import shutil
 import inspect
 from xml.etree import ElementTree as etree
@@ -259,19 +259,6 @@ class ModelRun:
         stgRunStr = "%s " % (runExe)
         for inputFile in self.modelInputFiles:  
             stgRunStr += inputFile+" "
-            if False:
-                # TODO: fix what's going on here ...
-                pathtoUW = stgRunStr
-                pathtoUWSplit = pathtoUW.split('/')
-                length = len(pathtoUWSplit)
-                pathUW = ""
-                for i in range(1, length - 3):
-                    if i != length - 4:
-                        pathUW += pathtoUWSplit[i]+os.sep
-                    else:
-                        pathUW += pathtoUWSplit[i]					
-                inputPathStr = "%s" % (self.inputFilePath)
-                stgRunStr += "$UW/" + inputPathStr + os.sep + inputFile + " "			
         if self.analysisXML:
             stgRunStr += self.analysisXML+" "
 
@@ -281,6 +268,28 @@ class ModelRun:
         if extraCmdLineOpts:
             stgRunStr += " " + extraCmdLineOpts
         return stgRunStr
+
+    def constructModelRunCommandPBS(self, extraCmdLineOpts=None):
+        """Given a model run, construct the PBS command needed to run that model,
+        and return as a string."""
+        runExe = self.getModelRunAppExeCommand()
+        stgRunStr = "%s " % (runExe)
+        startDir = os.getcwd()
+        for inputFile in self.modelInputFiles:  
+            stgRunStr += startDir+"/"+inputFile+" "
+        if self.analysisXML:
+            stgRunStr += self.analysisXML+" "
+
+        stgRunStr += credo.modelrun.getParamOverridesAsStr(self.paramOverrides)
+        if self.solverOpts:
+            stgRunStr += " " + stgcmdline.solverOptsStr(self.solverOpts)
+        if extraCmdLineOpts:
+            stgRunStr += " " + extraCmdLineOpts
+        outPathStr = "%s" % (self.outputPath)
+        outdir = "--outputPath="+startDir+"/"+outPathStr
+        stgRunStr += " "+outdir
+        return stgRunStr
+
 
     def postRunCleanup(self):
         """function designed to be run after a modelRun has completed, and will
