@@ -31,6 +31,7 @@ from credo.jobrunner.api import *
 from credo.modelresult import ModelResult, JobMetaInfo
 from credo.modelresult import getSimInfoFromFreqOutput
 
+MPI_RUN_COMMAND = "MPI_RUN_COMMAND"
 # For PBS, default to use mpiexec
 DEFAULT_MPI_RUN_COMMAND = "mpiexec"
 
@@ -50,7 +51,10 @@ class PBSJobRunner(JobRunner):
         JobRunner.__init__(self)
         # PBS Job Runners should by default submit all jobs first
         self.runSuiteNonBlockingDefault = True
-        self.mpiRunCommand = DEFAULT_MPI_RUN_COMMAND
+        if MPI_RUN_COMMAND in os.environ:
+            self.mpiRunCommand = os.environ[MPI_RUN_COMMAND]
+        else:
+            self.mpiRunCommand = DEFAULT_MPI_RUN_COMMAND
 
     def setup(self):
         # TODO: check pbs available and running, if necessary
@@ -69,7 +73,7 @@ class PBSJobRunner(JobRunner):
 
         modelRun.checkValidRunConfig()
         modelRun.preRunPreparation()
-        modelRunCommand = modelRun.constructModelRunCommand(extraCmdLineOpts)
+        modelRunCommand = modelRun.constructModelRunCommandPBS(extraCmdLineOpts)
 
         # Construct full run line
         mpiPart = "%s" % (self.mpiRunCommand)
@@ -125,7 +129,7 @@ class PBSJobRunner(JobRunner):
         #TODO
         print "Going to parse qsub output '%s', stderr '%s'" % \
             (qsubStdOut, qsubStdErr)
-        jobId = 0
+        jobId = qsubStdOut
         return jobId
 
     def _writePBSFile(self, modelRun, runCommand):
@@ -167,26 +171,71 @@ class PBSJobRunner(JobRunner):
         f.write(wallTimeLine+"\n")
         #export bash script vars:
         f.write("%s -V\n" % PBS_PREFIX)
-        #export UW
-        # This is because some clusters require the full path to be specified
-        # If this is the case, remember to
-        # specify the full path for the output dir
-        #f.write("export UW="+pathUW+"\n")
-        #export UWPATH
-        #f.write("export UWPATH=$UW\n")
         #cmd line:
         f.write(runCommand+"\n")
         f.close()
         return pbsFileName
 
     def blockResult(self, modelRun, jobMetaInfo):        
-        # TODO
-        # Check jobMetaInfo is of type PBS...
-        # jobID = jobMetaInfo['jobId']
-        # pollInterval = modelRun.jobParams.pollInterval
+        # Check jobMetaInfo is of type PBS
+	# via self.runType = "PBS" 
+        jobID = jobMetaInfo.jobId
+        maxRunTime = modelRun.jobParams['maxRunTime']	
+        pollInterval = modelRun.jobParams['pollInterval']
+        checkOutput = 0
         # periodically based on pollInterval:
+        if pollInterval > maxRunTime: pollInterval = maxRunTime
+        totalTime = 0
+        timeOut = True
+        while totalTime <= maxRunTime:
+            time.sleep(pollInterval)
+            totalTime += pollInterval
             # check PBS job output ... (eg using qstat on jobID)
-            # Get server info ...
+            qstat = os.popen("qstat "+jobID).readlines()
+            qstatus = "%s" % (qstat)
+            # when the job has been submitted and we query the job ID we should get something like:
+            # if the job has ended:
+            #qstat: Unknown Job Id 3506.tweedle
+            # OR
+            #3505.tweedle              cratonic30t2c3d2 WendySharples   00:15:16 E batch
+            # if the job has not commenced running or is still running:
+            #3505.tweedle              cratonic30t2c3d2 WendySharples   00:15:16 Q batch
+            #3505.tweedle              cratonic30t2c3d2 WendySharples   00:15:16 R batch
+            #3505.tweedle              cratonic30t2c3d2 WendySharples   00:15:16 S batch
+            # if the job has not been able to be run:
+            #3505.tweedle              cratonic30t2c3d2 WendySharples   00:15:16 C batch
+            # So if we break the command line up into an array of words separated by spaces:
+            qstatus = qstatus.split(" ")
+            length = len(qstatus)
+            #jobName and modelName MUST be THE SAME 
+            for i in range(1, length):
+                if qstatus[i] == "Unknown":
+                    print "job has already run\n"
+                    checkOutput = 1
+                if qstatus[i] == "R":
+                    print "job is still running\n"
+                if qstatus[i] == "Q":
+                    print "job is queued\n"
+                if qstatus[i] == "C":
+                    print "job is cancelled\n"
+                    checkOutput = 1
+                if qstatus[i] == "E":
+                    print "job has ended\n"
+                    checkOutput = 1
+            if checkOutput == 1:
+                timeOut = False
+                break
+        if timeOut == True:
+			# At this point, we know the process has run too long.
+			# From Python 2.6, change this to procHandle.kill()
+			print "Error: passed timeout of %s, sending quit signal." % \
+                    (str(timedelta(seconds=maxRunTime)))
+			qdel = os.popen("qdel "+jobID).readlines()
+			qdelstatus = "%s" % (qdel)
+			print qdelstatus
+			raise ModelRunTimeoutError(modelRun.name, stdOutFilename,
+                stdErrFilename, modelRun.jobParams['maxRunTime'])
+			# Get server info ...
             # jobMetaInfo.dict['nodeInfo'] = nodeInfo
             # get retCode, timeOut.
 
@@ -196,10 +245,8 @@ class PBSJobRunner(JobRunner):
 
         stdOutFilename = modelRun.getStdOutFilename()
         stdErrFilename = modelRun.getStdErrFilename()
-        if timeOut == True:
-            raise ModelRunTimeoutError(modelRun.name, stdOutFilename,
-                stdErrFilename, modelRun.jobParams['maxRunTime'])
-        if retCode != 0:
+            
+        if checkOutput == 0 and timeOut == False:
             raise ModelRunRegularError(modelRun.name, retCode, stdOutFilename,
                 stdErrFilename)
         else:
@@ -207,7 +254,19 @@ class PBSJobRunner(JobRunner):
             absLogPath = os.path.join(modelRun.basePath, modelRun.logPath)
             # TODO: Move and rename output and error files created by PBS,
             #  ... to stdOutFilename, stdErrFilename
-            print "Model ran successfully (output saved to path %s, std out"\
+			# check PBS output file and make sure there's something in it
+            jobName = "%s" % (modelRun.name)           
+            jobid = jobID.split(".")
+            jobNo = jobid[0] 
+            fileName = jobName+".o"+jobNo
+            f = open(fileName, 'r')
+            lines = f.read()
+            if lines == "":
+                print "error in file no output obtained\n"
+                raise ModelRunRegularError(modelRun.name, retCode, stdOutFilename,
+                stdErrFilename)
+            else:    
+			    print "Model ran successfully (output saved to path %s, std out"\
                 " & std error to %s." % (absOutPath, absLogPath)
 
         print "Doing post-run tidyup:"
@@ -228,7 +287,8 @@ class PBSJobRunner(JobRunner):
         # get performance info
         # attach performance info
         mResult.jobMetaInfo = jobMetaInfo
-
+		# Navigate to the model's base directory
+        startDir = os.getcwd()
         if modelRun.basePath != startDir:
             print "Restoring initial path '%s'" % \
                 (startDir)
