@@ -175,7 +175,9 @@ def getVariantCmdLineOverrides(modelVariants, indicesIt):
         overrideCmdLines.append(" ".join(overStrs))
     return overrideCmdLines
 
-def getDefaultSubdir(modelVariants, paramIndices):
+def getSubdirName(modelVariants, paramIndices):
+    """Creates a subdirectory text based on the names and values of each
+    variant."""
     subDirName = ""
     varTexts = []
     for mvI, mvEntry in enumerate(modelVariants.iteritems()):
@@ -185,10 +187,10 @@ def getDefaultSubdir(modelVariants, paramIndices):
     subDirName = "-".join(varTexts)
     return subDirName
 
-def getDefaultSubdirs(modelVariants, indicesIt):
+def getTextParamValsSubdirs(modelVariants, indicesIt):
     subDirs = []
     for indexSet in indicesIt:
-        subDirs.append(getDefaultSubdir(modelVariants, indexSet))
+        subDirs.append(getSubdirName(modelVariants, indexSet))
     return subDirs
 
 def getVarRunIs(varName, modelVariants, runDicts):
@@ -219,6 +221,20 @@ def getOtherParamValsByVarRunIs(varRunIsMap, varDicts, otherParam):
         otherValsMap[varValue] = [varDicts[runI][otherParam] for runI \
             in varRunIs]
     return otherValsMap
+
+################
+
+def getSubdir_TextParamVals(modelRun, modelVariants, paramIndices, runIndex):
+    """Generate an output sub-directory name for a run with
+    a printed version of :attr:`.modelVariants`names, and vales for this run.
+    (Good in the sense of being fairly self-describing, but can
+    be long if you have many model variants)."""
+    subPath = getSubdirName(modelVariants, paramIndices)
+    return subPath
+
+def getSubdir_RunIndex(modelRun, modelVariants, paramIndices, runIndex):
+    """Simply prints the index of the run as a subdirectory."""
+    return "%.5d" % runIndex
 
 class ModelSuite:
     '''A class for running a suite of Models (e.g. a group for profiling,
@@ -262,8 +278,8 @@ class ModelSuite:
 
     .. attribute:: subOutputPathGenFunc
        
-       If set, this function will be used to customise the model sub-path based
-       on each modelRun.
+       This function will can be used to customise the model sub-path based
+       on each modelRun. Override it if you wish to use other than the default.
 
     .. attribute:: templateMRun
 
@@ -294,7 +310,7 @@ class ModelSuite:
         self.runDescrips = []
         self.runCustomOptSets = []
         self.resultsList = []
-        self.subOutputPathGenFunc = None
+        self.subOutputPathGenFunc = getSubdir_RunIndex
         # Parameters related to dynamic generation
         self.templateMRun = templateMRun
         self.iterGen = None
@@ -378,34 +394,29 @@ class ModelSuite:
 
         # Save the strategy passed in.
         self.iterGen = iterGen
+        # Empty the "runs", in case it has values in there already
+        self.runs = []
+
         # Strategy used below is instead of iterating directly over the 
         # parameters we are applying to each run, create indices into the
         # modelVariants lists to work out which to apply for each run.
         indexIterator = getVariantIndicesIter(self.modelVariants, self.iterGen)
 
-        for paramIndices in indexIterator:
+        for runI, paramIndices in enumerate(indexIterator):
             # First create a copy of the template model run
             newMRun = copy.deepcopy(self.templateMRun)
             # Now, apply each variant to it as appropriate
             for varI, modelVar in enumerate(self.modelVariants.itervalues()):
                 modelVar.applyToModel(newMRun, paramIndices[varI])
 
-            if self.subOutputPathGenFunc:
-                subPath = self.subOutputPathGenFunc(modelRun)
-            else:
-                subPath = self.getOutputSubPath(paramIndices)
+            subPath = self.subOutputPathGenFunc(newMRun, self.modelVariants,
+                paramIndices, runI)
 
             newMRun.name += "-%s" % (subPath)
             newMRun.outputPath = os.path.join(self.outputPathBase, subPath)  
             self.runs.append(newMRun)
             self.runDescrips.append(subPath)
             self.runCustomOptSets.append(None)
-
-    def getOutputSubPath(self, paramIndices):
-        """Generate the standard output directory for a run with given
-        paramIndices into the :attr:`.modelVariants` to be applied."""
-        subPath = getDefaultSubdir(self.modelVariants, paramIndices)
-        return subPath
 
     def writeAllModelRunXMLs(self):
         """Save an XML record of each ModelRun currently in :attr:`.runs`."""
@@ -480,10 +491,6 @@ class ModelSuite:
 # of various properties of the suite, e.g. memory usage? Or should
 # this be a capability of some sort of uber-results list? Or profiling
 # tools?
-
-
-              
-
 
 def writeInputsOutputsToCSV(mSuite, observablesDict, fname):
     """Write a CSV file, containing all the ModelVariants defined for a 

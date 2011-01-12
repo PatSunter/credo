@@ -28,8 +28,8 @@ def testVarGenFuncs(iterGen):
     varPathDicts = msuite.getVariantParamPathDicts(varDict, indicesIter)
     print "Dictionary of var paths:values :\n%s" % varPathDicts
     indicesIter = msuite.getVariantIndicesIter(varDict, iterGen)
-    subPaths = msuite.getDefaultSubdirs(varDict, indicesIter)
-    print "Sub-paths:\n%s" % subPaths
+    subPaths = msuite.getTextParamValsSubdirs(varDict, indicesIter)
+    print "Sub-paths (textual):\n%s" % subPaths
     indicesIter = msuite.getVariantIndicesIter(varDict, iterGen)
     cmdLineOvers = msuite.getVariantCmdLineOverrides(varDict, indicesIter)
     print "Cmd-line strings:\n%s" % cmdLineOvers

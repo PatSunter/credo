@@ -100,13 +100,15 @@ class ModelSuiteTestCase(unittest.TestCase):
                 self.zRange[zIndex])
             self.assertEqual(mSuite.runs[ii].outputPath,
                 os.path.join("output", "genSuiteTest",
-                "depthVary_%s-ZVary_%s" % (self.yRange[yIndex],
-                    self.zRange[zIndex])))
+                    mSuite.subOutputPathGenFunc(mSuite.runs[ii],
+                        mSuite.modelVariants, expIndexTuple, ii)))
+        # Now test regenerating produces correct length again
+        mSuite.generateRuns()
+        self.assertEqual(len(mSuite.runs), len(self.yRange) * len(self.zRange))
 
     def test_generateRuns_izip(self):        
         mSuite = ModelSuite(os.path.join("output","genSuiteTest"),
             templateMRun = self.mRun1)
-
         mSuite.addVariant("depthVary", self.stgI1)
         mSuite.addVariant("ZVary", self.stgI2)
         mSuite.generateRuns(itertools.izip)
@@ -114,17 +116,42 @@ class ModelSuiteTestCase(unittest.TestCase):
             min(len(self.yRange), len(self.zRange)))
         # These are indices into lists above, created manually for testing
         expIndices = [(0,0),(1,1)]
-        for ii, expIndexes in enumerate(expIndices):
-            yIndex, zIndex = expIndexes
+        for ii, expIndexTuple in enumerate(expIndices):
+            yIndex, zIndex = expIndexTuple
             self.assertEqual(mSuite.runs[ii].paramOverrides['minY'],
                 self.yRange[yIndex])
             self.assertEqual(mSuite.runs[ii].paramOverrides['maxZ'],
                 self.zRange[zIndex])
             self.assertEqual(mSuite.runs[ii].outputPath,
                 os.path.join("output", "genSuiteTest",
-                "depthVary_%s-ZVary_%s" % (self.yRange[yIndex],
-                    self.zRange[zIndex])))
+                    mSuite.subOutputPathGenFunc(mSuite.runs[ii],
+                    mSuite.modelVariants, expIndexTuple, ii)))
 
+    def test_generateRuns_customSubdirs(self):        
+        mSuite = ModelSuite(os.path.join("output","genSuiteTest"),
+            templateMRun = self.mRun1)
+        mSuite.addVariant("depthVary", self.stgI1)
+        mSuite.addVariant("ZVary", self.stgI2)
+
+        mSuite.subOutputPathGenFunc = msuite.getSubdir_RunIndex
+        mSuite.generateRuns(itertools.izip)
+        self.assertEqual(len(mSuite.runs),
+            min(len(self.yRange), len(self.zRange)))
+        for runI in range(len(mSuite.runs)):
+            # This should just be a very simple output path based on
+            #  run index
+            self.assertEqual(mSuite.runs[runI].outputPath,
+                os.path.join("output", "genSuiteTest",
+                    msuite.getSubdir_RunIndex(None, None, None, runI)))
+
+        mSuite.subOutputPathGenFunc = msuite.getSubdir_TextParamVals
+        mSuite.generateRuns(itertools.izip)
+        expIndices = [(0,0),(1,1)]
+        for runI, expIndexTuple in enumerate(expIndices):
+            self.assertEqual(mSuite.runs[runI].outputPath,
+                os.path.join("output", "genSuiteTest",
+                    msuite.getSubdir_TextParamVals(mSuite.runs[runI],
+                    mSuite.modelVariants, expIndexTuple, runI)))
 
 def suite():
     suite = unittest.TestSuite()
