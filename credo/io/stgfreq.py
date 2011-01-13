@@ -176,6 +176,13 @@ class FreqOutput:
             recordDict[header] = record[col]
         return recordDict    
     
+    def getRecordDictAtFinalStep(self):
+        """Utility wrapper function to get a dictionary of records in
+        the FreqOutput at the final timestep - see :attr:`.getRecordDictAtStep`
+        ."""
+        if not self.populated: self.populateFromFile()
+        return self.getRecordDictAtStep(self._finalTimeStep)
+
     def finalStep(self):
         """Returns the highest timestep number that has information recorded for
         it in the associated FrequentOutput file."""
