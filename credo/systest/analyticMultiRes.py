@@ -26,10 +26,10 @@ from xml.etree import ElementTree as etree
 
 from credo.modelsuite import ModelSuite
 import credo.modelrun as mrun
-from credo.systest.api import SysTest, CREDO_PASS, CREDO_FAIL
+from credo.systest.api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL
 from credo.systest.fieldCvgWithScaleTest import FieldCvgWithScaleTest
 
-class AnalyticMultiResTest(SysTest):
+class AnalyticMultiResTest(SingleModelSysTest):
     '''A Multiple Resolution system test.
        This test can be used to convert any existing system test that
        analyses fields, to check that the error between the analytic
@@ -52,15 +52,16 @@ class AnalyticMultiResTest(SysTest):
 
     description = '''Runs an existing test with multiple resolutions.'''
     passMsg = "The solution compared to the analytic result"\
-		    " converged as expected with increasing resolution for all fields."
+	    " converged as expected with increasing resolution for all fields."
     failMsg = "One of the fields failed to converge as expected."
 
-    def __init__(self, inputFiles, outputPathBase, resSet, nproc=1,
-            paramOverrides=None, solverOpts=None, 
-            basePath=None, nameSuffix=None, timeout=None):
-        SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, solverOpts, "AnalyticMultiResConvergence",
-            basePath, nameSuffix, timeout)
+    def __init__(self, inputFiles, outputPathBase, resSet, 
+            basePath=None, nproc=1, timeout=None,
+            paramOverrides=None, solverOpts=None, nameSuffix=None):
+        SingleModelSysTest.__init__(self, "AnalyticMultiResConvergence",
+            inputFiles, outputPathBase,
+            basePath, nproc, timeout,
+            paramOverrides, solverOpts, nameSuffix)
         self.resSet = resSet
         cvgChecker = FieldCvgWithScaleTest()
         self.testComponents['fieldConvChecker'] = cvgChecker

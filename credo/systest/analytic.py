@@ -25,10 +25,10 @@ import os
 from xml.etree import ElementTree as etree
 
 from credo.modelsuite import ModelSuite
-from credo.systest.api import SysTest, CREDO_PASS, CREDO_FAIL
+from credo.systest.api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL
 from credo.systest.fieldWithinTolTest import FieldWithinTolTest
 
-class AnalyticTest(SysTest):
+class AnalyticTest(SingleModelSysTest):
     '''An Analytic System test.
        This case requires the user to have configured the XML correctly
        to load an anlytic soln, and compare it to the correct fields.
@@ -61,13 +61,14 @@ class AnalyticTest(SysTest):
         " solution at end of run."
     failMsg = "At least one Field not within tolerance of analytic soln."
 
-    def __init__(self, inputFiles, outputPathBase, nproc=1,
-            defFieldTol=3e-2, fieldTols=None, 
-            paramOverrides=None, solverOpts=None,
-            basePath=None, nameSuffix=None, timeout=None):
-        SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, solverOpts, "Analytic", 
-            basePath, nameSuffix, timeout)
+    def __init__(self, inputFiles, outputPathBase,
+            basePath=None, nproc=1, timeout=None,
+            paramOverrides=None, solverOpts=None, nameSuffix=None, 
+            defFieldTol=3e-2, fieldTols=None):
+        SingleModelSysTest.__init__(self, "Analytic",
+            inputFiles, outputPathBase,
+            basePath, nproc, timeout,
+            paramOverrides, solverOpts, nameSuffix)
         self.testComponents[self.fTestName] = FieldWithinTolTest(
             defFieldTol=defFieldTol, fieldTols=fieldTols)
 

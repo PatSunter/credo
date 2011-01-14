@@ -35,13 +35,13 @@ from xml.etree import ElementTree as etree
 from credo.modelsuite import ModelSuite
 from credo.modelrun import SimParams
 import credo.jobrunner
-from credo.systest.api import SysTest, CREDO_PASS, CREDO_FAIL, getStdTestNameBasic
+from credo.systest.api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL
+from credo.systest.api import getStdTestNameBasic
 from credo.systest.fieldWithinTolTest import FieldWithinTolTest
-
 
 DEF_TEST_FIELDS = ['VelocityField','PressureField']
 
-class ReferenceTest(SysTest):
+class ReferenceTest(SingleModelSysTest):
     '''A Reference System test.
     This case simply runs a given model for a set number of steps,
     then checks the resultant solution matches within a tolerance
@@ -67,7 +67,6 @@ class ReferenceTest(SysTest):
 
        Standard name to use for this test's field comparison TestComponent
        in the :attr:`~credo.systest.api.SysTest.testComponents` list.
-       
     '''
 
     fTestName = 'Reference Solution compare'
@@ -78,15 +77,17 @@ class ReferenceTest(SysTest):
         " soln at end of run."
     failMsg = "A Field was not within tolerance of reference soln."
 
-    def __init__(self, inputFiles, outputPathBase, nproc=1,
-            fieldsToTest = None,
-            runSteps=20, defFieldTol=1e-2, fieldTols=None, paramOverrides=None,
-            solverOpts=None, basePath=None, expPathPrefix="expected",
-            nameSuffix=None, timeout=None):
-        SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, solverOpts, "Reference", 
-            basePath, nameSuffix, timeout)
-        testNameBasic = getStdTestNameBasic(self.testType+"Test", inputFiles)
+    def __init__(self, inputFiles, outputPathBase,
+            basePath=None, nproc=1, timeout=None,
+            paramOverrides=None, solverOpts=None, nameSuffix=None, 
+            fieldsToTest = None, runSteps=20, defFieldTol=1e-2, fieldTols=None,
+            expPathPrefix="expected"):
+        SingleModelSysTest.__init__(self, "Reference",
+            inputFiles, outputPathBase,
+            basePath, nproc, timeout,
+            paramOverrides, solverOpts, nameSuffix)
+        testNameBasic = getStdTestNameBasic(self.testType+"Test",
+            self.inputFiles)
         self.expectedSolnPath = os.path.join(expPathPrefix, testNameBasic)
         if fieldsToTest == None:
             # Set default fields to test.

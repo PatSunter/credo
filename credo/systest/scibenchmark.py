@@ -26,6 +26,7 @@ from xml.etree import ElementTree as etree
 
 from credo.modelsuite import ModelSuite
 from credo.systest.api import SysTest, TestComponent, CREDO_PASS, CREDO_FAIL
+import credo.utils
 
 class SciBenchmarkTest(SysTest):
     '''A Science benchmark test.
@@ -41,14 +42,16 @@ class SciBenchmarkTest(SysTest):
 
     description = '''Runs a user-defined science benchmark.'''
 
-    def __init__(self, inputFiles, outputPathBase, nproc=1,
-            paramOverrides=None, solverOpts=None, 
-            basePath=None, nameSuffix=None, timeout=None):
-        SysTest.__init__(self, inputFiles, outputPathBase, nproc, 
-            paramOverrides, solverOpts, "SciBenchmark",
-            basePath, nameSuffix, timeout)
+    def __init__(self, testName, outputPathBase,
+            basePath=None, nproc=1, timeout=None):
+        if basePath is None:
+            # Since expect this class to be used directly,
+            #  get calling path 1 levels up
+            basePath = credo.utils.getCallingPath(1)
+        SysTest.__init__(self, "SciBenchmark", testName, basePath, 
+            outputPathBase, nproc, timeout)
 
-    def addTestComponent(self, testComp, testCompName):
+    def addTestComp(self, testComp, testCompName):
         """Add a testComponent (:class:`~credo.systest.api.TestComponent`)
         with name testCompName to the list of test
         components to be applied as part of determining if the benchmark
@@ -60,25 +63,28 @@ class SciBenchmarkTest(SysTest):
         self.testComponents[testCompName] = testComp
 
     def _writeXMLCustomSpec(self, specNode):
+        # TODO: write info about the modelRuns making up the suite ...
+        #  or should this be a standard feature of all Sys tests writeups?
         # TODO: write stuff like paper references here?
+        # TODO: does this need to be converted to an FP to allow
+         # user to more easily over-ride? Or is that done via
+         #  custom test components?
         pass
 
     def genSuite(self):
         """See base class :meth:`~credo.systest.api.SysTest.genSuite`.
         
-        By default will create just a single model run.
-
-        .. note:: for Benchmarks that involve running a suite of models, this 
-           API may need re-thinking. Or else a separate SciBenchmarkSuite
-           class could be added.
-        """
-        mSuite = ModelSuite(outputPathBase=self.outputPathBase)
-        self.mSuite = mSuite
-        mRun = self._createDefaultModelRun(self.testName, self.outputPathBase)
+        For Sci Benchmarks, simply return the suite of models the user
+        has constructed and added themselves, after ensuring any
+        necessary test component ops are attached."""
+        if self.mSuite == None:
+            raise AttributeError("Error: for SciBenchmark Tests, you as"\
+                " the user need to configure and set the ModelSuite used"\
+                " for the test and assign to the mSuite parameter.")
         for tComp in self.testComponents.itervalues():
-            tComp.attachOps(mRun)
-        mSuite.addRun(mRun, "Run the model needed for the benchmark.")
-        return mSuite
+            for mRun in self.mSuite.runs:
+                tComp.attachOps(mRun)
+        return self.mSuite
 
     def checkResultValid(self, resultsSet):
         """See base class :meth:`~credo.systest.api.SysTest.checkResultValid`."""

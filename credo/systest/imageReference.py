@@ -31,7 +31,7 @@ import credo.jobrunner
 from . import api
 from credo.systest.imageCompTest import ImageCompTest
 
-class ImageReferenceTest(api.SysTest):
+class ImageReferenceTest(api.SingleModelSysTest):
     '''An image comparison against Reference System test.
     To do this, creates a set of several 
     :class:`~credo.systest.imageCompTest.ImageCompTest` Test Components for
@@ -56,15 +56,17 @@ class ImageReferenceTest(api.SysTest):
     failMsg = "An image was not within tolerance of reference version."
 
     def __init__(self, inputFiles, outputPathBase,
-            imagesToTest, nproc=1, runSteps=20, defImageTol=(5e-3, 1e-2),
-            imageTols=None, paramOverrides=None,
-            solverOpts=None, basePath=None, expPathPrefix="expected",
-            nameSuffix=None, timeout=None):
-        api.SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, solverOpts, "ImageReference", 
-            basePath, nameSuffix, timeout)
+            imagesToTest,
+            basePath=None, nproc=1, timeout=None,
+            paramOverrides=None, solverOpts=None, nameSuffix=None, 
+            imageTols=None, expPathPrefix="expected",
+            runSteps=20, defImageTol=(5e-3, 1e-2)):
+        api.SingleModelSysTest.__init__(self,"ImageReference",
+            inputFiles, outputPathBase,
+            basePath, nproc, timeout,
+            paramOverrides, solverOpts, nameSuffix)
         testNameBasic = api.getStdTestNameBasic(self.testType+"Test",
-            inputFiles)
+            self.inputFiles)
         self.expectedSolnPath = os.path.join(expPathPrefix, testNameBasic)
         self.imagesToTest = imagesToTest
         assert isinstance(self.imagesToTest, list)

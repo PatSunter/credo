@@ -55,5 +55,7 @@ except ImportError:
     print "Warning, cannot import the ImageReferenceTest for"\
         " use since you don't have required libraries (PIL) installed."
 
-# Import the benchmark
+# Import the benchmark test
 from credo.systest.scibenchmark import SciBenchmarkTest
+
+# TODO: import all test components here too?

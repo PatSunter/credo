@@ -36,6 +36,7 @@ from xml.etree import ElementTree as etree
 import credo.modelrun as mrun
 import credo.io.stgxml
 import credo.io.stgpath as stgpath
+import credo.utils
 
 class SysTestSetupError(Exception):
     """An exception for when a System test fails to set up correctly."""
@@ -135,9 +136,8 @@ def getStdTestName(testTypeStr, inputFiles, nproc, paramOverrides,
 
     return testName
 
-
 class SysTest:
-    '''A class for managing SysTests in CREDO. This is an abstract base
+    """A class for managing SysTests in CREDO. This is an abstract base
     class: you must sub-class it to create actual system test types.
 
     The SysTest is designed to interact with the 
@@ -147,22 +147,11 @@ class SysTest:
     the results pass an expected metric:- generally by applying one or more
     :class:`~credo.systest.api.TestComponent` classes.
     
-    Constructor keywords not in member attribute list:
-    
-    * nameSuffix: if specified, this defines the suffix that
-      will be added to the test's name, output path, 
-      and log path (where the test's result and stderr/out will be saved
-      respectively) - Overriding the default one based on params used.
-
     .. attribute:: testType
 
        records the "type" of the system test, as a string (e.g. "Analytic",
        or "SciBenchmark") - for printing purposes.
     
-    .. attribute:: inputFiles
-
-       StGermain XML files that define the Model to be tested.
-
     .. attribute:: testName
 
        The name of this test, generally auto-generated from other properties.
@@ -197,67 +186,33 @@ class SysTest:
        Number of processors to be used for the test. See 
        :attr:`credo.modelrun.ModelRun.nproc`.
 
-    .. attribute:: paramOverrides
-
-       Any model parameter overrides to be passed to ModelRuns performed
-       as part of running the test - see
-       :attr:`credo.modelrun.ModelRun.paramOverrides`. Thus allow 
-       customisation of the test properties.
-
-    .. attribute:: solverOpts
-
-       Solver options to be used for any models making up this test.
-       See :attr:`credo.modelrun.ModelRun.solverOpts`
-
-    .. attribute:: resIndicesToTest
-    
-       If this is set to other than None, then only these indices will
-       be passed to TestComponents to check as part of the 
-       :attr:`~.getStatus` function.
-    
     .. attribute:: timeout
 
        if set to a positive integer, this will be used as a maximum time
        (in seconds) the test is allowed to run for - if it runs over this
        the result of the test will be set to an Error.
        If timeout is None, 0 or negative, no timeout will be applied.
-    '''
 
-    def __init__(self, inputFiles, outputPathBase,
-            nproc, paramOverrides, solverOpts, testType,
-            basePath=None, nameSuffix=None, timeout=None):
+    .. attribute:: resIndicesToTest
+    
+       If this is set to other than None, then only these indices will
+       be passed to TestComponents to check as part of the 
+       :attr:`~.getStatus` function.
+    """
+    def __init__(self, testType, testName, basePath, outputPathBase, 
+            nproc=1, timeout=None):
         self.testType = testType
-        # Be forgiving of user passing a single string rather than a list,
-        # and correct for this.
-        if isinstance(inputFiles, str):
-            inputFiles = [inputFiles]
-        self.inputFiles = inputFiles
-        if basePath is not None:
-            self.basePath = basePath
-        else:
-            # By default, base path is the path of the calling script *2.
-            # (Since immediately calling script is likely to be child instantiation).
-            callingFile = inspect.stack()[2][1]
-            callingPath = os.path.dirname(callingFile)
-            self.basePath = callingPath
+        self.testName = testName
+        self.basePath = basePath
         self.basePath = os.path.abspath(self.basePath) 
-
-        self.testName = getStdTestName(testType+"Test", inputFiles,
-            nproc, paramOverrides, solverOpts, nameSuffix)
-        absInputFiles = stgpath.convertLocalXMLFilesToAbsPaths(self.inputFiles,
-            self.basePath)
-        stgpath.checkAllXMLInputFilesExist(absInputFiles)
         self.outputPathBase = outputPathBase
+        self.nproc = nproc 
+        self.timeout = timeout
+        ### - attributes created in process of testing.
         self.mSuite = None
         self.testStatus = None
         self.testComponents = {}
-        self.nproc = nproc 
-        self.paramOverrides = paramOverrides
-        if self.paramOverrides == None:
-            self.paramOverrides = {}
-        self.solverOpts = solverOpts
         self.resIndicesToTest = None
-        self.timeout = timeout
 
     def setup(self):
         '''For the setup phase of tests.
@@ -364,17 +319,6 @@ class SysTest:
         properties of the systest (such as :attr:`.testName`)."""
         return 'SysTest-'+self.testName+'.xml'
 
-    def _createDefaultModelRun(self, modelName, outputPath):
-        """Create and return a :class:`credo.modelrun.ModelRun` with the
-        default options as specified for this System Test.
-        (Thus is a useful helper function for sub-classes, so they can
-        use this and not keep up to date with changes in
-        the ModelRun interface.)"""
-        return mrun.ModelRun(modelName,
-            self.inputFiles, outputPath, basePath=self.basePath,
-            nproc=self.nproc, paramOverrides=copy.copy(self.paramOverrides),
-            solverOpts=copy.copy(self.solverOpts))
-
     def writePreRunXML(self, outputPath="", filename="", prettyPrint=True):
         """Write the SysTest XML with as much information before the run as
         is possible. This includes general info about the test, and detailed
@@ -465,26 +409,14 @@ class SysTest:
         descNode.text = self.description
 
     def _writeXMLSpecification(self, baseNode):
-        """Function to write the test specification to baseNode (xml.etree)."""
-        specNode = etree.SubElement(baseNode, 'testSpecification')
+        """Function to write the test specification to baseNode (xml.etree).
         
-        ipListNode = etree.SubElement(specNode, 'inputFiles')
-        for xmlFilename in self.inputFiles:
-            fileNode = etree.SubElement(ipListNode, 'inputFile')
-            fileNode.text = xmlFilename
-        etree.SubElement(specNode, 'outputPathBase').text = self.outputPathBase
-
-        nProcNode = etree.SubElement(specNode, "nproc")
-        nProcNode.text = str(self.nproc)
-
-        if self.timeout is not None:
-            timeOutStr = str(timedelta(seconds=self.timeout))
-        else:
-            timeOutStr = "None"
-        etree.SubElement(specNode, "timeout").text = timeOutStr
-
-        mrun.writeParamOverridesInfoXML(self.paramOverrides, specNode)
-        mrun.writeSolverOptsInfoXML(self.solverOpts, specNode)
+        .. note: any "infrastructure" sub-classes should over-ride this method
+           appropriately. For user-level sub-classes, use the 
+           _writeXMLCustomSpec function.
+        """
+        specNode = self._createXMLSpecNode(baseNode)
+        self._writeXMLSysTestBasicSpecification(specNode)
         try:
             self._writeXMLCustomSpec(specNode)
         except AttributeError, ae:
@@ -492,6 +424,23 @@ class SysTest:
                 " _writeXMLCustomSpec()"\
                 " method for your SysTest subclass: %s" % ae )
             raise ae
+    
+    def _createXMLSpecNode(self, baseNode):
+        """Utility function to create a specification XML node with
+         standard name."""
+        return etree.SubElement(baseNode, 'testSpecification')
+
+    def _writeXMLSysTestBasicSpecification(self, specNode):
+        """Function to write the test specification to baseNode (xml.etree)."""
+        etree.SubElement(specNode, 'basePath').text = self.basePath
+        etree.SubElement(specNode, 'outputPathBase').text = self.outputPathBase
+        nProcNode = etree.SubElement(specNode, "nproc")
+        nProcNode.text = str(self.nproc)
+        if self.timeout is not None:
+            timeOutStr = str(timedelta(seconds=self.timeout))
+        else:
+            timeOutStr = "None"
+        etree.SubElement(specNode, "timeout").text = timeOutStr
     
     def _writeXMLCustomSpec(self, specNode):
         """Function to write the custom specification for a particular test
@@ -524,6 +473,86 @@ class SysTest:
         statusMsgNode = etree.SubElement(resNode, 'statusMsg')
         statusMsgNode.text = self.testStatus.detailMsg
 
+
+class SingleModelSysTest(SysTest):
+    """
+    A subclass of :class:`.SysTest` for common system test types that are
+    based on variations on a single Model (defined by a group of XML model
+    files, see :attr:`.inputFiles`. Includes utility functions for easily
+    creating new model runs based on these standard parameters.
+
+    Constructor keywords not in member attribute list:
+    
+    * nameSuffix: if specified, this defines the suffix that
+      will be added to the test's name, output path, 
+      and log path (where the test's result and stderr/out will be saved
+      respectively) - Overriding the default one based on params used.
+
+    .. attribute:: inputFiles
+
+       StGermain XML files that define the Model to be tested.
+
+    .. attribute:: paramOverrides
+
+       Any model parameter overrides to be passed to ModelRuns performed
+       as part of running the test - see
+       :attr:`credo.modelrun.ModelRun.paramOverrides`. Thus allow 
+       customisation of the test properties.
+
+    .. attribute:: solverOpts
+
+       Solver options to be used for any models making up this test.
+       See :attr:`credo.modelrun.ModelRun.solverOpts`
+    """
+    def __init__(self, testType, inputFiles, outputPathBase,
+            basePath=None, nproc=1, timeout=None,
+            paramOverrides=None, solverOpts=None, nameSuffix=None):
+        if isinstance(inputFiles, str):
+            inputFiles = [inputFiles]
+        testName = getStdTestName(testType+"Test", inputFiles,
+            nproc, paramOverrides, solverOpts, nameSuffix)
+        if basePath is None:
+            # Since this is a virtual class, get calling path 2 levels up
+            basePath = credo.utils.getCallingPath(2)
+        SysTest.__init__(self, testType, testName, basePath, outputPathBase,
+            nproc, timeout)
+        self.inputFiles = inputFiles
+        self.paramOverrides = paramOverrides
+        if self.paramOverrides == None:
+            self.paramOverrides = {}
+        absInputFiles = stgpath.convertLocalXMLFilesToAbsPaths(self.inputFiles,
+            self.basePath)
+        stgpath.checkAllXMLInputFilesExist(absInputFiles)
+        self.solverOpts = solverOpts
+
+    def _createDefaultModelRun(self, modelName, outputPath):
+        """Create and return a :class:`credo.modelrun.ModelRun` with the
+        default options as specified for this System Test.
+        (Thus is a useful helper function for sub-classes, so they can
+        use this and not keep up to date with changes in
+        the ModelRun interface.)"""
+        return mrun.ModelRun(modelName,
+            self.inputFiles, outputPath, basePath=self.basePath,
+            nproc=self.nproc, paramOverrides=copy.copy(self.paramOverrides),
+            solverOpts=copy.copy(self.solverOpts))
+    
+    def _writeXMLSpecification(self, baseNode):
+        specNode = self._createXMLSpecNode(baseNode)
+        self._writeXMLSysTestBasicSpecification(specNode)
+        # Now write stuff appropriate to SingleModelSysTest
+        ipListNode = etree.SubElement(specNode, 'inputFiles')
+        for xmlFilename in self.inputFiles:
+            fileNode = etree.SubElement(ipListNode, 'inputFile')
+            fileNode.text = xmlFilename
+        mrun.writeParamOverridesInfoXML(self.paramOverrides, specNode)
+        mrun.writeSolverOptsInfoXML(self.solverOpts, specNode)
+        try:
+            self._writeXMLCustomSpec(specNode)
+        except AttributeError, ae:
+            raise NotImplementedError("Please implement a "\
+                " _writeXMLCustomSpec()"\
+                " method for your SysTest subclass: %s" % ae )
+            raise ae        
 
 class SysTestSuite:
     """Class that aggregates  a set of :class:`~credo.systest.api.SysTest`.
@@ -599,13 +628,12 @@ class SysTestSuite:
                 " a subclass of the CREDO SysTest type. Arg passed in, '%s',"\
                 " of type '%s', is not a Python Class." \
                 % (testClass, type(testClass)))
-        if not issubclass(testClass, SysTest):
+        if not issubclass(testClass, SingleModelSysTest):
             raise TypeError("The testClass argument must be a type that's"\
                 " a subclass of the CREDO SysTest type. Type passed in, '%s',"\
                 " not a subclass of SysTest." \
                 % (testClass))
-        callingFile = inspect.stack()[1][1]
-        callingPath = os.path.dirname(callingFile)
+        callingPath = credo.utils.getCallingPath(1)
         # If just given a single input file as a string, convert
         #  to a list (containing that single file).
         if isinstance(inputFiles, str):
@@ -651,7 +679,10 @@ class SysTestSuite:
 
     def _getStdOutputPath(self, testClass, inputFiles, testOpts):
         """Get the standard name for the test's output path. Attempts to
-        avoid naming collisions where reasonable."""
+        avoid naming collisions where reasonable.
+        
+        TODO: move to be a method of SingleModelSysTest since relies
+         on several of those attributes?"""
 
         classStr = str(testClass).split('.')[-1]
         #TODO: resolve fact this already likely has "test" at end, unlike test

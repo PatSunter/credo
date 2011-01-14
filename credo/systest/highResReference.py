@@ -29,10 +29,10 @@ from credo.io import stgxml as stgxml
 from credo.modelsuite import ModelSuite
 from credo.modelrun import SimParams
 import credo.jobrunner
-from credo.systest.api import SysTest, CREDO_PASS, CREDO_FAIL, getStdTestNameBasic
+from credo.systest.api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL, getStdTestNameBasic
 from credo.systest.fieldWithinTolTest import FieldWithinTolTest
 
-class HighResReferenceTest(SysTest):
+class HighResReferenceTest(SingleModelSysTest):
     '''A High Res Reference System test.
        This case simply runs a given model for a set number of steps,
        then checks the resultant solution matches within a tolerance
@@ -72,15 +72,18 @@ class HighResReferenceTest(SysTest):
         " soln at end of run."
     failMsg = "A Field was not within tolerance of the high res reference soln."
 
-    def __init__(self, inputFiles, outputPathBase, nproc=1,
+    def __init__(self, inputFiles, outputPathBase,
+            basePath=None, nproc=1, timeout=None,
+            paramOverrides=None, solverOpts=None, nameSuffix=None,
+            expPathPrefix="HRexpected",
             fieldsToTest = ['VelocityField','PressureField'],
-            runSteps=1, defFieldTol=1e-2, fieldTols=None, paramOverrides=None,
-            solverOpts=None, basePath=None, expPathPrefix="HRexpected",
-            nameSuffix=None, timeout=None, highResRatio=4):
-        SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, solverOpts, "highResReference", 
-            basePath, nameSuffix, timeout)
-        testNameBasic = getStdTestNameBasic(self.testType+"Test", inputFiles)
+            runSteps=1, defFieldTol=1e-2, fieldTols=None, highResRatio=4):
+        SingleModelSysTest.__init__(self, "highResReference",
+            inputFiles, outputPathBase,
+            basePath, nproc, timeout,
+            paramOverrides, solverOpts, nameSuffix)
+        testNameBasic = getStdTestNameBasic(self.testType+"Test",
+            self.inputFiles)
         self.expectedSolnPath = os.path.join(expPathPrefix, testNameBasic)
         self.fieldsToTest = fieldsToTest
         self.runSteps = runSteps

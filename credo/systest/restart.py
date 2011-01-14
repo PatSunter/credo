@@ -27,10 +27,10 @@ from xml.etree import ElementTree as etree
 
 from credo.modelsuite import ModelSuite
 from credo.modelrun import SimParams
-from credo.systest.api import SysTest, CREDO_PASS, CREDO_FAIL
+from credo.systest.api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL
 from credo.systest.fieldWithinTolTest import FieldWithinTolTest
 
-class RestartTest(SysTest):
+class RestartTest(SingleModelSysTest):
     '''A Restart System test.
        This case simply runs a given model for set number of steps,
        then restarts half-way through, and checks the same result is
@@ -68,14 +68,15 @@ class RestartTest(SysTest):
     failMsg = "At least one field wasn't within tolerance"\
                 " on restart run of original run."
 
-    def __init__(self, inputFiles, outputPathBase, nproc=1,
+    def __init__(self, inputFiles, outputPathBase,
+            basePath=None, nproc=1, timeout=None,
+            paramOverrides=None, solverOpts=None, nameSuffix=None, 
             fieldsToTest = ['VelocityField','PressureField'], fullRunSteps=20,
-            defFieldTol=1e-5, fieldTols=None, 
-            paramOverrides=None, solverOpts=None, 
-            basePath=None, nameSuffix=None, timeout=None):
-        SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, solverOpts, "Restart",
-            basePath, nameSuffix, timeout)
+            defFieldTol=1e-5, fieldTols=None):
+        SingleModelSysTest.__init__(self, "Restart",
+            inputFiles, outputPathBase,
+            basePath, nproc, timeout,
+            paramOverrides, solverOpts, nameSuffix)
         self.initialOutputPath = os.path.join(self.outputPathBase, "initial")
         self.restartOutputPath = os.path.join(self.outputPathBase, "restart")
         self.fieldsToTest = fieldsToTest
