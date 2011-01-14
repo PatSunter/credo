@@ -25,6 +25,18 @@
 into other modules."""
 
 import os
+import inspect
+
+def getCallingPath(stackNum):
+    """Get the path of the calling stack at stackNum levels higher."""
+    # We need to add +1 to the stackNum calculation below because 
+    #  of the getCallingPath() function call itself.
+    callingFile = inspect.stack()[stackNum+1][1]
+    if callingFile == '<stdin>':
+        callingPath = os.getcwd()
+    else:    
+        callingPath = os.path.dirname(callingFile)
+    return callingPath
 
 def productCalc(*args, **kwds):
     """Basic implementation of itertools.product from Python 2.6:
