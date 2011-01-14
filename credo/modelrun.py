@@ -39,6 +39,7 @@ from credo.io import stgxml
 from credo.io import stgpath
 from credo.io import stgcmdline
 from credo.analysis import fields
+import credo.utils
 
 # Global list of allowed Python types that can be saved as StGermain SimParams
 #  I.E. that StGermain's Dictionary knows how to handle.
@@ -191,9 +192,7 @@ class ModelRun:
         self.modelInputFiles = modelInputFiles
         if basePath is None:
             # Default to the path of the calling script
-            callingFile = inspect.stack()[1][1]
-            callingPath = os.path.dirname(callingFile)
-            self.basePath = callingPath
+            self.basePath = credo.utils.getCallingPath(1)
         else:
             self.basePath = basePath
         self.basePath = os.path.abspath(self.basePath)    
