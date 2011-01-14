@@ -50,6 +50,10 @@ class SciBenchmarkTest(SysTest):
             basePath = credo.utils.getCallingPath(1)
         SysTest.__init__(self, "SciBenchmark", testName, basePath, 
             outputPathBase, nproc, timeout)
+        # In the case of SciBenchmarks, we will auto-create the 
+        # ModelSuite here, since it's up to the user to configure 
+        # this rather than being done automatically in genSuite.
+        self.mSuite = ModelSuite(self.outputPathBase)
 
     def addTestComp(self, testComp, testCompName):
         """Add a testComponent (:class:`~credo.systest.api.TestComponent`)
@@ -77,10 +81,10 @@ class SciBenchmarkTest(SysTest):
         For Sci Benchmarks, simply return the suite of models the user
         has constructed and added themselves, after ensuring any
         necessary test component ops are attached."""
-        if self.mSuite == None:
+        if len(self.mSuite.runs) < 1:
             raise AttributeError("Error: for SciBenchmark Tests, you as"\
-                " the user need to configure and set the ModelSuite used"\
-                " for the test and assign to the mSuite parameter.")
+                " the user need to configure the runs of the ModelSuite used"\
+                " for the test on the sysTest.mSuite parameter.")
         for tComp in self.testComponents.itervalues():
             for mRun in self.mSuite.runs:
                 tComp.attachOps(mRun)
