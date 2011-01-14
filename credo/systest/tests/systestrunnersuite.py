@@ -36,16 +36,16 @@ class SysTestRunnerTestCase(unittest.TestCase):
         self.basedir = os.path.realpath(tempfile.mkdtemp())
         self.stRunner = SysTestRunner()
         self.inputFiles = [os.path.join("input","TempDiffusion.xml")]
-        self.skelTest1 = SkeletonSysTest(self.inputFiles,
+        self.skelTest1 = SkeletonSysTest("skelTest1",
             "output/SkeletonTest1",
             statusToReturn=CREDO_PASS("testPass"), nproc=1)
-        self.skelTest2 = SkeletonSysTest(self.inputFiles, 
+        self.skelTest2 = SkeletonSysTest("skelTest2",
             "output/SkeletonTest2",
             statusToReturn=CREDO_FAIL("testFail"), nproc=1)
-        self.skelTest3 = SkeletonSysTest(self.inputFiles,
+        self.skelTest3 = SkeletonSysTest("skelTest3",
             "output/SkeletonTest3",
             statusToReturn=CREDO_ERROR("testError"), nproc=1)
-        self.skelTest4 = SkeletonSysTest(self.inputFiles,
+        self.skelTest4 = SkeletonSysTest("skelTest4",
             "output/SkeletonTest4",
             statusToReturn=CREDO_PASS("testPass2"), nproc=1)
         for skelTest in [self.skelTest1, self.skelTest2, self.skelTest3,

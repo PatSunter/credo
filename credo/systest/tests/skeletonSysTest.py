@@ -22,7 +22,9 @@
 ##  MA  02110-1301  USA
 
 
-from credo.systest.api import SysTest, CREDO_PASS, CREDO_FAIL
+import credo.utils
+from credo.systest.api import SysTest, SingleModelSysTest, \
+    CREDO_PASS, CREDO_FAIL
 from credo.modelsuite import ModelSuite
 
 class SkeletonSysTest(SysTest):
@@ -30,13 +32,45 @@ class SkeletonSysTest(SysTest):
 
     description = "Skeleton system test."
 
-    def __init__(self, inputFiles, outputPathBase,
-            statusToReturn, nproc=1,
-            paramOverrides=None, solverOpts=None,
-            basePath=None, nameSuffix=None, timeout=None):
-        SysTest.__init__(self, inputFiles, outputPathBase, nproc,
-            paramOverrides, solverOpts, "Skeleton",
-            basePath, nameSuffix, timeout)        
+    def __init__(self, testName, outputPathBase, statusToReturn, 
+            basePath=None, nproc=1, timeout=None):
+        if basePath is None:
+            # Since expect this class to be used directly,
+            #  get calling path 1 levels up
+            basePath = credo.utils.getCallingPath(1)
+        SysTest.__init__(self, "SkeletonSysTest", testName,
+            basePath, outputPathBase, nproc, timeout)
+        self.statusToReturn = statusToReturn    
+    
+    def genSuite(self):
+        # an empty suite
+        self.mSuite = ModelSuite(outputPathBase=self.outputPathBase)
+        return self.mSuite
+    
+    def checkResultValid(self, resultsSet):
+        pass
+
+    def getStatus(self, resultsSet):
+        self.testStatus = self.statusToReturn
+        return self.testStatus
+    
+    def _writeXMLCustomSpec(self, specNode):
+        pass
+
+
+class SkeletonSingleModelSysTest(SingleModelSysTest):
+    """A Skeleton system test class, used for testing."""
+
+    description = "Skeleton system test."
+
+    def __init__(self, inputFiles, outputPathBase, statusToReturn, 
+            basePath=None, nproc=1, timeout=None,
+            paramOverrides=None, solverOpts=None, nameSuffix=None):
+        SingleModelSysTest.__init__(self, "SkeletonSingleModelSysTest",
+            inputFiles, outputPathBase,
+            basePath, nproc, timeout,
+            paramOverrides, solverOpts, nameSuffix)
+
         self.statusToReturn = statusToReturn    
     
     def genSuite(self):

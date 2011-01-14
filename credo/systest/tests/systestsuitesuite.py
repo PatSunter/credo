@@ -27,7 +27,7 @@ import tempfile
 import unittest
 
 from credo.systest import SysTestSuite, CREDO_PASS, CREDO_FAIL, CREDO_ERROR
-from skeletonSysTest import SkeletonSysTest
+from skeletonSysTest import SkeletonSingleModelSysTest
 
 class SysTestSuiteTestCase(unittest.TestCase):
 
@@ -41,21 +41,21 @@ class SysTestSuiteTestCase(unittest.TestCase):
         shutil.rmtree(self.basedir)
 
     def test_addStdTest(self):
-        self.stSuite.addStdTest(SkeletonSysTest, self.inputFiles, 
+        self.stSuite.addStdTest(SkeletonSingleModelSysTest, self.inputFiles, 
             statusToReturn=CREDO_PASS("testPass"), nproc=1)
         sysTestsList = self.stSuite.sysTests
         self.assertEqual(len(self.stSuite.sysTests), 1)
         addedTest = sysTestsList[0]
-        self.assertTrue(isinstance(addedTest, SkeletonSysTest))
-        self.assertEqual(addedTest.testType, "Skeleton")
+        self.assertTrue(isinstance(addedTest, SkeletonSingleModelSysTest))
+        self.assertEqual(addedTest.testType, "SkeletonSingleModelSysTest")
         self.assertEqual(addedTest.inputFiles, self.inputFiles)
         self.assertEqual(addedTest.testStatus, None)
-        self.stSuite.addStdTest(SkeletonSysTest, self.inputFiles, 
+        self.stSuite.addStdTest(SkeletonSingleModelSysTest, self.inputFiles, 
             statusToReturn=CREDO_FAIL("testFail"), nproc=1)
         self.assertEqual(len(self.stSuite.sysTests), 2)
         secondTest = sysTestsList[1]
-        self.assertTrue(isinstance(addedTest, SkeletonSysTest))
-        self.assertEqual(addedTest.testType, "Skeleton")
+        self.assertTrue(isinstance(addedTest, SkeletonSingleModelSysTest))
+        self.assertEqual(addedTest.testType, "SkeletonSingleModelSysTest")
         self.assertEqual(addedTest.inputFiles, self.inputFiles)
         self.assertEqual(addedTest.testStatus, None)
     
@@ -88,9 +88,9 @@ class SysTestSuiteTestCase(unittest.TestCase):
         self.assertEqual(self.stSuite.subSuites[0], subSuite1)
         self.assertEqual(self.stSuite.subSuites[1], subSuite2)
         # Now try add some tests to these suites
-        self.stSuite.addStdTest(SkeletonSysTest, self.inputFiles, 
+        self.stSuite.addStdTest(SkeletonSingleModelSysTest, self.inputFiles, 
             statusToReturn=CREDO_FAIL("testFail"), nproc=1)
-        subSuite2.addStdTest(SkeletonSysTest, self.inputFiles, 
+        subSuite2.addStdTest(SkeletonSingleModelSysTest, self.inputFiles, 
             statusToReturn=CREDO_PASS("testPass"), nproc=1)
         self.assertEqual(len(self.stSuite.sysTests), 1)
         self.assertEqual(len(self.stSuite.subSuites[0].sysTests), 0)
