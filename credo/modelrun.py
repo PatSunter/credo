@@ -179,7 +179,7 @@ class ModelRun:
 
     solverOptsRecordFilename = "solverOptsUsed.opt"
 
-    def __init__(self, name, modelInputFiles, outputPath, basePath=None,
+    def __init__(self, name, modelInputFiles, outputPath=None, basePath=None,
             logPath="log",
             cpReadPath=None, nproc=1, simParams=None,
             paramOverrides=None, solverOpts=None, xmlExtras=None,
@@ -190,13 +190,17 @@ class ModelRun:
         if isinstance(modelInputFiles, str):
             modelInputFiles = [modelInputFiles]
         self.modelInputFiles = modelInputFiles
+        if outputPath is None:
+            # Sensible default is output/name
+            self.outputPath = os.path.join("output", name)
+        else:
+            self.outputPath = self.setPath(outputPath)
         if basePath is None:
             # Default to the path of the calling script
             self.basePath = credo.utils.getCallingPath(1)
         else:
             self.basePath = basePath
         self.basePath = os.path.abspath(self.basePath)    
-        self.outputPath = self.setPath(outputPath)
         self.cpReadPath = self.setPath(cpReadPath)
         self.logPath = self.setPath(logPath)
         self.jobParams = JobParams(nproc=nproc)
