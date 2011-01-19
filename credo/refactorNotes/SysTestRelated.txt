@@ -7,6 +7,14 @@ For SysTests (XML record writing):
   - then these can be queried, auto-magically saved to XML records,
      or presented in displays by stuff like ReportLab
 
+Make test Suite stuff a "Register" factory process like StGermain, where
+CREDO manages a global register of test cases that have been set up:
+ - e.g. testSuite.credo.SysTestSuite("Underworld", "SciBench-ThermalConv")
+ - and then you could add appropriate tests easily, and if your master
+    script involves importing multiple benchmark scripts,
+    they will all be in same suite
+ - Hmmm - neat but maybe too "magical" so user has to learn behind scenes?   
+
 Test result and analytic test generation:
 -----------------------------------------
 
