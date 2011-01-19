@@ -55,11 +55,12 @@ class SciBenchmarkTest(SysTest):
         # this rather than being done automatically in genSuite.
         self.mSuite = ModelSuite(self.outputPathBase)
 
-    def addTestComp(self, testComp, testCompName):
+    def addTestComp(self, testCompName, runs, testComp):
         """Add a testComponent (:class:`~credo.systest.api.TestComponent`)
         with name testCompName to the list of test
         components to be applied as part of determining if the benchmark
         has passed."""
+        # TODO: handle the runs parameter.
         if not isinstance(testComp, TestComponent):
             raise TypeError("Test component passed in to be added to"\
                 " benchmark, '%s', not an instance of a TestComponent."\
