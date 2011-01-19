@@ -1,0 +1,23 @@
+CREDO Refactoring ideas:
+
+Specific ideas:
+-------
+
+
+Improving JobRunner, ModelResult, ModelSuite etc
+------------------------------------------------
+
+- Note: from Sharples' examples, should probably force writing of model
+  run and model result
+   XMLs at run-time, otherwise the user will likely forget this step 
+   (perhaps as a param to runModel that's set to True by default).
+
+- Adding timing functionality to the JobRunner
+^^^^^^^^^^^
+
+- This will also involve stuff like improving the way suites are
+  generated (e.g. with iterators)
+
+- And also factor into this the command line input processing
+ (perhaps a PETSc or Pyre like
+   system for managing this, where objects can handle as appropriate).
