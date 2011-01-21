@@ -346,7 +346,8 @@ class ModelSuite:
                 return runI
 
     def preRunCleanup(self):
-        """Tasks to do before running to clean up directories."""
+        """Convenience function to call all sub-methods for tasks to do
+        before running to clean up directories."""
         self.cleanAllOutputPaths()
         self.cleanAllLogFiles()
 
