@@ -345,6 +345,11 @@ class ModelSuite:
             if modelRun.name == runName:
                 return runI
 
+    def preRunCleanup(self):
+        """Tasks to do before running to clean up directories."""
+        self.cleanAllOutputPaths()
+        self.cleanAllLogFiles()
+
     def cleanAllOutputPaths(self):
         '''Remove all files in each model's output path. Useful to get rid of
         results still there from previous jobs. Doesn't delete sub-directories,
