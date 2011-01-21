@@ -75,6 +75,7 @@ class ImageReferenceTest(api.SingleModelSysTest):
         self.imageTols = imageTols
         if self.imageTols is not None:
             assert isinstance(self.imageTols, dict)
+        self.imageComps = {}
         for ii, imageFilename in enumerate(self.imagesToTest):
             if self.imageTols is not None and imageFilename in self.imageTols:
                 imageTol = self.imageTols[imageFilename]
@@ -122,7 +123,7 @@ class ImageReferenceTest(api.SingleModelSysTest):
         mRun = self._createDefaultModelRun(self.testName, self.outputPathBase)
         mRun.simParams = SimParams(nsteps=self.runSteps,
             cpevery=0, dumpevery=1)
-        mSuite.addRun(mRun, "Run the model, and check images against "\
+        self.mSuite.addRun(mRun, "Run the model, and check images against "\
             "previously generated reference images.")
 
     def configureTestComps(self):    
