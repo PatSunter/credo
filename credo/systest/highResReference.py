@@ -143,7 +143,7 @@ class HighResReferenceTest(SingleModelSysTest):
     
     def configureTestComps(self):
         assert len(self.mSuite.runs) == 1
-        self.testComps[self.fTestName][0] = self.fTests
+        self.testComps[0][self.fTestName] = self.fTests
 
     def checkModelResultsValid(self, resultsSet):
         """See base class :meth:`~credo.systest.api.SysTest.checkModelResultsValid`."""
