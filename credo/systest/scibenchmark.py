@@ -42,12 +42,14 @@ class SciBenchmarkTest(SysTest):
 
     description = '''Runs a user-defined science benchmark.'''
 
-    def __init__(self, testName, outputPathBase,
+    def __init__(self, testName, outputPathBase=None,
             basePath=None, nproc=1, timeout=None):
         if basePath is None:
             # Since expect this class to be used directly,
             #  get calling path 1 levels up
             basePath = credo.utils.getCallingPath(1)
+        if outputPathBase == None:
+            outputPathBase = os.path.join("output", testName)
         SysTest.__init__(self, "SciBenchmark", testName, basePath, 
             outputPathBase, nproc, timeout)
         # In the case of SciBenchmarks, we will auto-create the 
@@ -55,17 +57,28 @@ class SciBenchmarkTest(SysTest):
         # this rather than being done automatically in genSuite.
         self.mSuite = ModelSuite(self.outputPathBase)
 
-    def addTestComp(self, testCompName, runs, testComp):
+    # TODO : move to base class?
+    def addTestComp(self, testCompName, run, testComp):
         """Add a testComponent (:class:`~credo.systest.api.TestComponent`)
         with name testCompName to the list of test
         components to be applied as part of determining if the benchmark
         has passed."""
-        # TODO: handle the runs parameter.
         if not isinstance(testComp, TestComponent):
             raise TypeError("Test component passed in to be added to"\
                 " benchmark, '%s', not an instance of a TestComponent."\
                 % (testComp))
-        self.testComponents[testCompName] = testComp
+        if not len(self.testComps) == len(self.mSuite.runs):
+            raise AttributeError("Error, the array of testComps hasn't yet "\
+                "been properly set up to match the modelSuite's number of "\
+                "runs (%d). Have you run both %s and %s already?"\
+                % (len(self.mSuite.runs), "self.mSuite.genSuite()", \
+                    "self.setupEmptyTestCompsList()"))
+        try:
+            self.testComps[run][testCompName] = testComp
+        except IndexError:
+            raise ValueError("Error, 'run' passed in must be < the number"\
+                " of runs in this system test's ModelSuite, currently %d"\
+                % (len(self.testComps)))
 
     def _writeXMLCustomSpec(self, specNode):
         # TODO: write info about the modelRuns making up the suite ...
@@ -83,29 +96,31 @@ class SciBenchmarkTest(SysTest):
         has constructed and added themselves, after ensuring any
         necessary test component ops are attached."""
         if len(self.mSuite.runs) < 1:
-            raise AttributeError("Error: for SciBenchmark Tests, you as"\
+            raise AttributeError("Error: test's ModelSuite has zero runs"\
+                " currently:-for SciBenchmark Tests, you as"\
                 " the user need to configure the runs of the ModelSuite used"\
                 " for the test on the sysTest.mSuite parameter.")
-        for tComp in self.testComponents.itervalues():
-            for mRun in self.mSuite.runs:
-                tComp.attachOps(mRun)
-        return self.mSuite
 
-    def checkResultValid(self, resultsSet):
-        """See base class :meth:`~credo.systest.api.SysTest.checkResultValid`."""
+    def configureTestComps(self):
+        #TODO: how do we let the user over-ride this?
+        raise NotImplementedError
+
+    def checkModelResultsValid(self, resultsSet):
+        """See base class :meth:`~credo.systest.api.SysTest.checkModelResultsValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:
             pass
 
+    #TODO: is this function still valid? Should just the default one be used?
     def getStatus(self, resultsSet):
         """See base class :meth:`~credo.systest.api.SysTest.getStatus`."""
-        self.checkResultValid(resultsSet)
+        self.checkModelResultsValid(resultsSet)
         mResult = resultsSet[0]
 
         overallResult = True
         failedCompNames = []
-        for tCompName, tComp in self.testComponents.iteritems():
+        for tCompName, tComp in self.testComps.iteritems():
             result = tComp.check(resultsSet)
             if not result:
                 overallResult = False

@@ -30,7 +30,6 @@ import inspect
 from xml.etree import ElementTree as etree
 
 import credo.jobrunner
-from credo.jobrunner.api import ModelRunError
 import credo.io.stgxml
 from credo.systest.api import *
 
@@ -64,56 +63,20 @@ class SysTestRunner:
     def __init__(self):
         return
 
-    def runTest(self, sysTest):
-        """Run a given sysTest, and return the 
-        :class:`credo.systest.api.SysTestResult` it produces.
-        Will also write an XML record of the System test, and each ModelRun
-        and ModelResult in the suite that made up the test."""
-        # Change directories in sys test run, just to be careful
-        startDir = os.getcwd()
-        os.chdir(sysTest.basePath)
-        mSuite = sysTest.genSuite()
-        mSuite.cleanAllOutputPaths()
-        mSuite.cleanAllLogFiles()
-        print "Writing pre-test info to XML"
-        sysTest.writePreRunXML()
-        mSuite.writeAllModelRunXMLs()
-        try:
-            # TODO: maybe could allow job-runner type to be over-ridden as
-            # a command line argument, or set on the constructor.
-            jobRunner = credo.jobrunner.defaultRunner()
-            suiteResults = jobRunner.runSuite(mSuite,
-                maxRunTime=sysTest.timeout)
-        except ModelRunError, mre:
-            suiteResults = None
-            testResult = sysTest.setErrorStatus(str(mre))
-        else:    
-            print "Checking test result:"
-            testResult = sysTest.getStatus(suiteResults)
-            # TODO: should we get the below to be run and we write model results
-            # even if there was an error?
-            mSuite.writeAllModelResultXMLs()
-
-        print "Test result was %s" % testResult
-        if isinstance(testResult, CREDO_ERROR):
-            print "Error msg: %s" % (testResult.detailMsg)
-        outFilePath = sysTest.updateXMLWithResult(suiteResults)
-        testResult.setRecordFile(outFilePath)
-        print "Saved test result to %s" % (outFilePath)
-        os.chdir(startDir)
-        return testResult
-
     def runTests(self, sysTests, projName=None, suiteName=None,
             printSummary=True):
         """Run all tests in the sysTests list.
-        Will also save all appropriate XMLs (as discussed in :meth:`.runTest`)
-        and print a summary of results."""
+        Will also save all appropriate XMLs and print a summary of results."""
         results = []
         testTotal = len(sysTests)
         for testI, sysTest in enumerate(sysTests):
+            sysTest.setupTest()
+            #TODO: perhaps need to pass jobRunner in when running tests
+            # or use as a factory method?
+            jobRunner = credo.jobrunner.defaultRunner()
             print "Running System test %d/%d, with name '%s':" \
                 % (testI+1, testTotal, sysTest.testName)
-            results.append(self.runTest(sysTest))
+            results.append(sysTest.runTest(jobRunner))
         if printSummary:
             self.printResultsSummary(sysTests, results, projName, suiteName)
         return results

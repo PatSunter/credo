@@ -201,6 +201,7 @@ class FieldCvgWithScaleTest(TestComponent):
         self.fCvgMeetsReq = {}
         self.fCvgResults = {}
 
+    # TODO: will take a set of modelRuns
     def attachOps(self, modelRun):
         """Implements base class
         :meth:`credo.systest.api.TestComponent.attachOps`."""

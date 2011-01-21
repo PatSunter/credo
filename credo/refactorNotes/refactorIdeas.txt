@@ -1,8 +1,59 @@
 CREDO Refactoring ideas:
 
+Refactoring the MultiRunTestComponent stuff
+Updating documentation! Esp SciBenchmark section.
+
+Big picture:
+--------
+
+- N.B: Once new Benchmarking features enabled,
+    ... make a specific pitch to Steve and Louis as well.
+may be worth emailing Underworld-users about new release ...
+    ... and also specifically people like Dave May, Sergio, Einat, and Katie 
+       Cooper (inernationally)
+        (esp since Dave May working with Matt)
+    ... and Margaret, Fabio
+    ... and Matt K ... talk about run at CIG
+
+- Tutorials :- screencasts.
+
+- "CREDO" should combine really well with iPython sessions potentially, for
+   interactive model exploration, with results saved
+   (Some mega meta-interpreter hacking here would be cool, to add credo
+     methods to save script history nicely for you etc)
+- CREDO "cookbook" section in scripts, to allow e.g. the Model time
+   per timestep to be looked at.
+
 Specific ideas:
 -------
 
+- TODO: rename files in SysTest so "testComps" have obvious name. 
+- NB: is basePath still necessary on both test suite and model suite?
+  (perhaps use just for model suite - hmmm ... although we need to
+   stay in the same path to do suite checks)
+
+TestComps API:
+ - TODO: make it easier to create TC Status objects at end of testComps
+ - Also parameterise the 'passMsg' vs 'failMsg' for SingleRunTestComponents
+
+SysTest API:
+ - Collapse "configureSuite" and "genSuite" stuff?
+- TODO: add setup() func to standard API of sysTests, pass in job runner
+   - and search out all examples of this in client  codes to change.
+   - add a preRunCheck() phase, to check e.g. reference dir exists
+      and contains correct content?
+- Move "addTestComp()" method from SciBenchmark to base SysTest class?      
+
+ModelSuite API:
+- NB: should runSuite method push down writing of model result XMLs
+   inside there by default? (Think so)
+
+JobRunner API:
+ - idea: make jobRunner save model run XML and model result XML by default,
+    unless we use cmd line keywords to tell it not no.
+
+Overall:
+- Use Python's logging system for reporting/printing
 
 Improving JobRunner, ModelResult, ModelSuite etc
 ------------------------------------------------

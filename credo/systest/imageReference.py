@@ -80,12 +80,12 @@ class ImageReferenceTest(api.SingleModelSysTest):
                 imageTol = self.imageTols[imageFilename]
             else:
                 imageTol = self.defImageTol
-            testName = 'Image(s) Reference Solution compare - %s' \
+            tcName = 'Image(s) Reference Solution compare - %s' \
                 % imageFilename
-            self.testComponents[testName] = ImageCompTest(imageFilename,
+            self.imageComps[tcName] = ImageCompTest(imageFilename,
                 imageTol, refPath=self.expectedSolnPath)
 
-    def setup(self):
+    def setup(self, jobRunner):
         '''Do a run to create the reference images to use.'''
 
         print "Running the model to create reference images after %d"\
@@ -95,13 +95,12 @@ class ImageReferenceTest(api.SingleModelSysTest):
             self.expectedSolnPath)
         mRun.simParams = SimParams(nsteps=self.runSteps, cpevery=0,
             dumpevery=1)
-        for imageComp in self.testComponents.itervalues():
+        for imageComp in self.imageComps.itervalues():
             imageComp.attachOps(mRun)
         mRun.writeInfoXML()
-        jobRunner = credo.jobrunner.defaultRunner()
         result = jobRunner.runModel(mRun)
         # Now check the required images were actually created
-        for imageComp in self.testComponents.itervalues():
+        for imageComp in self.imageComps.itervalues():
             refImageFilename = os.path.join(self.expectedSolnPath,
                 imageComp.imageFilename)
             if not os.path.exists(refImageFilename):
@@ -111,7 +110,6 @@ class ImageReferenceTest(api.SingleModelSysTest):
                     " generate the image correctly, and/or the image filename"\
                     " you specified in your test is correct."\
                     % refImageFilename)
-                
         result.writeRecordXML()
 
     # TODO: a pre-check phase - check the reference dir exists?
@@ -121,20 +119,18 @@ class ImageReferenceTest(api.SingleModelSysTest):
 
         For this test, just a single model run is needed, to run
         the model and compare against the reference solution."""
-        mSuite = ModelSuite(outputPathBase=self.outputPathBase)
-        self.mSuite = mSuite
-        # Normal mode
         mRun = self._createDefaultModelRun(self.testName, self.outputPathBase)
         mRun.simParams = SimParams(nsteps=self.runSteps,
             cpevery=0, dumpevery=1)
-        for imageComp in self.testComponents.itervalues():
-            imageComp.attachOps(mRun)
         mSuite.addRun(mRun, "Run the model, and check images against "\
             "previously generated reference images.")
-        return mSuite
 
-    def checkResultValid(self, resultsSet):
-        """See base class :meth:`~credo.systest.api.SysTest.checkResultValid`."""
+    def configureTestComps(self):    
+        assert len(self.mSuite.runs) == 1
+        self.testComps[0] = self.imageComps
+
+    def checkModelResultsValid(self, resultsSet):
+        """See base class :meth:`~credo.systest.api.SysTest.checkModelResultsValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:

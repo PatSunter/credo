@@ -44,10 +44,15 @@ class SkeletonSysTest(SysTest):
     
     def genSuite(self):
         # an empty suite
-        self.mSuite = ModelSuite(outputPathBase=self.outputPathBase)
-        return self.mSuite
+        pass
     
-    def checkResultValid(self, resultsSet):
+    def configureTestComps(self):
+        pass
+
+    def attachAllTestCompOps(self):
+        pass
+
+    def checkModelResultsValid(self, resultsSet):
         pass
 
     def getStatus(self, resultsSet):
@@ -78,7 +83,7 @@ class SkeletonSingleModelSysTest(SingleModelSysTest):
         self.mSuite = ModelSuite(outputPathBase=self.outputPathBase)
         return self.mSuite
     
-    def checkResultValid(self, resultsSet):
+    def checkModelResultsValid(self, resultsSet):
         pass
 
     def getStatus(self, resultsSet):

@@ -69,28 +69,26 @@ class AnalyticTest(SingleModelSysTest):
             inputFiles, outputPathBase,
             basePath, nproc, timeout,
             paramOverrides, solverOpts, nameSuffix)
-        self.testComponents[self.fTestName] = FieldWithinTolTest(
-            defFieldTol=defFieldTol, fieldTols=fieldTols)
+        self.fTests = FieldWithinTolTest(defFieldTol=defFieldTol,
+            fieldTols=fieldTols)
 
     def genSuite(self):
         """See base class :meth:`~credo.systest.api.SysTest.genSuite`.
 
         For this test, just a single model run is needed, to run
         the model and compare against the analytic solution."""
-        mSuite = ModelSuite(outputPathBase=self.outputPathBase)
-        self.mSuite = mSuite
-
+        #Hmmm ... could this be refactored as standard practice?
+        # so base class creates suite etc?
         mRun = self._createDefaultModelRun(self.testName, 
             self.outputPathBase)
-        # For analytic test, read fields to analyse from the XML
-        fTests = self.testComponents[self.fTestName]
-        fTests.attachOps(mRun)
-        mSuite.addRun(mRun, "Run the model and generate analytic soln.")
+        self.mSuite.addRun(mRun, "Run the model and generate analytic soln.")
 
-        return mSuite
+    def configureTestComps(self):
+        self.testComps[0][self.fTestName] = self.fTests
 
-    def checkResultValid(self, resultsSet):
-        """See base class :meth:`~credo.systest.api.SysTest.checkResultValid`."""
+    def checkModelResultsValid(self, resultsSet):
+        """See base class
+        :meth:`~credo.systest.api.SysTest.checkModelResultsValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:

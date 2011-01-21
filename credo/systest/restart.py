@@ -84,7 +84,8 @@ class RestartTest(SingleModelSysTest):
         if self.fullRunSteps % 2 != 0:
             raise ValueError("fullRunSteps parameter must be even so restart"\
                 " can occur half-way - but you provided %d." % (fullRunSteps))
-        self.testComponents[self.fTestName] = FieldWithinTolTest(
+        #TODO Hmmm ... hard-coding index here is a bit hacky
+        self.fTests = FieldWithinTolTest(
             fieldsToTest=self.fieldsToTest, defFieldTol=defFieldTol,
             fieldTols=fieldTols,
             useReference=True,
@@ -98,16 +99,13 @@ class RestartTest(SingleModelSysTest):
         one to initally run the requested Model and save the results,
         and a 2nd to restart mid-way through, so that the results can
         be compared at the end."""
-        mSuite = ModelSuite(outputPathBase=self.outputPathBase)
-        self.mSuite = mSuite
-
         # Initial run
         initRun = self._createDefaultModelRun(self.testName+"-initial",
             self.initialOutputPath)
         initRun.simParams = SimParams(nsteps=self.fullRunSteps,
             cpevery=self.fullRunSteps/2, dumpevery=0)
         initRun.cpFields = self.fieldsToTest
-        mSuite.addRun(initRun, "Do the initial full run and checkpoint"\
+        self.mSuite.addRun(initRun, "Do the initial full run and checkpoint"\
             " solutions.")
         # Restart run
         resRun = self._createDefaultModelRun(self.testName+"-restart",
@@ -115,16 +113,15 @@ class RestartTest(SingleModelSysTest):
         resRun.simParams = SimParams(nsteps=self.fullRunSteps/2,
             cpevery=0, dumpevery=0, restartstep=self.fullRunSteps/2)
         resRun.cpReadPath = self.initialOutputPath    
-        fTests = self.testComponents[self.fTestName]
-        fTests.attachOps(resRun)
-        resRunI = mSuite.addRun(resRun, "Do the restart run and check results"\
-            " at end match initial.")
-        # Only test fields on the restart run
-        self.setResIndicesToTest([resRunI])
-        return mSuite
+        self.resRunI = self.mSuite.addRun(resRun,
+            "Do the restart run and check results at end match initial.")
 
-    def checkResultValid(self, resultsSet):
-        """See base class :meth:`~credo.systest.api.SysTest.checkResultValid`."""
+    def configureTestComps(self):
+        # Only test fields on the restart run
+        self.testComps[self.resRunI][self.fTestName] = self.fTests
+
+    def checkModelResultsValid(self, resultsSet):
+        """See base class :meth:`~credo.systest.api.SysTest.checkModelResultsValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:

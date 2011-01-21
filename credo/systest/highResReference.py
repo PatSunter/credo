@@ -90,14 +90,14 @@ class HighResReferenceTest(SingleModelSysTest):
         self.highResRatio = highResRatio
         if self.highResRatio <= 1.0:
             raise ValueError("highResRatio must be >= 1")
-        self.testComponents[self.fTestName] = FieldWithinTolTest(
-            fieldsToTest=self.fieldsToTest, defFieldTol=defFieldTol,
+        self.fTests = FieldWithinTolTest(fieldsToTest=self.fieldsToTest,
+            defFieldTol=defFieldTol,
             fieldTols=fieldTols,
             useHighResReference=True,
             referencePath=self.expectedSolnPath,
             testTimestep=self.runSteps)
 
-    def setup(self):
+    def setup(self, jobRunner):
         '''Do a run to create the reference solution to use.'''
         resParams = ("elementResI", "elementResJ", "elementResK")
         ffile = stgxml.createFlattenedXML(self.inputFiles)
@@ -122,7 +122,6 @@ class HighResReferenceTest(SingleModelSysTest):
         mRun.cpFields = self.fieldsToTest
         mRun.writeInfoXML()
         mRun.analysisXMLGen()
-        jobRunner = credo.jobrunner.defaultRunner()
         result = jobRunner.runModel(mRun)
         # It's conceivable this could be useful, if we store results about
         # e.g. solver solution times etc.
@@ -136,20 +135,18 @@ class HighResReferenceTest(SingleModelSysTest):
 
         For this test, just a single model run is needed, to run
         the model and compare against the reference solution."""
-        mSuite = ModelSuite(outputPathBase=self.outputPathBase)
-        self.mSuite = mSuite
-        # Normal mode
         mRun = self._createDefaultModelRun(self.testName, self.outputPathBase)
         mRun.simParams = SimParams(nsteps=self.runSteps,
             cpevery=0, dumpevery=0)
-        fTests = self.testComponents[self.fTestName]
-        fTests.attachOps(mRun)
-        mSuite.addRun(mRun, "Run the model, and check results against "\
+        self.mSuite.addRun(mRun, "Run the model, and check results against "\
             "previously generated reference solution.")
-        return mSuite
+    
+    def configureTestComps(self):
+        assert len(self.mSuite.runs) == 1
+        self.testComps[self.fTestName][0] = self.fTests
 
-    def checkResultValid(self, resultsSet):
-        """See base class :meth:`~credo.systest.api.SysTest.checkResultValid`."""
+    def checkModelResultsValid(self, resultsSet):
+        """See base class :meth:`~credo.systest.api.SysTest.checkModelResultsValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:

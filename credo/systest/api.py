@@ -34,6 +34,7 @@ import copy
 from datetime import timedelta
 from xml.etree import ElementTree as etree
 import credo.modelrun as mrun
+import credo.modelsuite as msuite
 import credo.io.stgxml
 import credo.io.stgpath as stgpath
 import credo.utils
@@ -171,16 +172,6 @@ class SysTest:
        The suite of Models that will be run as part of the test. Initially
        None, must be filled in as part of calling :attr:`.genSuite`.
 
-    .. attribute:: testStatus
-
-       Status of the test. Initially `None`, once the test has been run
-       the :class:`.SysTestResult` generated will be saved here.
-
-    .. attribute:: testComponents
-
-       A list of any :class:`.TestComponent` classes used as part of 
-       performing the test.
-    
     .. attribute:: nproc
 
        Number of processors to be used for the test. See 
@@ -193,11 +184,21 @@ class SysTest:
        the result of the test will be set to an Error.
        If timeout is None, 0 or negative, no timeout will be applied.
 
-    .. attribute:: resIndicesToTest
-    
-       If this is set to other than None, then only these indices will
-       be passed to TestComponents to check as part of the 
-       :attr:`~.getStatus` function.
+    .. attribute:: testStatus
+
+       Status of the test. Initially `None`, once the test has been run
+       the :class:`.SysTestResult` generated will be saved here.
+
+    .. attribute:: testComps
+
+       A list of any :class:`.TestComponent` classes used as part of 
+       performing the test (one entry in the list for each run, one
+       test for )
+
+    .. attribute:: testComps
+
+       A dictionary of any :class:`.MultiRunTestComponent` classes
+       used as part of performing the test.
     """
     def __init__(self, testType, testName, basePath, outputPathBase, 
             nproc=1, timeout=None):
@@ -210,15 +211,65 @@ class SysTest:
         self.timeout = timeout
         ### - attributes created in process of testing.
         self.mSuite = None
+        self.testComps = []
+        self.multiRunTestComps = {}
         self.testStatus = None
-        self.testComponents = {}
-        self.resIndicesToTest = None
+        self.tcResults = []
 
-    def setup(self):
+    def setup(self, jobRunner):
         '''For the setup phase of tests.
         Since not all tests need a setup phase, the default behaviour is to
         do nothing.'''
         pass
+
+    def setupTest(self):
+        # Change directories in sys test run, just to be careful
+        self.configureSuite()
+        self.mSuite.preRunCleanup()
+        self.setupEmptyTestCompsList()
+        self.configureTestComps()
+        #TODO: do we want to allow any custom post-proc opps here?
+    
+    def runTest(self, jobRunner):
+        """Run this sysTest, and return the 
+        :class:`~credo.systest.api.SysTestResult` it produces.
+        Will also write an XML record of the System test, and each ModelRun
+        and ModelResult in the suite that made up the test."""
+        startDir = os.getcwd()
+        os.chdir(self.basePath)
+        print "Attaching test component analysis ops to suite ModelRuns"
+        self.attachAllTestCompOps()
+        print "Writing pre-test info to XML"
+        self.writePreRunXML()
+        #TODO: subsume into modelSuite? run
+        self.mSuite.writeAllModelRunXMLs()
+        try:
+            suiteResults = jobRunner.runSuite(self.mSuite, 
+                maxRunTime=self.timeout)
+            self.mSuite.writeAllModelResultXMLs()
+        except ModelRunError, mre:
+            suiteResults = None
+            sysTestResult = self.setErrorStatus(str(mre))
+        else:    
+            print "Processing sys test result:"
+            sysTestResult = self.getStatus(suiteResults)
+            # TODO: Do we need to allow any custom post-proc here?
+            # Including custom getStatus?
+
+        print "Sys test result was %s" % sysTestResult
+        if isinstance(sysTestResult, CREDO_ERROR):
+            print "Error msg: %s" % (sysTestResult.detailMsg)
+        outFilePath = self.updateXMLWithResult(suiteResults)
+        print "Saved test result to %s" % (outFilePath)
+        sysTestResult.setRecordFile(outFilePath)
+        os.chdir(startDir)
+        return sysTestResult
+
+    def configureSuite(self):
+        # TODO: perhaps this could be key func to over-ride?
+        self.mSuite = msuite.ModelSuite(outputPathBase=self.outputPathBase)
+        # TODO: could do some cleanup here? Instead of master?
+        self.genSuite()
 
     def genSuite(self):
         """Must return a :class:`credo.modelsuite.ModelSuite`
@@ -234,32 +285,33 @@ class SysTest:
             raise NotImplementedError("Error, base class, and no mSuite"\
                 " attribute set.")
 
-    def checkResultValid(self, resultsSet):
+    def setupEmptyTestCompsList(self):    
+        assert len(self.mSuite.runs) > 0
+        # Zero test components here, now we know number of runs
+        self.testComps = [{} for mRun in self.mSuite.runs]
+
+    def configureTestComps(self):
+        raise NotImplementedError("Error, abstract base method - "\
+            "please implement.")
+        
+    def attachAllTestCompOps(self):
+        """Useful in :meth:`.configureTestComps`.
+        but default is to call 'attachOps' method of all testComps
+        (assumes testComps were already set up and declared in
+        constructor)"""
+        assert len(self.testComps) > 0
+        assert len(self.mSuite.runs) == len(self.testComps)
+        for runI, testCompsForRun in enumerate(self.testComps):
+            for tcName, testComp in testCompsForRun.iteritems():
+                testComp.attachOps(self.mSuite.runs[runI])
+        #TODO: multiRunTestComps
+
+    def checkModelResultsValid(self, resultsSet):
         """Check that the given result set is "valid", i.e. exists, has 
         the right number of model results, and model results have necessary
         analysis ops associated with them to allow aspects of test to
         evaluate properly."""
-
-    def setResIndicesToTest(self, resultIndices):
-        """Sets which result indices should be checked."""
-        for ii in resultIndices:
-            if type(ii) is not int:
-                raise TypeError("All result Indices must be integers.")
-            elif ii < 0:
-                raise ValueError("All result Indices must be positive.")
-        self.resIndicesToTest = resultIndices
-
-    def getResultsSubset(self, resultsSet):
-        if self.resIndicesToTest is None:
-            subSet = resultsSet
-        else:
-            subSet = []
-            for ii in self.resIndicesToTest:
-                if ii >= len(resultsSet):
-                    raise ValueError("Error, a result index to test is"\
-                        " greater than the number of results in the suite.")
-                subSet.append(resultsSet[ii])
-        return subSet
+        pass
 
     def getStatus(self, resultsSet):
         """After a suite of runs created by :meth:".genSuite"
@@ -281,21 +333,34 @@ class SysTest:
             raise AttributeError("Please define 'passMsg' and 'failMsg'"\
                 " attributes of your SysTest class to use the defualt"\
                 " getStatus method.")
-
-        # In case the test is designed to only operate on a sub-set of 
-        #  the results, update here.
-        resultsSet = self.getResultsSubset(resultsSet)
-        self.checkResultValid(resultsSet)
+        if len(resultsSet) != len(self.testComps):
+            raise ValueError("Model results passed in to getStatus must"\
+                " be same length array as number of testComponents specified"\
+                " (lens are %d and %d, respectively)" %\
+                (len(resultsSet), len(self.testComps)))
+        self.checkModelResultsValid(resultsSet)
         allPassed = True
-        for tComp in self.testComponents.itervalues():
-            result = tComp.check(resultsSet)
-            if not result:
-                allPassed = False
-                testStatus = CREDO_FAIL(self.failMsg)
+        runPassed = [False for res in resultsSet]
+        self.tcResults = [{} for res in resultsSet]
+        # TODO: print some useful stuff - inc from the generator
+        # Do single run tests first
+        for runI, modelResult in enumerate(resultsSet):
+            for tcName, tComp in self.testComps[runI].iteritems():
+                tcResult = tComp.check(modelResult)
+                self.tcResults[runI][tcName] = tcResult
+
+            if all(self.tcResults[runI].itervalues()):
+                # TODO: print passed
+                print "All test components for run %d passed." % runI
+            else:
+                #Do not break - we want to do all checks for sys tests
+                runPassed[runI] = False
+                #TODO:- print how run failed.
         if allPassed:
-            testStatus = CREDO_PASS(self.passMsg)
-        self.testStatus = testStatus
-        return testStatus
+            self.testStatus = CREDO_PASS(self.passMsg)
+        else:
+            self.testStatus = CREDO_FAIL(self.failMsg)
+        return self.testStatus
     
     # TODO: here is where it could be useful to have a method to get all
     #  test components to do additional optional analysis, e.g. plotting
@@ -451,20 +516,29 @@ class SysTest:
         """Write necessary info for all test components used by this 
         system test before a run (eg their specification info."""
         tcListNode = etree.SubElement(baseNode, 'testComponents')
-        for tcName, testComponent in self.testComponents.iteritems():
-            testComponent.writePreRunXML(tcListNode, tcName)
+        runsNode = etree.SubElement(tcListNode, 'runs')
+        for runI, tcForRun in enumerate(self.testComps):
+            runNode = etree.SubElement(runsNode, 'run')
+            runNode.attrib['num'] = "%d" % runI
+            for tcName, testComp in tcForRun.iteritems():
+                testComp.writePreRunXML(runNode, tcName)
 
     def _updateXMLTestComponentResults(self, baseNode, resultsSet):
         """Update the XML info about each test component after a run
         (ie result info.)"""
         tcListNode = baseNode.find('testComponents')
-        tcCompsAndXMLs = zip(self.testComponents.iterkeys(),
-            self.testComponents.itervalues(),
-            tcListNode.getchildren())
-        for tcName, testComponent, testCompXMLNode in tcCompsAndXMLs:
-            assert tcName == testCompXMLNode.attrib['name']
-            assert testComponent.tcType == testCompXMLNode.attrib['type']
-            testComponent.updateXMLWithResult(testCompXMLNode, resultsSet)
+        runsNode = tcListNode.find('runs')
+        runsNodes = runsNode.getchildren()
+        for runI, tcForRun in enumerate(self.testComps):
+            runNode = runsNodes[runI]
+            assert int(runNode.attrib['num']) == runI
+            tCompsAndXMLs = zip(tcForRun.iterkeys(),
+                tcForRun.itervalues(),
+                runNode.getchildren())
+            for tcName, testComp, testCompXMLNode in tCompsAndXMLs:
+                assert tcName == testCompXMLNode.attrib['name']
+                assert testComp.tcType == testCompXMLNode.attrib['type']
+                testComp.updateXMLWithResult(testCompXMLNode, resultsSet)
 
     def _writeXMLResult(self, baseNode):
         """Write the status of a test to the XML doc."""

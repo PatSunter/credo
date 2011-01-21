@@ -132,35 +132,27 @@ class FieldWithinTolTest(TestComponent):
             fieldTol = self.defFieldTol
         return fieldTol
 
-    def check(self, resultsSet):
+    def check(self, mResult):
         """Implements base class
         :meth:`credo.systest.api.TestComponent.check`."""
         self.fieldResults = {}
         self.fieldErrors = {}
         statusMsg = ""
-        numRuns = len(resultsSet)
         overallResult = True
         for fComp in self.fComps.fields.itervalues():
             fieldTol = self.getTolForField(fComp.name)
-            self.fieldResults[fComp.name] = []
-            self.fieldErrors[fComp.name] = []
-            for runI, mResult in enumerate(resultsSet):
-                fCompRes = fComp.getResult(mResult)
-                fieldResult = fCompRes.withinTol(fieldTol)
-                self.fieldResults[fComp.name].append(fieldResult)
-                self.fieldErrors[fComp.name].append(fCompRes.dofErrors)
-                if not fieldResult:
-                    if numRuns > 1:
-                        statusMsg += "For run %d out of %d: " % (runI, numRuns)
-                    statusMsg += "Field comp '%s' error(s) of %s not within"\
-                        " tol %g of %s solution\n"\
-                        % (fComp.name, fCompRes.dofErrors, fieldTol,
-                        self.fComps.getCmpSrcString())
-                    overallResult = False    
-
-            if all(self.fieldResults[fComp.name]):
+            fieldResult, dofErrors = self._checkFieldWithinTol(fComp, mResult)
+            self.fieldResults[fComp.name] = fieldResult
+            self.fieldErrors[fComp.name] = dofErrors
+            if not fieldResult:
+                statusMsg += "Field comp '%s' error(s) of %s not within"\
+                    " tol %g of %s solution\n"\
+                    % (fComp.name, dofErrors, fieldTol,
+                    self.fComps.getCmpSrcString())
+                overallResult = False
+            else:
                 statusMsg += "Field comp '%s' error within tol %g of %s"\
-                    " solution for all runs.\n"\
+                    " solution.\n"\
                     % (fComp.name, fieldTol, self.fComps.getCmpSrcString())
 
         print statusMsg
@@ -170,6 +162,13 @@ class FieldWithinTolTest(TestComponent):
             self.tcStatus = CREDO_PASS(statusMsg)
         return overallResult
 
+    def _checkFieldWithinTol(self, fComp, mResult):
+        fieldTol = self.getTolForField(fComp.name)
+        fCompRes = fComp.getResult(mResult)
+        fieldResult = fCompRes.withinTol(fieldTol)
+        dofErrors = fCompRes.dofErrors
+        return fieldResult, dofErrors
+
     def _writeXMLCustomSpec(self, specNode):
         etree.SubElement(specNode, 'fromXML', value=str(self.fComps.fromXML))
         etree.SubElement(specNode, 'testTimestep',
@@ -178,10 +177,7 @@ class FieldWithinTolTest(TestComponent):
             value=str(self.fComps.useReference))
         etree.SubElement(specNode, 'useHighResReference',
             value=str(self.fComps.useHighResReference))
-        if self.fComps.useReference:
-            etree.SubElement(specNode, 'referencePath',
-                value=self.fComps.referencePath)
-        if self.fComps.useHighResReference:
+        if self.fComps.useReference or self.fComps.useHighResReference:
             etree.SubElement(specNode, 'referencePath',
                 value=self.fComps.referencePath)
         fListNode = etree.SubElement(specNode, 'fields')
@@ -189,18 +185,16 @@ class FieldWithinTolTest(TestComponent):
             fNode = etree.SubElement(fListNode, 'field', name=fName,
                 tol=str(self.getTolForField(fName)))
 
-    def _writeXMLCustomResult(self, resNode, resultsSet):
+    def _writeXMLCustomResult(self, resNode, mResult):
         frNode = etree.SubElement(resNode, 'fieldResultDetails')
         for fName, fComp in self.fComps.fields.iteritems():
             fieldTol = self.getTolForField(fName)
+            fieldRes = self.fieldResults[fName]
             fieldNode = etree.SubElement(frNode, "field", name=fName)
-            for runI, fieldRes in enumerate(self.fieldResults[fName]):
-                runNode = etree.SubElement(fieldNode, "run")
-                runNode.attrib['number'] = str(runI+1)
-                runNode.attrib['allDofsWithinTol'] = str(fieldRes)
-                desNode = etree.SubElement(runNode, "dofErrors")
-                for dofI, dofError in enumerate(self.fieldErrors[fName][runI]):
-                    deNode = etree.SubElement(desNode, "dofError")
-                    deNode.attrib["num"] = str(dofI)
-                    deNode.attrib["error"] = "%6e" % dofError
-                    deNode.attrib["withinTol"] = str(dofError <= fieldTol) 
+            fieldNode.attrib['allDofsWithinTol'] = str(fieldRes)
+            desNode = etree.SubElement(fieldNode, "dofErrors")
+            for dofI, dofError in enumerate(self.fieldErrors[fName]):
+                deNode = etree.SubElement(desNode, "dofError")
+                deNode.attrib["num"] = str(dofI)
+                deNode.attrib["error"] = "%6e" % dofError
+                deNode.attrib["withinTol"] = str(dofError <= fieldTol) 

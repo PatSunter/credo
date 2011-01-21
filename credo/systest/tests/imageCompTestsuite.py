@@ -48,12 +48,12 @@ class ImageCompTestTestCase(unittest.TestCase):
         pass
 
     def test_check(self):
-        checkRes = self.imageCompTest.check([self.resultsSet1])
+        checkRes = self.imageCompTest.check(self.resultsSet1)
         self.assertTrue(checkRes)
-        checkRes = self.imageCompTest.check([self.resultsSet2])
+        checkRes = self.imageCompTest.check(self.resultsSet2)
         self.assertTrue(checkRes)
         self.imageCompTest.tol = (1e-10, 1e-10)
-        checkRes = self.imageCompTest.check([self.resultsSet2])
+        checkRes = self.imageCompTest.check(self.resultsSet2)
         self.assertFalse(checkRes)
 
     def test_writeXMLSpec(self):
@@ -73,26 +73,19 @@ class ImageCompTestTestCase(unittest.TestCase):
 
     def test_writeXMLResult(self):
         testNode = etree.Element('testResult')
-        self.imageCompTest.imageResults = [True, True, False]
-        self.imageCompTest.imageErrors = [(0.01, 0.03),
-            (0.2, 0.4), (0.5, 0.8)]
+        self.imageCompTest.tol = (1e-10, 1e-10)
+        self.imageCompTest.imageErrors = (1.e-11, 0.03)
+        self.imageCompTest.imageResults = [True, False]
         self.imageCompTest._writeXMLCustomResult(testNode, None)
-        resNode = testNode.find('imageResults')
-        self.assertTrue(resNode != None)
-        self.assertEqual(len(resNode), len(self.imageCompTest.imageResults))
-        for ii, runNode in enumerate(resNode.getchildren()):
-            self.assertEqual(int(runNode.attrib['number']), ii+1)
-            self.assertEqual(runNode.attrib['withinTol'],
-                str(self.imageCompTest.imageResults[ii])) 
-            errorsNode = runNode.find('imgErrors')
-            self.assertTrue(errorsNode != None)
-            for jj, eNode in enumerate(errorsNode.getchildren()):
-                self.assertEqual(int(eNode.attrib['num']), jj)
-                self.assertAlmostEqual(float(eNode.attrib['error']),
-                    self.imageCompTest.imageErrors[ii][jj])
-                self.assertEqual(eNode.attrib['withinTol'],
-                    str(self.imageCompTest.imageErrors[ii][jj] <= \
-                        self.imageCompTest.tol[jj]))
+        errorsNode = testNode.find('imgErrors')
+        self.assertTrue(errorsNode != None)
+        for ii, eNode in enumerate(errorsNode.getchildren()):
+            self.assertEqual(int(eNode.attrib['num']), ii)
+            self.assertAlmostEqual(float(eNode.attrib['error']),
+                self.imageCompTest.imageErrors[ii])
+            self.assertEqual(eNode.attrib['withinTol'],
+                str(self.imageCompTest.imageErrors[ii] <= \
+                    self.imageCompTest.tol[ii]))
 
 def suite():
     suite = unittest.TestSuite()
