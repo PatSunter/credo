@@ -224,6 +224,7 @@ class SysTest:
         '''For the setup phase of tests.
         Since not all tests need a setup phase, the default behaviour is to
         do nothing.'''
+        #TODO: name needs to be changed given func below.
         pass
 
     def setupTest(self):
@@ -238,7 +239,10 @@ class SysTest:
         """Run this sysTest, and return the 
         :class:`~credo.systest.api.SysTestResult` it produces.
         Will also write an XML record of the System test, and each ModelRun
-        and ModelResult in the suite that made up the test."""
+        and ModelResult in the suite that made up the test.
+        
+        :returns: SysTestResult, and list of ModelResults
+           (since latter may be useful for further post-processing)"""
         startDir = os.getcwd()
         os.chdir(self.basePath)
         print "Attaching test component analysis ops to suite ModelRuns"
@@ -267,7 +271,7 @@ class SysTest:
         print "Saved test result to %s" % (outFilePath)
         sysTestResult.setRecordFile(outFilePath)
         os.chdir(startDir)
-        return sysTestResult
+        return sysTestResult, suiteResults
 
     def configureSuite(self):
         # TODO: perhaps this could be key func to over-ride?
@@ -347,16 +351,24 @@ class SysTest:
         self.checkModelResultsValid(resultsSet)
         runPassed = [None for res in resultsSet]
         self.tcResults = [{} for res in resultsSet]
-        # TODO: print some useful stuff - inc from the generator
-        # Do single run tests first
+        #TODO: cleanup in future
+        if self.mSuite.iterGen is not None:
+            inIter = msuite.getVariantIndicesIter(self.mSuite.modelVariants,
+                self.mSuite.iterGen)
+            varDicts = msuite.getVariantNameDicts(self.mSuite.modelVariants,
+                inIter)
         for runI, modelResult in enumerate(resultsSet):
+            print "Testing single-run T.C.s for model result %d" % (runI)
+            if self.mSuite.iterGen is not None:
+                print "(var-generated, with variants applied of:\n%s)"\
+                    % varDicts[runI]
             for tcName, tComp in self.testComps[runI].iteritems():
                 tcResult = tComp.check(modelResult)
                 self.tcResults[runI][tcName] = tcResult
 
             runPassed[runI] = all(self.tcResults[runI].itervalues())
             if len(self.testComps[runI]) > 0:
-                if runPassed:
+                if runPassed[runI]:
                     print "All single run test components for"\
                         " run %d passed." % runI
                 else:
@@ -365,6 +377,8 @@ class SysTest:
                        " run %d failed." % runI
         self.allsrPassed = all(runPassed)
         #Now do the Multi-run test components
+        if len(self.multiRunTestComps) > 0:
+            print "Testing multi-run test components:"
         self.mrtcResults = {}
         for tcName, mrtComp in self.multiRunTestComps.iteritems():
             tcResult = mrtComp.check(resultsSet)

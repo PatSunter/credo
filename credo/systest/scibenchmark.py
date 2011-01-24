@@ -41,6 +41,8 @@ class SciBenchmarkTest(SysTest):
         in practice.'''
 
     description = '''Runs a user-defined science benchmark.'''
+    passMsg = "All aspects of the benchmark passed."
+    failMsg = "At least one aspect of the benchmark failed."
 
     def __init__(self, testName, outputPathBase=None,
             basePath=None, nproc=1, timeout=None):
@@ -57,8 +59,15 @@ class SciBenchmarkTest(SysTest):
         # this rather than being done automatically in genSuite.
         self.mSuite = ModelSuite(self.outputPathBase)
 
+    def setupTest(self):
+        """Overriding default SysTest.setupTest() method, as for
+        SciBenchmarks we want to allow the user to manage test setup
+        explicitly in their benchmark script. Thus assume suite 
+        runs and test components have been setup correctly already."""
+        self.mSuite.preRunCleanup()
+
     # TODO : move to base class?
-    def addTestComp(self, testCompName, run, testComp):
+    def addTestComp(self, runI, testCompName, testComp):
         """Add a testComponent (:class:`~credo.systest.api.TestComponent`)
         with name testCompName to the list of test
         components to be applied as part of determining if the benchmark
@@ -74,20 +83,11 @@ class SciBenchmarkTest(SysTest):
                 % (len(self.mSuite.runs), "self.mSuite.genSuite()", \
                     "self.setupEmptyTestCompsList()"))
         try:
-            self.testComps[run][testCompName] = testComp
+            self.testComps[runI][testCompName] = testComp
         except IndexError:
             raise ValueError("Error, 'run' passed in must be < the number"\
                 " of runs in this system test's ModelSuite, currently %d"\
                 % (len(self.testComps)))
-
-    def _writeXMLCustomSpec(self, specNode):
-        # TODO: write info about the modelRuns making up the suite ...
-        #  or should this be a standard feature of all Sys tests writeups?
-        # TODO: write stuff like paper references here?
-        # TODO: does this need to be converted to an FP to allow
-         # user to more easily over-ride? Or is that done via
-         #  custom test components?
-        pass
 
     def genSuite(self):
         """See base class :meth:`~credo.systest.api.SysTest.genSuite`.
@@ -105,33 +105,11 @@ class SciBenchmarkTest(SysTest):
         #TODO: how do we let the user over-ride this?
         raise NotImplementedError
 
-    def checkModelResultsValid(self, resultsSet):
-        """See base class :meth:`~credo.systest.api.SysTest.checkModelResultsValid`."""
-        # TODO check it's a result instance
-        # check number of results is correct
-        for mResult in resultsSet:
-            pass
-
-    #TODO: is this function still valid? Should just the default one be used?
-    def getStatus(self, resultsSet):
-        """See base class :meth:`~credo.systest.api.SysTest.getStatus`."""
-        self.checkModelResultsValid(resultsSet)
-        mResult = resultsSet[0]
-
-        overallResult = True
-        failedCompNames = []
-        for tCompName, tComp in self.testComps.iteritems():
-            result = tComp.check(resultsSet)
-            if not result:
-                overallResult = False
-                failedCompNames.append(tCompName)
-
-        if overallResult:    
-            testStatus = CREDO_PASS("All aspects of the benchmark passed.")
-        else:        
-            testStatus = CREDO_FAIL("The following components of the benchmark" \
-                " failed: %s" % failedCompNames)
-
-        self.testStatus = testStatus
-        return testStatus
-        
+    def _writeXMLCustomSpec(self, specNode):
+        # TODO: write info about the modelRuns making up the suite ...
+        #  or should this be a standard feature of all Sys tests writeups?
+        # TODO: write stuff like paper references here?
+        # TODO: does this need to be converted to an FP to allow
+         # user to more easily over-ride? Or is that done via
+         #  custom test components?
+        pass

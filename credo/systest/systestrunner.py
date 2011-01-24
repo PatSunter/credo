@@ -78,7 +78,7 @@ class SysTestRunner:
             jobRunner = credo.jobrunner.defaultRunner()
             print "Running System test %d/%d, with name '%s':" \
                 % (testI+1, testTotal, sysTest.testName)
-            results.append(sysTest.runTest(jobRunner))
+            results.append(sysTest.runTest(jobRunner)[0])
         if printSummary:
             self.printResultsSummary(sysTests, results, projName, suiteName)
         return results

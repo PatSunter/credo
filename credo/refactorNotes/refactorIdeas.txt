@@ -27,27 +27,33 @@ may be worth emailing Underworld-users about new release ...
 Specific ideas:
 -------
 
-TODO: SysTestRunner has to not do the suite run for when running SciBenchmarks.
-
-- TODO: rename files in SysTest so "testComps" have obvious name. 
+Dir structure/general:
 - (D) Separate SysTestSuite out from api.py
-- Separate TestComponent stuff out from api.py?
+- TODO: rename files in SysTest so "testComps" have obvious name. 
 - NB: is basePath still necessary on both test suite and model suite?
   (perhaps use just for model suite - hmmm ... although we need to
    stay in the same path to do suite checks)
+- TODO: really should have standard CREDO tests for all the TestComp operators
+ - if necessary creating Skeleton funcs to get data off ModelRuns/ModelResults
+   (this will be handy in future when have multiple Apps we can test)
 
-TestComps API:
- - TODO: make it easier to create TC Status objects at end of testComps
- - Also parameterise the 'passMsg' vs 'failMsg' for SingleRunTestComponents
+SysTestRunner:
+- D: SysTestRunner has to not do the setup part for when running SciBenchmarks.
 
 SysTest API:
  - Collapse "configureSuite" and "genSuite" stuff?
 - TODO: add setup() func to standard API of sysTests, pass in job runner
-   - and search out all examples of this in client  codes to change.
+   - and search out all examples of this in client codes to change.
    - add a preRunCheck() phase, to check e.g. reference dir exists
       and contains correct content?
 - Move "addTestComp()" method from SciBenchmark to base SysTest class?      
 
+TestComps API:
+ - TODO: Separate TestComponent stuff out from api.py?
+ - TODO: make funcs to handle lists of these as XMLs as functions of this
+   module, rather than member funcs of SysTest (just get called there).
+ - TODO: make it easier to create TC Status objects at end of testComps
+ - Also parameterise the 'passMsg' vs 'failMsg' for SingleRunTestComponents
 ModelSuite API:
 - NB: should runSuite method push down writing of model result XMLs
    inside there by default? (Think so)
