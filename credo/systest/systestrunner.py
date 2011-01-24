@@ -54,7 +54,7 @@ XML_TESTCASE_ATTR_RECORDFILE = 'recordfile'
 
 class SysTestRunner:
     """Class that runs a set of :class:`~credo.systest.api.SysTest`, usually
-    collected into :class:`~credo.systest.api.SysTestSuite` collections.
+    collected into :class:`~credo.systest.systestsuite.SysTestSuite` collections.
 
     For examples of how to use, see the CREDO documentation, especially
     :ref:`credo-examples-run-systest-direct`.

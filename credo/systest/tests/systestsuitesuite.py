@@ -26,7 +26,8 @@ import shutil
 import tempfile
 import unittest
 
-from credo.systest import SysTestSuite, CREDO_PASS, CREDO_FAIL, CREDO_ERROR
+from credo.systest.api import CREDO_PASS, CREDO_FAIL, CREDO_ERROR
+from credo.systest.systestsuite import SysTestSuite
 from skeletonSysTest import SkeletonSingleModelSysTest
 
 class SysTestSuiteTestCase(unittest.TestCase):

@@ -27,7 +27,11 @@ may be worth emailing Underworld-users about new release ...
 Specific ideas:
 -------
 
+TODO: SysTestRunner has to not do the suite run for when running SciBenchmarks.
+
 - TODO: rename files in SysTest so "testComps" have obvious name. 
+- (D) Separate SysTestSuite out from api.py
+- Separate TestComponent stuff out from api.py?
 - NB: is basePath still necessary on both test suite and model suite?
   (perhaps use just for model suite - hmmm ... although we need to
    stay in the same path to do suite checks)

@@ -42,7 +42,9 @@ see :ref:`credo-examples-systesting`.
 
 from credo.systest.api import *
 
+from credo.systest.systestsuite import SysTestSuite
 from credo.systest.systestrunner import SysTestRunner
+
 # Import all the standard tests so they're available
 from credo.systest.restart import RestartTest
 from credo.systest.analytic import AnalyticTest

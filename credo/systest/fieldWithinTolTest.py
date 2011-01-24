@@ -23,10 +23,10 @@
 
 from xml.etree import ElementTree as etree
 
-from credo.systest.api import TestComponent, CREDO_PASS, CREDO_FAIL
+from credo.systest.api import SingleRunTestComponent, CREDO_PASS, CREDO_FAIL
 import credo.analysis.fields as fields
 
-class FieldWithinTolTest(TestComponent):
+class FieldWithinTolTest(SingleRunTestComponent):
     """Checks whether, for a particular set of fields, the error
     between each field and an (analytic or reference) solution
     is below a specificed tolerance.
@@ -96,7 +96,7 @@ class FieldWithinTolTest(TestComponent):
             referencePath=None,
             testTimestep=0
             ):
-        TestComponent.__init__(self, "fieldWithinTol")
+        SingleRunTestComponent.__init__(self, "fieldWithinTol")
         self.fieldsToTest = fieldsToTest
         self.defFieldTol = defFieldTol
         self.fieldTols = fieldTols
@@ -113,7 +113,7 @@ class FieldWithinTolTest(TestComponent):
 
     def attachOps(self, modelRun):
         """Implements base class
-        :meth:`credo.systest.api.TestComponent.attachOps`."""
+        :meth:`credo.systest.api.SingleRunTestComponent.attachOps`."""
         if self.fieldsToTest == None:
             self.fComps.readFromStgXML(modelRun.modelInputFiles,
                 modelRun.basePath)
@@ -134,7 +134,7 @@ class FieldWithinTolTest(TestComponent):
 
     def check(self, mResult):
         """Implements base class
-        :meth:`credo.systest.api.TestComponent.check`."""
+        :meth:`credo.systest.api.SingleRunTestComponent.check`."""
         self.fieldResults = {}
         self.fieldErrors = {}
         statusMsg = ""

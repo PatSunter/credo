@@ -63,8 +63,7 @@ class AnalyticMultiResTest(SingleModelSysTest):
             basePath, nproc, timeout,
             paramOverrides, solverOpts, nameSuffix)
         self.resSet = resSet
-        cvgChecker = FieldCvgWithScaleTest()
-        self.testComps['fieldConvChecker'] = cvgChecker
+        self.cvgChecker = FieldCvgWithScaleTest()
 
     def genSuite(self):
         """See base class :meth:`~credo.systest.api.SysTest.genSuite`.
@@ -79,12 +78,10 @@ class AnalyticMultiResTest(SingleModelSysTest):
             mRun = self._createDefaultModelRun(modelName,
                 os.path.join(self.outputPathBase, resStr))
             customOpts = mrun.generateResOpts(res)
-            self.mSuite.addRun(mRun, "Run the model at res "+resStr, customOpts)
+            self.mSuite.addRun(mRun, "Run the model at res %s" % (resStr), customOpts)
     
     def configureTestComps(self):
-        # For analytic conv test, read fields to analyse from the XML
-        cvgChecker = self.testComps['fieldConvChecker']
-        cvgChecker.attachOps(self.mSuite.runs)
+        self.multiRunTestComps['fieldConvChecker'] = self.cvgChecker
 
     def checkModelResultsValid(self, resultsSet):
         """See base class :meth:`~credo.systest.api.SysTest.checkModelResultsValid`."""

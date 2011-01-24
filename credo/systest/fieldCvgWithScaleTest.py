@@ -23,7 +23,7 @@
 
 from xml.etree import ElementTree as etree
 
-from credo.systest.api import TestComponent, CREDO_PASS, CREDO_FAIL
+from credo.systest.api import MultiRunTestComponent, CREDO_PASS, CREDO_FAIL
 from credo.io import stgcvg
 import credo.analysis.fields as fields
 
@@ -118,12 +118,13 @@ def getDofErrorsByRun(fComp, resultsSet):
     return dofErrorsByRun
 
 
-class FieldCvgWithScaleTest(TestComponent):
+class FieldCvgWithScaleTest(MultiRunTestComponent):
     """Checks whether, for a particular set of fields, the error
     between each field and an (analytic or reference) solution
     reduces with increasing resolution at a required rate. 
-    Thus similar to :class:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest`,
-    except tests accuracy of solution with increasing resolution.
+    Thus similar to 
+    :class:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest`,
+    except tests accuracy of solution with increasing model resolution.
 
     This relies largely on functionality of:
 
@@ -183,17 +184,16 @@ class FieldCvgWithScaleTest(TestComponent):
        actual convergence rate. See the return value of 
        :func:`credo.analysis.fields.calcFieldCvgWithScale` for more.
 
-    """  
-
+    """ 
     def __init__(self, fieldsToTest = None,
             calcCvgFunc = fields.calcFieldCvgWithScale,
             fieldCvgCrits = defFieldScaleCvgCriterions):
-        TestComponent.__init__(self, "fieldCvgWithScaleTest")
+        MultiRunTestComponent.__init__(self, "fieldCvgWithScaleTest")
         self.calcCvgFunc = calcCvgFunc
         self.fieldCvgCrits = fieldCvgCrits
         self.fieldsToTest = fieldsToTest
         # TODO: would be good to check here that the fieldsToTest have
-        # cvg info provided in the  fieldCvgCrits dict. However becuase we
+        # cvg info provided in the fieldCvgCrits dict. However becuase we
         # allow fieldsToTest=None to mean "read from XML", can't always
         # do this just yet.
         self.fComps = None
@@ -201,22 +201,23 @@ class FieldCvgWithScaleTest(TestComponent):
         self.fCvgMeetsReq = {}
         self.fCvgResults = {}
 
-    # TODO: will take a set of modelRuns
-    def attachOps(self, modelRun):
+    def attachOps(self, modelRuns):
         """Implements base class
-        :meth:`credo.systest.api.TestComponent.attachOps`."""
+        :meth:`credo.systest.api.SingleRunTestComponent.attachOps`."""
         self.fComps = fields.FieldComparisonList()
         if self.fieldsToTest == None:
-            self.fComps.readFromStgXML(modelRun.modelInputFiles,
-                modelRun.basePath)
+            self.fComps.readFromStgXML(modelRuns[0].modelInputFiles,
+                modelRuns[0].basePath)
         else:
             for fieldName in self.fieldsToTest:
                 self.fComps.add(fields.FieldComparisonOp(fieldName))
-        modelRun.analysisOps['fieldComparisons'] = self.fComps
+
+        for mRun in modelRuns:
+            mRun.analysisOps['fieldComparisons'] = self.fComps
 
     def check(self, resultsSet):
         """Implements base class
-        :meth:`credo.systest.api.TestComponent.check`.
+        :meth:`credo.systest.api.MultiRunTestComponent.check`.
         
         As well as performing check, will save relevant into to attributes
         :attr:`.fErrorsByRun`, :attr:`.fCvgMeetsReq`, :attr:`.fCvgResults`."""

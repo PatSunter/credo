@@ -23,9 +23,9 @@
 
 from xml.etree import ElementTree as etree
 
-from credo.systest.api import TestComponent, CREDO_PASS, CREDO_FAIL
+from credo.systest.api import SingleRunTestComponent, CREDO_PASS, CREDO_FAIL
 
-class OutputWithinRangeTest(TestComponent):
+class OutputWithinRangeTest(SingleRunTestComponent):
     '''Test component to check that a given output parameter 
     (found in the frequent output) is within a given range, and
     optionally also that this occurs within a given set of model times.
@@ -80,7 +80,7 @@ class OutputWithinRangeTest(TestComponent):
 
     def __init__(self, outputName, reductionOp, allowedRange,  
             tRange=None):
-        TestComponent.__init__(self, "outputWithinRange")
+        SingleRunTestComponent.__init__(self, "outputWithinRange")
         self.outputName = outputName
         self.reductionOp = reductionOp
         self.allowedRange = allowedRange
@@ -104,7 +104,7 @@ class OutputWithinRangeTest(TestComponent):
                 
     def attachOps(self, modelRun):
         """Implements base class
-        :meth:`credo.systest.api.TestComponent.attachOps`.
+        :meth:`credo.systest.api.SingleRunTestComponent.attachOps`.
         
         .. note:: Currently does nothing. Intend to make it ensure the
            correct plugin is set to be loaded (to make sure observable
@@ -115,14 +115,12 @@ class OutputWithinRangeTest(TestComponent):
         #  Or maybe user passes this in when creating the test?
         pass
 
-    def check(self, resultsSet):
+    def check(self, mResult):
         """Implements base class
-        :meth:`credo.systest.api.TestComponent.check`."""
+        :meth:`credo.systest.api.SingleRunTestComponent.check`."""
         self.actualVal = None
         self.withinRange = None
         statusMsg = ""
-        numRuns = len(resultsSet)
-        overallResult = True
         mResult.readFrequentOutput()
         self.actualVal, actualTimeStep = mResult.freqOutput.getReductionOp(
             self.outputName, self.reductionOp)

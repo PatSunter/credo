@@ -24,10 +24,10 @@
 import os
 from xml.etree import ElementTree as etree
 
-from credo.systest.api import TestComponent, CREDO_PASS, CREDO_FAIL
+from credo.systest.api import SingleRunTestComponent, CREDO_PASS, CREDO_FAIL
 import credo.analysis.images as imageAnalysis
 
-class ImageCompTest(TestComponent):
+class ImageCompTest(SingleRunTestComponent):
     """Checks whether an image produced by the run (eg by gLucifer)
     is within a given "tolerance" of an expected image, using
     functionality of :mod:`credo.analysis.images` module.
@@ -67,7 +67,7 @@ class ImageCompTest(TestComponent):
             tol=None,
             refPath=None,
             genPath=None):
-        TestComponent.__init__(self, "imagesWithinTol")
+        SingleRunTestComponent.__init__(self, "imagesWithinTol")
         self.imageFilename = imageFilename
         if tol is not None:
             self.tol = tol
@@ -87,13 +87,13 @@ class ImageCompTest(TestComponent):
 
     def attachOps(self, modelRun):
         """Implements base class
-        :meth:`credo.systest.api.TestComponent.attachOps`."""
+        :meth:`credo.systest.api.SingleRunTestComponent.attachOps`."""
         # Nothing to do here - requires that the user has defined their
         # model XMLs correctly to generate the images.
 
     def check(self, mResult):
         """Implements base class
-        :meth:`credo.systest.api.TestComponent.check`."""
+        :meth:`credo.systest.api.SingleRunTestComponent.check`."""
         self.imageResults = []
         self.imageErrors = []
         statusMsg = ""
