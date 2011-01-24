@@ -1,7 +1,8 @@
 CREDO Refactoring ideas:
 
-Refactoring the MultiRunTestComponent stuff
-Updating documentation! Esp SciBenchmark section.
+Up next:
+- Continue improving SciBenchmarks with all minor refactors below.
+- Updating documentation! Esp SciBenchmark section.
 
 Big picture:
 --------
@@ -30,9 +31,6 @@ Specific ideas:
 Dir structure/general:
 - (D) Separate SysTestSuite out from api.py
 - TODO: rename files in SysTest so "testComps" have obvious name. 
-- NB: is basePath still necessary on both test suite and model suite?
-  (perhaps use just for model suite - hmmm ... although we need to
-   stay in the same path to do suite checks)
 - TODO: really should have standard CREDO tests for all the TestComp operators
  - if necessary creating Skeleton funcs to get data off ModelRuns/ModelResults
    (this will be handy in future when have multiple Apps we can test)
@@ -54,9 +52,10 @@ TestComps API:
    module, rather than member funcs of SysTest (just get called there).
  - TODO: make it easier to create TC Status objects at end of testComps
  - Also parameterise the 'passMsg' vs 'failMsg' for SingleRunTestComponents
+
 ModelSuite API:
 - NB: should runSuite method push down writing of model result XMLs
-   inside there by default? (Think so)
+   inside there by default, selectable as params? (Think so)
 
 JobRunner API:
  - idea: make jobRunner save model run XML and model result XML by default,
