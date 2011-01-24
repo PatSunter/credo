@@ -70,6 +70,8 @@ class SysTestRunner:
         results = []
         testTotal = len(sysTests)
         for testI, sysTest in enumerate(sysTests):
+            #TODO: need a "updateOnly" option, that doesn't re-run setup,
+            # or at least avoids deleting previous model results there.
             sysTest.setupTest()
             #TODO: perhaps need to pass jobRunner in when running tests
             # or use as a factory method?
