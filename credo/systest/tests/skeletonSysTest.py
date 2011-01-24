@@ -46,6 +46,10 @@ class SkeletonSysTest(SysTest):
         # an empty suite
         pass
     
+    def setupEmptyTestCompsList(self):
+        # have to over-ride this to prevent errors with our empty suite
+        pass
+
     def configureTestComps(self):
         pass
 
