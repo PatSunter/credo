@@ -235,7 +235,7 @@ class SysTest:
         self.configureTestComps()
         #TODO: do we want to allow any custom post-proc opps here?
     
-    def runTest(self, jobRunner):
+    def runTest(self, jobRunner, postProcFromExisting=False):
         """Run this sysTest, and return the 
         :class:`~credo.systest.api.SysTestResult` it produces.
         Will also write an XML record of the System test, and each ModelRun
@@ -243,28 +243,39 @@ class SysTest:
         
         :returns: SysTestResult, and list of ModelResults
            (since latter may be useful for further post-processing)"""
+
+        print "Running '%s' system test (%s):" % (self.testName, self.testType)
         startDir = os.getcwd()
         os.chdir(self.basePath)
-        print "Attaching test component analysis ops to suite ModelRuns"
-        self.attachAllTestCompOps()
         print "Writing pre-test info to XML"
         self.writePreRunXML()
-        #TODO: subsume into modelSuite? run
-        self.mSuite.writeAllModelRunXMLs()
-        try:
-            suiteResults = jobRunner.runSuite(self.mSuite, 
-                maxRunTime=self.timeout)
-            self.mSuite.writeAllModelResultXMLs()
-        except ModelRunError, mre:
-            suiteResults = None
-            sysTestResult = self.setErrorStatus(str(mre))
-        else:    
+        if postProcFromExisting == False:
+            print "Attaching test component analysis ops to suite ModelRuns"
+            self.attachAllTestCompOps()
+            #TODO: subsume into modelSuite? run
+            self.mSuite.writeAllModelRunXMLs()
+            try:
+                suiteResults = jobRunner.runSuite(self.mSuite, 
+                    maxRunTime=self.timeout)
+                self.mSuite.writeAllModelResultXMLs()
+            except ModelRunError, mre:
+                suiteResults = None
+                sysTestResult = self.setErrorStatus(str(mre))
+            else:
+                print "Processing sys test result:"
+                sysTestResult = self.getStatus(suiteResults)
+        else:
+            print "(Reading existing results from %s)" % \
+                (os.path.join(self.basePath, self.outputPathBase))
+            suiteResults = self.mSuite.readResultsFromPath(self.basePath)
             print "Processing sys test result:"
             sysTestResult = self.getStatus(suiteResults)
-            # TODO: Do we need to allow any custom post-proc here?
-            # Including custom getStatus?
+        
+        # TODO: Do we need to allow any custom post-proc here?
+        # Including custom getStatus?
 
-        print "Sys test result was %s" % sysTestResult
+        print "%s '%s' result: **%s**" % \
+            (self.testType, self.testName, sysTestResult)
         if isinstance(sysTestResult, CREDO_ERROR):
             print "Error msg: %s" % (sysTestResult.detailMsg)
         outFilePath = self.updateXMLWithResult(suiteResults)
@@ -416,6 +427,13 @@ class SysTest:
         """Return the default system test XML record filename, based on
         properties of the systest (such as :attr:`.testName`)."""
         return 'SysTest-'+self.testName+'.xml'
+
+    def writeRecordXML(self, mResults, outputPath="", filename="",
+            prettyPrint=True):
+        """Convenience function to call all other XML writing funcs
+        (pre-run and post-run) in one go."""
+        self.writePreRunXML(outputPath, filename, prettyPrint)
+        self.updateXMLWithResult(mResults, outputPath, filename, prettyPrint)
 
     def writePreRunXML(self, outputPath="", filename="", prettyPrint=True):
         """Write the SysTest XML with as much information before the run as
