@@ -511,11 +511,15 @@ def writeInputsOutputsToCSV(mSuite, observablesDict, fname):
     """  
     target = open(os.path.join(mSuite.runs[0].basePath, mSuite.outputPathBase, fname), "w" )
     wtr = csv.writer(target)
-    wtr.writerow(mSuite.modelVariants.keys()+observablesDict.keys())
+    # Need to do sorting to make sure keys here match those below.
+    sortedVarNames = mSuite.modelVariants.keys()
+    sortedVarNames.sort()
+    wtr.writerow(sortedVarNames + observablesDict.keys())
     indexIt = getVariantIndicesIter(mSuite.modelVariants, mSuite.iterGen)
     varDicts = getVariantNameDicts(mSuite.modelVariants, indexIt)
     for varDict, observs in zip(varDicts, zip(*observablesDict.itervalues())):
-        wtr.writerow(varDict.values()+list(observs))
+        sortedValues = [varDict[varName] for varName in sortedVarNames]
+        wtr.writerow(sortedValues + list(observs))
     target.close()
 
 def getModelResultsArray(baseName, baseDir):
