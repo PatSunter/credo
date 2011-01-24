@@ -406,9 +406,18 @@ class SysTest:
             self.testStatus = CREDO_FAIL(self.failMsg)
         return self.testStatus
     
-    # TODO: here is where it could be useful to have a method to get all
-    #  test components to do additional optional analysis, e.g. plotting
-    #  of graphs.
+    def getTCRes(self, tcName): 
+        """Utility function for single run test components to get lists of 
+        test components, and tc results, for each run of a given testComp
+        (This can be done by list manipulation in Python, this function
+        just makes it easier).
+        
+        :returns: a tuple of 2 lists: all test components of a given name
+          ordered by model run in the test, and a list of corresponding
+          test component results."""
+        tcByRun = [tComps[tcName] for tComps in self.testComps]
+        tcRes = [tcRes[tcName] for tcRes in self.tcResults]
+        return tcByRun, tcRes
 
     def setErrorStatus(self, errorMsg):
         """Utility function for if a model run fails as part of the test,
