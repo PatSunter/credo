@@ -358,14 +358,14 @@ class SysTest:
             varDicts = msuite.getVariantNameDicts(self.mSuite.modelVariants,
                 inIter)
         for runI, modelResult in enumerate(resultsSet):
-            print "Testing single-run T.C.s for model result %d" % (runI)
-            if self.mSuite.iterGen is not None:
-                print "(var-generated, with variants applied of:\n%s)"\
-                    % varDicts[runI]
+            if len(self.testComps[runI]) > 0:
+                print "Testing single-run T.C.s for model result %d" % (runI)
+                if self.mSuite.iterGen is not None:
+                    print "(var-generated, with variants applied of:\n%s)"\
+                        % varDicts[runI]
             for tcName, tComp in self.testComps[runI].iteritems():
                 tcResult = tComp.check(modelResult)
                 self.tcResults[runI][tcName] = tcResult
-
             runPassed[runI] = all(self.tcResults[runI].itervalues())
             if len(self.testComps[runI]) > 0:
                 if runPassed[runI]:
