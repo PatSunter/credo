@@ -96,7 +96,7 @@ class OutputWithinRangeTest(SingleRunTestComponent):
             value=str(self.allowedRange[0]))
         etree.SubElement(specNode, 'allowedRange-max',
             value=str(self.allowedRange[1]))
-        if self.tRange:
+        if self.tRange is not None:
             etree.SubElement(specNode, 'tRange-min',
                 value=str(self.tRange[0]))
             etree.SubElement(specNode, 'tRange-max',
@@ -132,25 +132,28 @@ class OutputWithinRangeTest(SingleRunTestComponent):
         if not self.withinRange:
             statusMsg += "Model output '%s' value %g not within"\
                 " required range (%g,%g)."\
-                % (self.outputName, self.actualVal, self.allowedRange[0],\
-                    self.allowedRange[1])
+                % ((self.outputName, self.actualVal,) + self.allowedRange)
             overallResult = False    
         else:
             statusMsg += "Model output '%s' value %g within"\
                 " required range (%g,%g)"\
-                % (self.outputName, self.actualVal,) + self.allowedRange
-            # Currently passing - but there may also be a time range
-            if self.tRange:
+                % ((self.outputName, self.actualVal,) + self.allowedRange)
+            if self.tRange is None:
+                statusMsg += "."        
+                overallResult = True
+            else:    
                 tMin, tMax = self.tRange
                 withinTRange = (tMin <= self.actualTime <= tMax)
                 if not withinTRange:
                     statusMsg += ", but time at which this"\
                         " occurred (%s) not within req'd range (%g,%g)."\
-                        % (self.actualTime,) + self.tRange
+                        % ((self.actualTime,) + self.tRange)
                     overallResult = False
-            else:
-                statusMsg += "."        
-                overallResult = True
+                else:    
+                    statusMsg += ", and time at which this"\
+                        " occurred (%s) within req'd range (%g,%g)."\
+                        % ((self.actualTime,) + self.tRange)
+                    overallResult = True
 
         print statusMsg
         if overallResult == False:
