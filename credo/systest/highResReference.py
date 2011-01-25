@@ -30,14 +30,14 @@ from credo.modelsuite import ModelSuite
 from credo.modelrun import SimParams
 import credo.jobrunner
 from credo.systest.api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL, getStdTestNameBasic
-from credo.systest.fieldWithinTolTest import FieldWithinTolTest
+from credo.systest.fieldWithinTolTC import FieldWithinTolTC
 
 class HighResReferenceTest(SingleModelSysTest):
     '''A High Res Reference System test.
        This case simply runs a given model for a set number of steps,
        then checks the resultant solution matches within a tolerance
        of a previously-generated high resolution reference solution. Uses a
-       :class:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest`
+       :class:`~credo.systest.fieldWithinTolTC.FieldWithinTolTC`
        test component to perform the check.
 
        Optional constructor keywords:
@@ -47,8 +47,8 @@ class HighResReferenceTest(SingleModelSysTest):
          reference solution.
        * defFieldTol: The default tolerance to be applied when comparing
          fields of interest to the reference solution.
-         See also the FieldWithinTolTest's
-         :attr:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
+         See also the FieldWithinTolTC's
+         :attr:`~credo.systest.fieldWithinTolTC.FieldWithinTolTC.defFieldTol`.
        * fieldTols: a dictionary of tolerances to use when testing particular
          fields, rather than the default tolerance as set in the defFieldTol
          argument.
@@ -90,7 +90,7 @@ class HighResReferenceTest(SingleModelSysTest):
         self.highResRatio = highResRatio
         if self.highResRatio <= 1.0:
             raise ValueError("highResRatio must be >= 1")
-        self.fTests = FieldWithinTolTest(fieldsToTest=self.fieldsToTest,
+        self.fTests = FieldWithinTolTC(fieldsToTest=self.fieldsToTest,
             defFieldTol=defFieldTol,
             fieldTols=fieldTols,
             useHighResReference=True,

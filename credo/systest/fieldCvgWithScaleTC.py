@@ -118,12 +118,12 @@ def getDofErrorsByRun(fComp, resultsSet):
     return dofErrorsByRun
 
 
-class FieldCvgWithScaleTest(MultiRunTestComponent):
+class FieldCvgWithScaleTC(MultiRunTestComponent):
     """Checks whether, for a particular set of fields, the error
     between each field and an (analytic or reference) solution
     reduces with increasing resolution at a required rate. 
     Thus similar to 
-    :class:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest`,
+    :class:`~credo.systest.fieldWithinTolTC.FieldWithinTolTC`,
     except tests accuracy of solution with increasing model resolution.
 
     This relies largely on functionality of:
@@ -188,7 +188,7 @@ class FieldCvgWithScaleTest(MultiRunTestComponent):
     def __init__(self, fieldsToTest = None,
             calcCvgFunc = fields.calcFieldCvgWithScale,
             fieldCvgCrits = defFieldScaleCvgCriterions):
-        MultiRunTestComponent.__init__(self, "fieldCvgWithScaleTest")
+        MultiRunTestComponent.__init__(self, "fieldCvgWithScaleTC")
         self.calcCvgFunc = calcCvgFunc
         self.fieldCvgCrits = fieldCvgCrits
         self.fieldsToTest = fieldsToTest

@@ -41,28 +41,28 @@ Examples of how to use this module are provided in the CREDO documentation,
 see :ref:`credo-examples-systesting`.
 """
 
-from credo.systest.api import *
+from .api import *
 
-from credo.systest.systestsuite import SysTestSuite
-from credo.systest.systestrunner import SysTestRunner
+from .systestsuite import SysTestSuite
+from .systestrunner import SysTestRunner
 
 # Import all the standard tests so they're available
-from credo.systest.restart import RestartTest
-from credo.systest.analytic import AnalyticTest
-from credo.systest.analyticMultiRes import AnalyticMultiResTest
-from credo.systest.reference import ReferenceTest
-from credo.systest.highResReference import HighResReferenceTest
+from .restart import RestartTest
+from .analytic import AnalyticTest
+from .analyticMultiRes import AnalyticMultiResTest
+from .reference import ReferenceTest
+from .highResReference import HighResReferenceTest
 try:
-    from credo.systest.imageReference import ImageReferenceTest
+    from .imageReference import ImageReferenceTest
 except ImportError:
     print "Warning, cannot import the ImageReferenceTest for"\
         " use since you don't have required libraries (PIL) installed."
 
 # Import the benchmark test
-from credo.systest.scibenchmark import SciBenchmarkTest
+from .scibenchmark import SciBenchmarkTest
 
 # import all test components here too so available for benchmark tests
-from .fieldCvgWithScaleTest import FieldCvgWithScaleTest
-from .fieldWithinTolTest import FieldWithinTolTest
-from .imageCompTest import ImageCompTest
-from .outputWithinRangeTest import OutputWithinRangeTest
+from .fieldCvgWithScaleTC import FieldCvgWithScaleTC
+from .fieldWithinTolTC import FieldWithinTolTC
+from .imageCompTC import ImageCompTC
+from .outputWithinRangeTC import OutputWithinRangeTC

@@ -27,7 +27,7 @@ from xml.etree import ElementTree as etree
 from credo.modelsuite import ModelSuite
 import credo.modelrun as mrun
 from credo.systest.api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL
-from credo.systest.fieldCvgWithScaleTest import FieldCvgWithScaleTest
+from credo.systest.fieldCvgWithScaleTC import FieldCvgWithScaleTC
 
 class AnalyticMultiResTest(SingleModelSysTest):
     '''A Multiple Resolution system test.
@@ -35,7 +35,7 @@ class AnalyticMultiResTest(SingleModelSysTest):
        analyses fields, to check that the error between the analytic
        solution fields and the actual results improves at the required
        rate as the model resolution is increased. Uses a
-       :class:`~credo.systest.fieldCvgWithScaleTest.FieldCvgWithScaleTest`
+       :class:`~credo.systest.fieldCvgWithScaleTC.FieldCvgWithScaleTC`
        test component to perform the check.
 
        Optional constructor keywords:
@@ -63,7 +63,7 @@ class AnalyticMultiResTest(SingleModelSysTest):
             basePath, nproc, timeout,
             paramOverrides, solverOpts, nameSuffix)
         self.resSet = resSet
-        self.cvgChecker = FieldCvgWithScaleTest()
+        self.cvgChecker = FieldCvgWithScaleTC()
 
     def genSuite(self):
         """See base class :meth:`~credo.systest.api.SysTest.genSuite`.

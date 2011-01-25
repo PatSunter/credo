@@ -26,7 +26,7 @@ from xml.etree import ElementTree as etree
 from credo.systest.api import SingleRunTestComponent, CREDO_PASS, CREDO_FAIL
 import credo.analysis.fields as fields
 
-class FieldWithinTolTest(SingleRunTestComponent):
+class FieldWithinTolTC(SingleRunTestComponent):
     """Checks whether, for a particular set of fields, the error
     between each field and an (analytic or reference) solution
     is below a specificed tolerance.

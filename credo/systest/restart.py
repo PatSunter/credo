@@ -28,7 +28,7 @@ from xml.etree import ElementTree as etree
 from credo.modelsuite import ModelSuite
 from credo.modelrun import SimParams
 from credo.systest.api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL
-from credo.systest.fieldWithinTolTest import FieldWithinTolTest
+from credo.systest.fieldWithinTolTC import FieldWithinTolTC
 
 class RestartTest(SingleModelSysTest):
     '''A Restart System test.
@@ -36,7 +36,7 @@ class RestartTest(SingleModelSysTest):
        then restarts half-way through, and checks the same result is
        obtained. (Thus it's largely a regression test to ensure 
        checkpoint-restarting works for various types of models).
-       Uses a :class:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest`
+       Uses a :class:`~credo.systest.fieldWithinTolTC.FieldWithinTolTC`
        test component to perform the check.
 
        Optional constructor keywords:
@@ -47,8 +47,8 @@ class RestartTest(SingleModelSysTest):
          reference solution.
        * defFieldTol: The default tolerance to be applied when comparing fields of
          interest between the restarted, and original solution.
-         See also the FieldWithinTolTest's
-         :attr:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
+         See also the FieldWithinTolTC's
+         :attr:`~credo.systest.fieldWithinTolTC.FieldWithinTolTC.defFieldTol`.
        * fieldTols: a dictionary of tolerances to use when testing particular
          fields, rather than the default tolerance defined by 
          the defFieldTol argument.
@@ -85,7 +85,7 @@ class RestartTest(SingleModelSysTest):
             raise ValueError("fullRunSteps parameter must be even so restart"\
                 " can occur half-way - but you provided %d." % (fullRunSteps))
         #TODO Hmmm ... hard-coding index here is a bit hacky
-        self.fTests = FieldWithinTolTest(
+        self.fTests = FieldWithinTolTC(
             fieldsToTest=self.fieldsToTest, defFieldTol=defFieldTol,
             fieldTols=fieldTols,
             useReference=True,

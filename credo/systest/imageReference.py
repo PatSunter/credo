@@ -29,12 +29,12 @@ from credo.modelsuite import ModelSuite
 from credo.modelrun import SimParams
 import credo.jobrunner
 from . import api
-from credo.systest.imageCompTest import ImageCompTest
+from credo.systest.imageCompTC import ImageCompTC
 
 class ImageReferenceTest(api.SingleModelSysTest):
     '''An image comparison against Reference System test.
     To do this, creates a set of several 
-    :class:`~credo.systest.imageCompTest.ImageCompTest` Test Components for
+    :class:`~credo.systest.imageCompTC.ImageCompTC` Test Components for
     each image you wish to test.
 
     Optional contructor keywords:
@@ -83,7 +83,7 @@ class ImageReferenceTest(api.SingleModelSysTest):
                 imageTol = self.defImageTol
             tcName = 'Image(s) Reference Solution compare - %s' \
                 % imageFilename
-            self.imageComps[tcName] = ImageCompTest(imageFilename,
+            self.imageComps[tcName] = ImageCompTC(imageFilename,
                 imageTol, refPath=self.expectedSolnPath)
 
     def setup(self, jobRunner):

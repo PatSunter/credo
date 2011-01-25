@@ -25,7 +25,7 @@ from xml.etree import ElementTree as etree
 
 from credo.systest.api import SingleRunTestComponent, CREDO_PASS, CREDO_FAIL
 
-class OutputWithinRangeTest(SingleRunTestComponent):
+class OutputWithinRangeTC(SingleRunTestComponent):
     '''Test component to check that a given output parameter 
     (found in the frequent output) is within a given range, and
     optionally also that this occurs within a given set of model times.

@@ -37,7 +37,7 @@ from credo.modelrun import SimParams
 import credo.jobrunner
 from credo.systest.api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL
 from credo.systest.api import getStdTestNameBasic
-from credo.systest.fieldWithinTolTest import FieldWithinTolTest
+from credo.systest.fieldWithinTolTC import FieldWithinTolTC
 
 DEF_TEST_FIELDS = ['VelocityField','PressureField']
 
@@ -46,7 +46,7 @@ class ReferenceTest(SingleModelSysTest):
     This case simply runs a given model for a set number of steps,
     then checks the resultant solution matches within a tolerance
     of a previously-generated reference solution. Uses a
-    :class:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest`
+    :class:`~credo.systest.fieldWithinTolTC.FieldWithinTolTC`
     test component to perform the check.
 
     Optional constructor keywords:
@@ -57,8 +57,8 @@ class ReferenceTest(SingleModelSysTest):
       :attr:`.DEF_TEST_FIELDS`.
     * defFieldTol: The default tolerance to be applied when comparing
       fields of interest to the reference solution.
-      See also the FieldWithinTolTest's
-      :attr:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
+      See also the FieldWithinTolTC's
+      :attr:`~credo.systest.fieldWithinTolTC.FieldWithinTolTC.defFieldTol`.
     * fieldTols: a dictionary of tolerances to use when testing particular
       fields, rather than the default tolerance as set in the defFieldTol
       argument.
@@ -95,7 +95,7 @@ class ReferenceTest(SingleModelSysTest):
         else:    
             self.fieldsToTest = fieldsToTest
         self.runSteps = runSteps
-        self.fTests = FieldWithinTolTest(fieldsToTest=self.fieldsToTest,
+        self.fTests = FieldWithinTolTC(fieldsToTest=self.fieldsToTest,
             defFieldTol=defFieldTol,
             fieldTols=fieldTols,
             useReference=True,
