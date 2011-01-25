@@ -154,12 +154,8 @@ class OutputWithinRangeTC(SingleRunTestComponent):
                         " occurred (%s) within req'd range (%g,%g)."\
                         % ((self.actualTime,) + self.tRange)
                     overallResult = True
-
         print statusMsg
-        if overallResult == False:
-            self.tcStatus = CREDO_FAIL(statusMsg)
-        else:
-            self.tcStatus = CREDO_PASS(statusMsg)
+        self._setStatus(overallResult, statusMsg)
         return overallResult
 
     def _writeXMLCustomResult(self, resNode, resultsSet):

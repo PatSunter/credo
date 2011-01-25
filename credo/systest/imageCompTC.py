@@ -117,13 +117,12 @@ class ImageCompTC(SingleRunTestComponent):
             statusMsg += "Image comp for image file '%s' errors %s not"\
                 " within tol %s of reference image\n"\
                 % (self.imageFilename, self.imageErrors, self.tol)
-            print statusMsg
-            self.tcStatus = CREDO_FAIL(statusMsg)
         else:
             statusMsg = "Image comp error within tolerances %s"\
                 " of ref image.\n"\
                 % (str(self.tol))
-            self.tcStatus = CREDO_PASS(statusMsg)
+        print statusMsg
+        self._setStatus(overallResult, statusMsg)
         return overallResult
 
     def _writeXMLCustomSpec(self, specNode):

@@ -245,16 +245,14 @@ class FieldCvgWithScaleTC(MultiRunTestComponent):
 
         overallResult = all(self.fCvgResults.itervalues())
         if not overallResult:
-            # TODO: be more specific in statusMsg
             statusMsg = "The solution compared to the %s result didn't cvg"\
                 " as expected with increasing resolution for all fields."\
                 % (self.fComps.getCmpSrcString())
-            self.tcStatus = CREDO_FAIL(statusMsg)
         else:
             statusMsg = "The solution compared to the %s result converged"\
                 " as expected with increasing resolution for all fields."\
                 % (self.fComps.getCmpSrcString())
-            self.tcStatus = CREDO_PASS(statusMsg)
+        self._setStatus(overallResult, statusMsg)
         return overallResult
 
     def _writeXMLCustomSpec(self, specNode):

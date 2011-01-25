@@ -257,12 +257,9 @@ class SysTest:
             for mRun in self.mSuite.runs:
                 assert mRun.outputPath != self.outputPathBase
             self.mSuite.preRunCleanup()
-            #TODO: subsume below into modelSuite? run
-            self.mSuite.writeAllModelRunXMLs()
             try:
                 suiteResults = jobRunner.runSuite(self.mSuite, 
-                    maxRunTime=self.timeout)
-                self.mSuite.writeAllModelResultXMLs()
+                    maxRunTime=self.timeout, writeRecords=True)
             except ModelRunError, mre:
                 suiteResults = None
                 sysTestResult = self.setErrorStatus(str(mre))
@@ -279,7 +276,6 @@ class SysTest:
         
         # TODO: Do we need to allow any custom post-proc here?
         # Including custom getStatus?
-
         print "%s '%s' result: **%s**" % \
             (self.testType, self.testName, sysTestResult)
         if isinstance(sysTestResult, CREDO_ERROR):
@@ -291,7 +287,10 @@ class SysTest:
         return sysTestResult, suiteResults
 
     def configureSuite(self):
-        # TODO: perhaps this could be key func to over-ride?
+        """Function for configuring the :class:`credo.modelsuite.ModelSuite`
+        to be used for testing on. Must be saved to :attr:`.mSuite` by the
+        end of this function. By Default, calls method :meth:`.genSuite`
+        which the user should override."""
         self.mSuite = msuite.ModelSuite(outputPathBase=self.outputPathBase)
         self.genSuite()
 
@@ -587,6 +586,7 @@ class SysTest:
         """Update the XML info about each test component after a run
         (ie result info.)"""
         tcListNode = baseNode.find('testComponents')
+        #First MultiRunTestComponents
         runsNode = tcListNode.find('singleRunTestComponents')
         runsNode.attrib['allPassed'] = str(self.allsrPassed)
         runsNodes = runsNode.getchildren()
@@ -605,7 +605,7 @@ class SysTest:
                 assert tcName == testCompXMLNode.attrib['name']
                 assert testComp.tcType == testCompXMLNode.attrib['type']
                 testComp.updateXMLWithResult(testCompXMLNode, resultsSet[runI])
-        #TODO: MultiRunTestComponents
+        #Now MultiRunTestComponents
         mrtcsNode = tcListNode.find('multiRunTestComponents')
         mrtcsNode.attrib['allPassed'] = str(self.allmrPassed)
         for mrtCompXMLNode in list(mrtcsNode):
@@ -723,6 +723,14 @@ class TestComponent:
         self.tcStatus = None
         self.tcType = tcType
 
+    def _setStatus(self, result, statusMsg):
+        """Utility function for setting the :attr:`.tcStatus` correctly.
+        Useful to use at the end of the check() function by child classes."""
+        if result == False:
+            self.tcStatus = CREDO_FAIL(statusMsg)
+        else:
+            self.tcStatus = CREDO_PASS(statusMsg)
+    
     def writePreRunXML(self, parentNode, name):
         '''Function to write out info about the test component to an XML file,
         as a sub-tree of parentNode.'''

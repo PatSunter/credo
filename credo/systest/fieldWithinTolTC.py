@@ -156,10 +156,7 @@ class FieldWithinTolTC(SingleRunTestComponent):
                     % (fComp.name, fieldTol, self.fComps.getCmpSrcString())
 
         print statusMsg
-        if overallResult == False:
-            self.tcStatus = CREDO_FAIL(statusMsg)
-        else:
-            self.tcStatus = CREDO_PASS(statusMsg)
+        self._setStatus(overallResult, statusMsg)
         return overallResult
 
     def _checkFieldWithinTol(self, fComp, mResult):
