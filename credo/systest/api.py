@@ -245,14 +245,14 @@ class SysTest:
         print "Running '%s' system test (%s):" % (self.testName, self.testType)
         startDir = os.getcwd()
         os.chdir(self.basePath)
+        print "Attaching test component analysis ops to suite ModelRuns"
+        self.attachAllTestCompOps()
         print "Writing pre-test info to XML"
         self.writePreRunXML()
         if postProcFromExisting == False:
             if len(self.mSuite.runs) < 1:
                 raise AttributeError("Error: test's ModelSuite has zero runs"\
                     " when about to run - please resolve.")
-            print "Attaching test component analysis ops to suite ModelRuns"
-            self.attachAllTestCompOps()
             # This is to avoid deleting the entire directory that we just
             #  wrote a pre-run XML into.
             for mRun in self.mSuite.runs:
@@ -316,7 +316,8 @@ class SysTest:
         but default is to call 'attachOps' method of all testComps
         (requires all testComps to have been already set up and declared in
         :meth:`.configureTestComps`)"""
-        assert len(self.testComps) > 0
+        assert (len(self.testComps) > 0) or (len(self.multiRunTestComps) > 0)
+        assert len(self.mSuite.runs) > 0
         assert len(self.mSuite.runs) == len(self.testComps)
         for runI, testCompsForRun in enumerate(self.testComps):
             for tcName, testComp in testCompsForRun.iteritems():
