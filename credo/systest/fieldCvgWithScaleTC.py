@@ -300,7 +300,7 @@ class FieldCvgWithScaleTC(MultiRunTestComponent):
                 runEsNode = etree.SubElement(dofNode, "runErrors")
                 for runI, dofError in enumerate(dofErrorsByRun):
                     dofErrorNode = etree.SubElement(runEsNode, "dofError")
-                    dofErrorNode.attrib['run_number'] = str(runI+1)
+                    dofErrorNode.attrib['run_number'] = str(runI)
                     dofErrorNode.attrib['lenScale'] = "%8.6e"\
                         % (lenScales[runI])
                     dofErrorNode.attrib["error"] = "%6e" % dofError
