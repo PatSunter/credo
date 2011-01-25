@@ -24,9 +24,10 @@
 """
 This module contains the System Testing functionality of CREDO. 
 
-Working at a higher-level than the :mod:`credo.modelrun` and :mod:`credo.analysis`
-modules, it is able to use their capabilities to run system tests of 
-StGermain-based codes, and communicate and record the results.
+Working at a higher-level than the :mod:`credo.modelrun` and
+:mod:`credo.analysis` modules, it is able to use their
+capabilities to run system tests of scientific applications,
+and communicate and record the results.
 
 From a user perspective, doing an::
 
@@ -60,4 +61,8 @@ except ImportError:
 # Import the benchmark test
 from credo.systest.scibenchmark import SciBenchmarkTest
 
-# TODO: import all test components here too?
+# import all test components here too so available for benchmark tests
+from .fieldCvgWithScaleTest import FieldCvgWithScaleTest
+from .fieldWithinTolTest import FieldWithinTolTest
+from .imageCompTest import ImageCompTest
+from .outputWithinRangeTest import OutputWithinRangeTest
