@@ -79,11 +79,13 @@ class JobRunner:
             return None
 
     def submitSuite(self, modelSuite, prefixStr=None, extraCmdLineOpts=None,
-            dryRun=False, maxRunTime=None):
+            dryRun=False, maxRunTime=None, writeRecords=True):
         """Submits each modelRun in a suite to be run, and returns a list
         of all jobMetaInfos for the submitted jobs."""
         jobMetaInfos = []
         for runI, modelRun in enumerate(modelSuite.runs):
+            if writeRecords == True:
+                modelSuite.writeAllModelRunXMLs()
             customOpts = modelSuite.getCustomOpts(runI, extraCmdLineOpts)
             jobMetaInfo = self.submitRun(modelRun, prefixStr, customOpts,
                 dryRun, maxRunTime)    
@@ -106,12 +108,22 @@ class JobRunner:
         return modelSuite.resultsList
     
     def runSuite(self, modelSuite, prefixStr=None, extraCmdLineOpts=None,
-            dryRun=False, maxRunTime=None, runSuiteNonBlocking=None):
+            dryRun=False, maxRunTime=None, runSuiteNonBlocking=None,
+            writeRecords=True):
         """Run each ModelRun in the suite - with optional extra cmd line opts.
         Will also write XML records of each ModelRun and ModelResult in the 
         suite.
 
-        Input arguments same as for :meth:`.runModel`.
+        Input arguments same as for :meth:`.runModel`, except those listed
+        below:
+
+        :keyword runSuiteNonBlocking: controls whether the suite will be 
+           run "non-blocking", i.e. all modelRuns submitted initially, then
+           a separate phase to block until they're all completed.
+
+        :keyword writeRecords: sets whether you want each ModelRun in the 
+           suite, and each ModelResult generated, to automatically write
+           an XML record of itself in default location as it is run/produced.
 
         :returns: a reference to the :attr:`.resultsList` containing all
            the ModelResults generated."""
@@ -124,8 +136,10 @@ class JobRunner:
 
         if runSuiteNonBlocking:
             jobMetaInfos = self.submitSuite(modelSuite, prefixStr,
-                extraCmdLineOpts, dryRun, maxRunTime)
+                extraCmdLineOpts, dryRun, maxRunTime, writeRecords)
             resultsList = self.blockSuite(modelSuite, jobMetaInfos)
+            if writeRecords == True:
+                modelSuite.writeAllModelResultXMLs()
             return resultsList
         else:
             modelSuite.resultsList = []
@@ -142,12 +156,15 @@ class JobRunner:
                     % (modelRun.outputPath)
 
                 customOpts = modelSuite.getCustomOpts(runI, extraCmdLineOpts)
+                if writeRecords == True:
+                    modelRun.writeInfoXML()
                 result = self.runModel(modelRun, prefixStr, customOpts,
                     dryRun, maxRunTime)
-
                 if dryRun == True: continue
                 assert isinstance(result, credo.modelresult.ModelResult)
                 modelSuite.resultsList.append(result)
+                if writeRecords == True:
+                    result.writeRecordXML()
 
         return modelSuite.resultsList
 
