@@ -365,4 +365,4 @@ def runSuitesFromModules(suiteModNames, outputSummaryDir):
     suites to import and run."""
     suites = getSuitesFromModules(suiteModNames)
     testRunner = SysTestRunner()
-    testRunner.runSuites(suites, outputSummaryDir)
+    testRunner.runSuites(suites, outputSummaryDir=outputSummaryDir)
