@@ -97,7 +97,7 @@ class HighResReferenceTest(SingleModelSysTest):
             referencePath=self.expectedSolnPath,
             testTimestep=self.runSteps)
 
-    def setup(self, jobRunner):
+    def regenerateFixture(self, jobRunner):
         '''Do a run to create the reference solution to use.'''
         resParams = ("elementResI", "elementResJ", "elementResK")
         ffile = stgxml.createFlattenedXML(self.inputFiles)

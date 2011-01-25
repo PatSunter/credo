@@ -86,7 +86,7 @@ class ImageReferenceTest(api.SingleModelSysTest):
             self.imageComps[tcName] = ImageCompTC(imageFilename,
                 imageTol, refPath=self.expectedSolnPath)
 
-    def setup(self, jobRunner):
+    def regenerateFixture(self, jobRunner):
         '''Do a run to create the reference images to use.'''
 
         print "Running the model to create reference images after %d"\

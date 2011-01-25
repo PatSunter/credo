@@ -221,15 +221,14 @@ class SysTest:
         self.allmrPassed = None
         self.testStatus = None
 
-    def setup(self, jobRunner):
-        '''For the setup phase of tests.
-        Since not all tests need a setup phase, the default behaviour is to
-        do nothing.'''
-        #TODO: name needs to be changed given func below.
+    def regenerateFixture(self, jobRunner):
+        '''Function to do any setup of tests for the first time they're run,
+        or e.g. when updating to a new Underworld version.
+        Since not all tests need this functionality, the default behaviour
+        is to do nothing.'''
         pass
 
     def setupTest(self):
-        # Change directories in sys test run, just to be careful
         self.configureSuite()
         self.configureTestComps()
     

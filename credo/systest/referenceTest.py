@@ -102,7 +102,7 @@ class ReferenceTest(SingleModelSysTest):
             referencePath=self.expectedSolnPath,
             testTimestep=self.runSteps)
 
-    def setup(self, jobRunner):
+    def regenerateFixture(self, jobRunner):
         '''Do a run to create the reference solution to use.'''
 
         print "Running the model to create a reference solution after %d"\
