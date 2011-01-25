@@ -47,19 +47,18 @@ from .systestsuite import SysTestSuite
 from .systestrunner import SysTestRunner
 
 # Import all the standard tests so they're available
-from .restart import RestartTest
-from .analytic import AnalyticTest
-from .analyticMultiRes import AnalyticMultiResTest
-from .reference import ReferenceTest
-from .highResReference import HighResReferenceTest
+from .restartTest import RestartTest
+from .analyticTest import AnalyticTest
+from .analyticMultiResTest import AnalyticMultiResTest
+from .referenceTest import ReferenceTest
+from .highResReferenceTest import HighResReferenceTest
 try:
-    from .imageReference import ImageReferenceTest
+    from .imageReferenceTest import ImageReferenceTest
 except ImportError:
     print "Warning, cannot import the ImageReferenceTest for"\
         " use since you don't have required libraries (PIL) installed."
-
 # Import the benchmark test
-from .scibenchmark import SciBenchmarkTest
+from .sciBenchmarkTest import SciBenchmarkTest
 
 # import all test components here too so available for benchmark tests
 from .fieldCvgWithScaleTC import FieldCvgWithScaleTC
