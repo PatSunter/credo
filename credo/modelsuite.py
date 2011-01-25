@@ -316,17 +316,27 @@ class ModelSuite:
         self.iterGen = None
         self.modelVariants = {}
 
-    def addRun(self, modelRun, runDescrip=None, runCustomOpts=None):
+    def addRun(self, modelRun, runDescrip=None, runCustomOpts=None,
+            forceOutputPathBaseSubdir=True):
         """Add a model run to the list of those to be run.
 
         :param modelRun: A :class:`~credo.modelrun.ModelRun` to be added.
         :keyword runDescrip: An (optional) string describing the run.
         :keyword runCustomOpts: (optional) string of any custom options
           that should be passed through to StGermain, only for this run.
+        :keyword forceOutputPathBaseSubdir: if True (default), will
+          update the model run's output dir to enforce it's a subdir of
+          :attr:`.outputPathBase`
         :returns: the index of the newly added run in the modelRun list."""
-        if not isinstance( modelRun, mrun.ModelRun ):
+        if not isinstance(modelRun, mrun.ModelRun):
             raise TypeError("Error, given run not an instance of a"\
                 " ModelRun" % runI)
+        if forceOutputPathBaseSubdir:
+            commonPrefix = os.path.commonprefix([self.outputPathBase,
+                modelRun.outputPath])
+            if commonPrefix != self.outputPathBase:
+                modelRun.outputPath = os.path.join(self.outputPathBase,
+                    modelRun.name)
         self.runs.append(modelRun)
         self.runDescrips.append(runDescrip)
         self.runCustomOptSets.append(runCustomOpts)
@@ -469,7 +479,13 @@ class ModelSuite:
         else:
             outputPathBase = self.outputPathBase
         # First read all results
-        readResults = getModelResultsArray(self.templateMRun.name,
+        # TODO: passing in the 'name' below is hacky:- really should be 
+        #  reading this in from model result XMLs
+        if self.templateMRun:
+            baseName = self.templateMRun.name
+        else:
+            baseName = None
+        readResults = getModelResultsArray(baseName,
             os.path.join(basePath, outputPathBase))
         # Now check through, and build a new list only contained in this index
         sResults = []
@@ -535,7 +551,10 @@ def getModelResultsArray(baseName, baseDir):
         fullPath = os.path.join(baseDir, fName)
         if os.path.isdir(os.path.join(baseDir, fName)):
             dirName = fName
-            modelName = "%s-%s" % (baseName, dirName)
+            if baseName == None:
+                modelName = dirName
+            else:    
+                modelName = "%s-%s" % (baseName, dirName)
             mResult = mres.ModelResult(modelName, fullPath)
             # TODO: When func ready, search for an XML file containing
             #  job meta info, and attach here
