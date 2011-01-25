@@ -84,6 +84,8 @@ class AnalyticTest(SingleModelSysTest):
         self.mSuite.addRun(mRun, "Run the model and generate analytic soln.")
 
     def configureTestComps(self):
+        assert len(self.mSuite.runs) == 1
+        self.setupEmptyTestCompsList()
         self.testComps[0][self.fTestName] = self.fTests
 
     def checkModelResultsValid(self, resultsSet):

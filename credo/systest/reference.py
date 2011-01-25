@@ -134,7 +134,7 @@ class ReferenceTest(SingleModelSysTest):
 
     def configureTestComps(self):
         assert len(self.mSuite.runs) == 1
-        #TODO: addTestComp() method
+        self.setupEmptyTestCompsList()
         self.testComps[0][self.fTestName] = self.fTests
 
     def checkModelResultsValid(self, resultsSet):

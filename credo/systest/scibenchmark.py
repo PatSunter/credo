@@ -56,8 +56,8 @@ class SciBenchmarkTest(SysTest):
             outputPathBase, nproc, timeout)
         # In the case of SciBenchmarks, we will auto-create the 
         # ModelSuite here, since it's up to the user to configure 
-        # this rather than being done automatically in genSuite.
-        self.mSuite = ModelSuite(self.outputPathBase)
+        # this rather than being done automatically in getSuite().
+        self.mSuite = ModelSuite(outputPathBase=self.outputPathBase)
 
     def setupTest(self):
         """Overriding default SysTest.setupTest() method, as for
@@ -73,12 +73,11 @@ class SciBenchmarkTest(SysTest):
             if commonPrefix != self.outputPathBase:
                 mRun.outputPath = os.path.join(self.outputPathBase, mRun.name)
 
-    # TODO : move to base class?
     def addTestComp(self, runI, testCompName, testComp):
         """Add a testComponent (:class:`~credo.systest.api.TestComponent`)
         with name testCompName to the list of test
         components to be applied as part of determining if the benchmark
-        has passed."""
+        has passed. Does basic error-checking."""
         if not isinstance(testComp, TestComponent):
             raise TypeError("Test component passed in to be added to"\
                 " benchmark, '%s', not an instance of a TestComponent."\
@@ -96,21 +95,14 @@ class SciBenchmarkTest(SysTest):
                 " of runs in this system test's ModelSuite, currently %d"\
                 % (len(self.testComps)))
 
-    def genSuite(self):
-        """See base class :meth:`~credo.systest.api.SysTest.genSuite`.
-        
-        For Sci Benchmarks, simply return the suite of models the user
-        has constructed and added themselves, after ensuring any
-        necessary test component ops are attached."""
-        if len(self.mSuite.runs) < 1:
-            raise AttributeError("Error: test's ModelSuite has zero runs"\
-                " currently:-for SciBenchmark Tests, you as"\
-                " the user need to configure the runs of the ModelSuite used"\
-                " for the test on the sysTest.mSuite parameter.")
+    def configureSuite(self):
+        raise NotImplementedError("Should not be called on SciBenchmark"\
+            " class, user should configure suite manually by operating on"\
+            " benchmarks .mSuite attribute directly.")
 
     def configureTestComps(self):
-        #TODO: how do we let the user over-ride this?
-        raise NotImplementedError
+        raise NotImplementedError("Should not be called on SciBenchmark"\
+            " class, user should configure manually by calling addTestComps()")
 
     def _writeXMLCustomSpec(self, specNode):
         # TODO: write info about the modelRuns making up the suite ...

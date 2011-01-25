@@ -210,8 +210,9 @@ class SysTest:
         self.outputPathBase = outputPathBase
         self.nproc = nproc 
         self.timeout = timeout
+        ##  The modelSuite used for system testing.
         self.mSuite = None
-        ### - attributes created in process of testing.
+        ## - attributes created in process of testing.
         self.testComps = []
         self.tcResults = []
         self.allsrPassed = None
@@ -230,9 +231,7 @@ class SysTest:
     def setupTest(self):
         # Change directories in sys test run, just to be careful
         self.configureSuite()
-        self.setupEmptyTestCompsList()
         self.configureTestComps()
-        #TODO: do we want to allow any custom post-proc opps here?
     
     def runTest(self, jobRunner, postProcFromExisting=False):
         """Run this sysTest, and return the 
@@ -249,6 +248,9 @@ class SysTest:
         print "Writing pre-test info to XML"
         self.writePreRunXML()
         if postProcFromExisting == False:
+            if len(self.mSuite.runs) < 1:
+                raise AttributeError("Error: test's ModelSuite has zero runs"\
+                    " when about to run - please resolve.")
             print "Attaching test component analysis ops to suite ModelRuns"
             self.attachAllTestCompOps()
             # This is to avoid deleting the entire directory that we just
@@ -256,7 +258,7 @@ class SysTest:
             for mRun in self.mSuite.runs:
                 assert mRun.outputPath != self.outputPathBase
             self.mSuite.preRunCleanup()
-            #TODO: subsume into modelSuite? run
+            #TODO: subsume below into modelSuite? run
             self.mSuite.writeAllModelRunXMLs()
             try:
                 suiteResults = jobRunner.runSuite(self.mSuite, 
@@ -292,22 +294,12 @@ class SysTest:
     def configureSuite(self):
         # TODO: perhaps this could be key func to over-ride?
         self.mSuite = msuite.ModelSuite(outputPathBase=self.outputPathBase)
-        # TODO: could do some cleanup here? Instead of master?
         self.genSuite()
 
     def genSuite(self):
-        """Must return a :class:`credo.modelsuite.ModelSuite`
-        containing all models that need to be run to perform the test.
-        
-        .. note:: most standard system tests should override this function
-           with their own suite generator, and save the suite as 
-           :attr:`.mSuite` in the process. """
-        if self.mSuite:
-            self.mSuite.generateRuns()
-            return self.mSuite
-        else:    
-            raise NotImplementedError("Error, base class, and no mSuite"\
-                " attribute set.")
+        """Must update the :attr:`.mSuite` attribute so it
+        contains all models that need to be run to perform the test."""
+        raise NotImplementedError("Error, base class abstract method.")
 
     def setupEmptyTestCompsList(self):    
         assert len(self.mSuite.runs) > 0
@@ -367,7 +359,7 @@ class SysTest:
         self.checkModelResultsValid(resultsSet)
         runPassed = [None for res in resultsSet]
         self.tcResults = [{} for res in resultsSet]
-        #TODO: cleanup in future
+        #TODO: cleanup in future when iterator/generator interface improved
         if self.mSuite.iterGen is not None:
             inIter = msuite.getVariantIndicesIter(self.mSuite.modelVariants,
                 self.mSuite.iterGen)

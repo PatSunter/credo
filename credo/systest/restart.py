@@ -117,6 +117,7 @@ class RestartTest(SingleModelSysTest):
             "Do the restart run and check results at end match initial.")
 
     def configureTestComps(self):
+        self.setupEmptyTestCompsList()
         # Only test fields on the restart run
         self.testComps[self.resRunI][self.fTestName] = self.fTests
 

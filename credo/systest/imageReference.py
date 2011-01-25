@@ -129,6 +129,7 @@ class ImageReferenceTest(api.SingleModelSysTest):
 
     def configureTestComps(self):    
         assert len(self.mSuite.runs) == 1
+        self.setupEmptyTestCompsList()
         self.testComps[0] = self.imageComps
 
     def checkModelResultsValid(self, resultsSet):
