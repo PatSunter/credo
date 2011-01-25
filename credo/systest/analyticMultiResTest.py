@@ -81,6 +81,7 @@ class AnalyticMultiResTest(SingleModelSysTest):
             self.mSuite.addRun(mRun, "Run the model at res %s" % (resStr), customOpts)
     
     def configureTestComps(self):
+        self.setupEmptyTestCompsList()
         self.multiRunTestComps['fieldConvChecker'] = self.cvgChecker
 
     def checkModelResultsValid(self, resultsSet):
