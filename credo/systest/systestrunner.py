@@ -63,27 +63,27 @@ class SysTestRunner:
     def __init__(self):
         return
 
-    def runTests(self, sysTests, projName=None, suiteName=None,
-            printSummary=True):
+    def runTests(self, sysTests, postProcFromExisting=False,
+            projName=None, suiteName=None, printSummary=True):
         """Run all tests in the sysTests list.
         Will also save all appropriate XMLs and print a summary of results."""
         results = []
         testTotal = len(sysTests)
         for testI, sysTest in enumerate(sysTests):
-            #TODO: need a "updateOnly" option, that doesn't re-run setup,
-            # or at least avoids deleting previous model results there.
             sysTest.setupTest()
-            #TODO: perhaps need to pass jobRunner in when running tests
-            # or use as a factory method?
             jobRunner = credo.jobrunner.defaultRunner()
             print "Running System test %d/%d, with name '%s':" \
                 % (testI+1, testTotal, sysTest.testName)
-            results.append(sysTest.runTest(jobRunner)[0])
+            testRes, mResults = sysTest.runTest(jobRunner,
+                postProcFromExisting=postProcFromExisting)
+            results.append(testRes)
         if printSummary:
             self.printResultsSummary(sysTests, results, projName, suiteName)
         return results
     
-    def runSuite(self, suite, runSubSuites=True, subSuiteMode=False,
+    def runSuite(self, suite,
+        runSubSuites=True, subSuiteMode=False,
+        postProcFromExisting=False, 
         outputSummaryDir="testLogs"):
         """Runs a suite of system tests, and prints results.
         The suite may contain sub-suites, which will also be run by default.
@@ -106,8 +106,10 @@ class SysTestRunner:
         suiteNode = self._createSuiteNode(suite)
         suiteXMLDoc = etree.ElementTree(suiteNode)
         if testTotal > 0:
-            results += self.runTests(suite.sysTests, suite.projectName,
-                suite.suiteName)
+            results += self.runTests(suite.sysTests, 
+                postProcFromExisting=postProcFromExisting,
+                projName=suite.projectName,
+                suiteName=suite.suiteName)
         # Even if no results, call func below so we get at least empty totals.
         self._addTestResultsInfo(suiteNode, suite, results)
 
@@ -120,7 +122,9 @@ class SysTestRunner:
         if runSubSuites and subSuitesTotal > 0:
             subSuiteResults = []
             for subSuite in suite.subSuites:
-                subResults = self.runSuite(subSuite, subSuiteMode=True,
+                subResults = self.runSuite(subSuite,
+                    subSuiteMode=True,
+                    postProcFromExisting=postProcFromExisting,
                     outputSummaryDir=outputSummaryDir)
                 subSuiteResults.append(subResults)
             for subResults in subSuiteResults:
@@ -129,9 +133,11 @@ class SysTestRunner:
                 suite.suiteName)
         return results
     
-    def runSuites(self, testSuites, outputSummaryDir="testLogs"):
+    def runSuites(self, testSuites, postProcFromExisting=False,
+            outputSummaryDir="testLogs"):
         """Runs a list of suites, and prints a big summary at the end.
         :param testSuites: list of test suites to run.
+        :param postProcFromExisting: see :func:`.runTests`.
         :keyword outputSummaryDir: name of directory to save a summary of
         tests
         to.
@@ -147,6 +153,7 @@ class SysTestRunner:
         resultsLists = []
         for suite in testSuites:
             suiteResults = self.runSuite(suite, 
+                postProcFromExisting=postProcFromExisting,
                 outputSummaryDir=outputSummaryDir)
             resultsLists.append(suiteResults)
         print "-"*80

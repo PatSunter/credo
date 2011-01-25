@@ -64,7 +64,14 @@ class SciBenchmarkTest(SysTest):
         SciBenchmarks we want to allow the user to manage test setup
         explicitly in their benchmark script. Thus assume suite 
         runs and test components have been setup correctly already."""
-        self.mSuite.preRunCleanup()
+        # Re-force this just in case
+        self.mSuite.outputPathBase = self.outputPathBase
+        # Check all output paths are subdirs of outputPathBase, if not correct
+        for mRun in self.mSuite.runs:
+            commonPrefix = os.path.commonprefix(
+                [self.outputPathBase, mRun.outputPath])
+            if commonPrefix != self.outputPathBase:
+                mRun.outputPath = os.path.join(self.outputPathBase, mRun.name)
 
     # TODO : move to base class?
     def addTestComp(self, runI, testCompName, testComp):

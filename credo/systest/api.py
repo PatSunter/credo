@@ -230,7 +230,6 @@ class SysTest:
     def setupTest(self):
         # Change directories in sys test run, just to be careful
         self.configureSuite()
-        self.mSuite.preRunCleanup()
         self.setupEmptyTestCompsList()
         self.configureTestComps()
         #TODO: do we want to allow any custom post-proc opps here?
@@ -252,6 +251,11 @@ class SysTest:
         if postProcFromExisting == False:
             print "Attaching test component analysis ops to suite ModelRuns"
             self.attachAllTestCompOps()
+            # This is to avoid deleting the entire directory that we just
+            #  wrote a pre-run XML into.
+            for mRun in self.mSuite.runs:
+                assert mRun.outputPath != self.outputPathBase
+            self.mSuite.preRunCleanup()
             #TODO: subsume into modelSuite? run
             self.mSuite.writeAllModelRunXMLs()
             try:
@@ -267,7 +271,8 @@ class SysTest:
         else:
             print "(Reading existing results from %s)" % \
                 (os.path.join(self.basePath, self.outputPathBase))
-            suiteResults = self.mSuite.readResultsFromPath(self.basePath)
+            suiteResults = self.mSuite.readResultsFromPath(self.basePath,
+                overrideOutputPath=self.outputPathBase)
             print "Processing sys test result:"
             sysTestResult = self.getStatus(suiteResults)
         
@@ -676,7 +681,7 @@ class SingleModelSysTest(SysTest):
         stgpath.checkAllXMLInputFilesExist(absInputFiles)
         self.solverOpts = solverOpts
 
-    def _createDefaultModelRun(self, modelName, outputPath):
+    def _createDefaultModelRun(self, modelName, outputPath=None):
         """Create and return a :class:`credo.modelrun.ModelRun` with the
         default options as specified for this System Test.
         (Thus is a useful helper function for sub-classes, so they can
