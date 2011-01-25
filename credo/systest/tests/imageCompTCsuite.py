@@ -25,16 +25,16 @@ import os
 import shutil
 import unittest
 
-from credo.systest.imageCompTest import *
+from credo.systest.imageCompTC import *
 from credo.modelresult import ModelResult
 
-class ImageCompTestTestCase(unittest.TestCase):
+class ImageCompTCTestCase(unittest.TestCase):
     def setUp(self):
         self.imageRefPath = os.path.join('input','testImages')
         self.resultsPath1 = os.path.join('input','resultsDirs','res1')
         self.resultsPath2 = os.path.join('input','resultsDirs','res2')
         # Set up a skeleton model run.
-        self.imageCompTest = ImageCompTest("window.00001.png", (0.1, 0.1),
+        self.imageCompTest = ImageCompTC("window.00001.png", (0.1, 0.1),
             refPath=self.imageRefPath)
         self.resultsSet1 = ModelResult('testModel1', self.resultsPath1)
         self.resultsSet2 = ModelResult('testModel2', self.resultsPath2)
@@ -89,7 +89,7 @@ class ImageCompTestTestCase(unittest.TestCase):
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(ImageCompTestTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(ImageCompTCTestCase, 'test'))
     return suite
 
 if __name__ == '__main__':

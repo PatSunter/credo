@@ -27,7 +27,7 @@ import shutil
 import tempfile
 import unittest
 
-from credo.systest.analytic import AnalyticTest
+from credo.systest.analyticTest import AnalyticTest
 
 class AnalyticTestTestCase(unittest.TestCase):
 
