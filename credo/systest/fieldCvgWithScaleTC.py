@@ -296,7 +296,6 @@ class FieldCvgWithScaleTC(MultiRunTestComponent):
                 dofCvgResult = fieldCvgResult[dofI]
                 dofNode.attrib['cvgrate'] = "%8.6f" % dofCvgResult[0]
                 dofNode.attrib['correlation'] = "%8.6f" % dofCvgResult[1]
-                #TODO run name? and overall result?
                 runEsNode = etree.SubElement(dofNode, "runErrors")
                 for runI, dofError in enumerate(dofErrorsByRun):
                     dofErrorNode = etree.SubElement(runEsNode, "dofError")
