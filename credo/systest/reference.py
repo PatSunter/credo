@@ -125,7 +125,8 @@ class ReferenceTest(SingleModelSysTest):
         """See base class :meth:`~credo.systest.api.SysTest.genSuite`.
         For this test, just a single model run is needed, to run
         the model and compare against the reference solution."""
-        mRun = self._createDefaultModelRun(self.testName, self.outputPathBase)
+        mRun = self._createDefaultModelRun(self.testName,
+            os.path.join(self.outputPathBase, "testRun"))
         mRun.simParams = SimParams(nsteps=self.runSteps,
             cpevery=0, dumpevery=0)
         self.mSuite.addRun(mRun, "Run the model, and check results against "\

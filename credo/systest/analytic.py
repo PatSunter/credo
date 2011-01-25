@@ -79,8 +79,8 @@ class AnalyticTest(SingleModelSysTest):
         the model and compare against the analytic solution."""
         #Hmmm ... could this be refactored as standard practice?
         # so base class creates suite etc?
-        mRun = self._createDefaultModelRun(self.testName, 
-            self.outputPathBase)
+        mRun = self._createDefaultModelRun(self.testName,
+            os.path.join(self.outputPathBase, "testRun"))
         self.mSuite.addRun(mRun, "Run the model and generate analytic soln.")
 
     def configureTestComps(self):
