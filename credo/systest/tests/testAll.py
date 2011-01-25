@@ -28,7 +28,7 @@ import unittest
 def suite():
     #testMods = [fName.rstrip(".py") for fName in glob.glob("*suite.py")]
     testMods = ['systestapisuite', 'systestsuitesuite', 'systestrunnersuite',
-        'imageCompTestsuite']
+        'imageCompTCsuite']
     # TODO: others need fixing
     alltests = unittest.TestSuite()
     for module in map(__import__, testMods):

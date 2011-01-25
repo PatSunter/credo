@@ -59,6 +59,11 @@ class SkeletonSysTest(SysTest):
     def checkModelResultsValid(self, resultsSet):
         pass
 
+    def runTest(self, jobRunner, postProcFromExisting=False):
+        testStatus = self.getStatus(None)
+        testStatus.setRecordFile("Foo.xml")
+        return testStatus, None
+
     def getStatus(self, resultsSet):
         self.testStatus = self.statusToReturn
         return self.testStatus
