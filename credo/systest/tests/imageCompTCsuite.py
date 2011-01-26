@@ -25,16 +25,16 @@ import os
 import shutil
 import unittest
 
-from credo.systest.imageCompTest import *
+from credo.systest.imageCompTC import *
 from credo.modelresult import ModelResult
 
-class ImageCompTestTestCase(unittest.TestCase):
+class ImageCompTCTestCase(unittest.TestCase):
     def setUp(self):
         self.imageRefPath = os.path.join('input','testImages')
         self.resultsPath1 = os.path.join('input','resultsDirs','res1')
         self.resultsPath2 = os.path.join('input','resultsDirs','res2')
         # Set up a skeleton model run.
-        self.imageCompTest = ImageCompTest("window.00001.png", (0.1, 0.1),
+        self.imageCompTest = ImageCompTC("window.00001.png", (0.1, 0.1),
             refPath=self.imageRefPath)
         self.resultsSet1 = ModelResult('testModel1', self.resultsPath1)
         self.resultsSet2 = ModelResult('testModel2', self.resultsPath2)
@@ -48,12 +48,12 @@ class ImageCompTestTestCase(unittest.TestCase):
         pass
 
     def test_check(self):
-        checkRes = self.imageCompTest.check([self.resultsSet1])
+        checkRes = self.imageCompTest.check(self.resultsSet1)
         self.assertTrue(checkRes)
-        checkRes = self.imageCompTest.check([self.resultsSet2])
+        checkRes = self.imageCompTest.check(self.resultsSet2)
         self.assertTrue(checkRes)
         self.imageCompTest.tol = (1e-10, 1e-10)
-        checkRes = self.imageCompTest.check([self.resultsSet2])
+        checkRes = self.imageCompTest.check(self.resultsSet2)
         self.assertFalse(checkRes)
 
     def test_writeXMLSpec(self):
@@ -73,30 +73,23 @@ class ImageCompTestTestCase(unittest.TestCase):
 
     def test_writeXMLResult(self):
         testNode = etree.Element('testResult')
-        self.imageCompTest.imageResults = [True, True, False]
-        self.imageCompTest.imageErrors = [(0.01, 0.03),
-            (0.2, 0.4), (0.5, 0.8)]
+        self.imageCompTest.tol = (1e-10, 1e-10)
+        self.imageCompTest.imageErrors = (1.e-11, 0.03)
+        self.imageCompTest.imageResults = [True, False]
         self.imageCompTest._writeXMLCustomResult(testNode, None)
-        resNode = testNode.find('imageResults')
-        self.assertTrue(resNode != None)
-        self.assertEqual(len(resNode), len(self.imageCompTest.imageResults))
-        for ii, runNode in enumerate(resNode.getchildren()):
-            self.assertEqual(int(runNode.attrib['number']), ii+1)
-            self.assertEqual(runNode.attrib['withinTol'],
-                str(self.imageCompTest.imageResults[ii])) 
-            errorsNode = runNode.find('imgErrors')
-            self.assertTrue(errorsNode != None)
-            for jj, eNode in enumerate(errorsNode.getchildren()):
-                self.assertEqual(int(eNode.attrib['num']), jj)
-                self.assertAlmostEqual(float(eNode.attrib['error']),
-                    self.imageCompTest.imageErrors[ii][jj])
-                self.assertEqual(eNode.attrib['withinTol'],
-                    str(self.imageCompTest.imageErrors[ii][jj] <= \
-                        self.imageCompTest.tol[jj]))
+        errorsNode = testNode.find('imgErrors')
+        self.assertTrue(errorsNode != None)
+        for ii, eNode in enumerate(errorsNode.getchildren()):
+            self.assertEqual(int(eNode.attrib['num']), ii)
+            self.assertAlmostEqual(float(eNode.attrib['error']),
+                self.imageCompTest.imageErrors[ii])
+            self.assertEqual(eNode.attrib['withinTol'],
+                str(self.imageCompTest.imageErrors[ii] <= \
+                    self.imageCompTest.tol[ii]))
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(ImageCompTestTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(ImageCompTCTestCase, 'test'))
     return suite
 
 if __name__ == '__main__':

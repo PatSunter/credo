@@ -56,11 +56,12 @@ class SysTestRunnerTestCase(unittest.TestCase):
         self.stRunner = None
         shutil.rmtree(self.basedir)
 
-    def test_runTest(self):
-        testResult = self.stRunner.runTest(self.skelTest1)
-        self.assertEqual(testResult.statusStr, CREDO_PASS.statusStr)
-        testResult = self.stRunner.runTest(self.skelTest2)
-        self.assertEqual(testResult.statusStr, CREDO_FAIL.statusStr)
+    def test_runTests(self):
+        sysTests = [self.skelTest1, self.skelTest2]
+        testResults = self.stRunner.runTests(sysTests)
+        self.assertEqual(len(testResults), 2)
+        self.assertEqual(testResults[0].statusStr, CREDO_PASS.statusStr)
+        self.assertEqual(testResults[1].statusStr, CREDO_FAIL.statusStr)
     
     def test_runSuite(self):
         skelSuite = SysTestSuite("StgFEM", "RegressionTests", 
@@ -99,13 +100,6 @@ class SysTestRunnerTestCase(unittest.TestCase):
         self.assertEqual(testResults[2].statusStr, CREDO_FAIL.statusStr)
         self.assertEqual(testResults[3].statusStr, CREDO_ERROR.statusStr)
 
-    def test_runTests(self):
-        sysTests = [self.skelTest1, self.skelTest2]
-        testResults = self.stRunner.runTests(sysTests)
-        self.assertEqual(len(testResults), 2)
-        self.assertEqual(testResults[0].statusStr, CREDO_PASS.statusStr)
-        self.assertEqual(testResults[1].statusStr, CREDO_FAIL.statusStr)
-    
     def test_runSuites(self):
         suite1 = SysTestSuite("StgFEM", "RegressionTests", 
             sysTests=[self.skelTest1, self.skelTest2])

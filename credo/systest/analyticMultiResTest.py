@@ -27,7 +27,7 @@ from xml.etree import ElementTree as etree
 from credo.modelsuite import ModelSuite
 import credo.modelrun as mrun
 from credo.systest.api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL
-from credo.systest.fieldCvgWithScaleTest import FieldCvgWithScaleTest
+from credo.systest.fieldCvgWithScaleTC import FieldCvgWithScaleTC
 
 class AnalyticMultiResTest(SingleModelSysTest):
     '''A Multiple Resolution system test.
@@ -35,7 +35,7 @@ class AnalyticMultiResTest(SingleModelSysTest):
        analyses fields, to check that the error between the analytic
        solution fields and the actual results improves at the required
        rate as the model resolution is increased. Uses a
-       :class:`~credo.systest.fieldCvgWithScaleTest.FieldCvgWithScaleTest`
+       :class:`~credo.systest.fieldCvgWithScaleTC.FieldCvgWithScaleTC`
        test component to perform the check.
 
        Optional constructor keywords:
@@ -63,8 +63,7 @@ class AnalyticMultiResTest(SingleModelSysTest):
             basePath, nproc, timeout,
             paramOverrides, solverOpts, nameSuffix)
         self.resSet = resSet
-        cvgChecker = FieldCvgWithScaleTest()
-        self.testComponents['fieldConvChecker'] = cvgChecker
+        self.cvgChecker = FieldCvgWithScaleTC()
 
     def genSuite(self):
         """See base class :meth:`~credo.systest.api.SysTest.genSuite`.
@@ -73,25 +72,20 @@ class AnalyticMultiResTest(SingleModelSysTest):
         XML files, but with increasing resolution as specified by the 
         :attr:`.resSet` attribute.
         """
-        mSuite = ModelSuite(outputPathBase=self.outputPathBase)
-        self.mSuite = mSuite
-        
-        # For analytic conv test, read fields to analyse from the XML
-        cvgChecker = self.testComponents['fieldConvChecker']
-
         for res in self.resSet:
             resStr = mrun.strRes(res)
             modelName = self.testName+'-'+resStr
             mRun = self._createDefaultModelRun(modelName,
                 os.path.join(self.outputPathBase, resStr))
             customOpts = mrun.generateResOpts(res)
-            cvgChecker.attachOps(mRun)
-            mSuite.addRun(mRun, "Run the model at res "+resStr, customOpts)
+            self.mSuite.addRun(mRun, "Run the model at res %s" % (resStr), customOpts)
+    
+    def configureTestComps(self):
+        self.setupEmptyTestCompsList()
+        self.multiRunTestComps['fieldConvChecker'] = self.cvgChecker
 
-        return mSuite
-
-    def checkResultValid(self, resultsSet):
-        """See base class :meth:`~credo.systest.api.SysTest.checkResultValid`."""
+    def checkModelResultsValid(self, resultsSet):
+        """See base class :meth:`~credo.systest.api.SysTest.checkModelResultsValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:

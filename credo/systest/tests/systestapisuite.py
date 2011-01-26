@@ -25,6 +25,8 @@ import unittest
 
 from credo.systest.api import *
 
+# TODO: more testing of the SysTest class itself
+
 class SysTestResultTestCase(unittest.TestCase):
     def setUp(self):
         self.passMsg = "All fields passed."

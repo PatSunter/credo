@@ -23,7 +23,7 @@
 
 from xml.etree import ElementTree as etree
 
-from credo.systest.api import TestComponent, CREDO_PASS, CREDO_FAIL
+from credo.systest.api import MultiRunTestComponent, CREDO_PASS, CREDO_FAIL
 from credo.io import stgcvg
 import credo.analysis.fields as fields
 
@@ -118,12 +118,13 @@ def getDofErrorsByRun(fComp, resultsSet):
     return dofErrorsByRun
 
 
-class FieldCvgWithScaleTest(TestComponent):
+class FieldCvgWithScaleTC(MultiRunTestComponent):
     """Checks whether, for a particular set of fields, the error
     between each field and an (analytic or reference) solution
     reduces with increasing resolution at a required rate. 
-    Thus similar to :class:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest`,
-    except tests accuracy of solution with increasing resolution.
+    Thus similar to 
+    :class:`~credo.systest.fieldWithinTolTC.FieldWithinTolTC`,
+    except tests accuracy of solution with increasing model resolution.
 
     This relies largely on functionality of:
 
@@ -183,17 +184,16 @@ class FieldCvgWithScaleTest(TestComponent):
        actual convergence rate. See the return value of 
        :func:`credo.analysis.fields.calcFieldCvgWithScale` for more.
 
-    """  
-
+    """ 
     def __init__(self, fieldsToTest = None,
             calcCvgFunc = fields.calcFieldCvgWithScale,
             fieldCvgCrits = defFieldScaleCvgCriterions):
-        TestComponent.__init__(self, "fieldCvgWithScaleTest")
+        MultiRunTestComponent.__init__(self, "fieldCvgWithScaleTC")
         self.calcCvgFunc = calcCvgFunc
         self.fieldCvgCrits = fieldCvgCrits
         self.fieldsToTest = fieldsToTest
         # TODO: would be good to check here that the fieldsToTest have
-        # cvg info provided in the  fieldCvgCrits dict. However becuase we
+        # cvg info provided in the fieldCvgCrits dict. However becuase we
         # allow fieldsToTest=None to mean "read from XML", can't always
         # do this just yet.
         self.fComps = None
@@ -201,21 +201,23 @@ class FieldCvgWithScaleTest(TestComponent):
         self.fCvgMeetsReq = {}
         self.fCvgResults = {}
 
-    def attachOps(self, modelRun):
+    def attachOps(self, modelRuns):
         """Implements base class
-        :meth:`credo.systest.api.TestComponent.attachOps`."""
+        :meth:`credo.systest.api.SingleRunTestComponent.attachOps`."""
         self.fComps = fields.FieldComparisonList()
         if self.fieldsToTest == None:
-            self.fComps.readFromStgXML(modelRun.modelInputFiles,
-                modelRun.basePath)
+            self.fComps.readFromStgXML(modelRuns[0].modelInputFiles,
+                modelRuns[0].basePath)
         else:
             for fieldName in self.fieldsToTest:
                 self.fComps.add(fields.FieldComparisonOp(fieldName))
-        modelRun.analysisOps['fieldComparisons'] = self.fComps
+
+        for mRun in modelRuns:
+            mRun.analysisOps['fieldComparisons'] = self.fComps
 
     def check(self, resultsSet):
         """Implements base class
-        :meth:`credo.systest.api.TestComponent.check`.
+        :meth:`credo.systest.api.MultiRunTestComponent.check`.
         
         As well as performing check, will save relevant into to attributes
         :attr:`.fErrorsByRun`, :attr:`.fCvgMeetsReq`, :attr:`.fCvgResults`."""
@@ -243,16 +245,14 @@ class FieldCvgWithScaleTest(TestComponent):
 
         overallResult = all(self.fCvgResults.itervalues())
         if not overallResult:
-            # TODO: be more specific in statusMsg
             statusMsg = "The solution compared to the %s result didn't cvg"\
                 " as expected with increasing resolution for all fields."\
                 % (self.fComps.getCmpSrcString())
-            self.tcStatus = CREDO_FAIL(statusMsg)
         else:
             statusMsg = "The solution compared to the %s result converged"\
                 " as expected with increasing resolution for all fields."\
                 % (self.fComps.getCmpSrcString())
-            self.tcStatus = CREDO_PASS(statusMsg)
+        self._setStatus(overallResult, statusMsg)
         return overallResult
 
     def _writeXMLCustomSpec(self, specNode):
@@ -294,11 +294,10 @@ class FieldCvgWithScaleTest(TestComponent):
                 dofCvgResult = fieldCvgResult[dofI]
                 dofNode.attrib['cvgrate'] = "%8.6f" % dofCvgResult[0]
                 dofNode.attrib['correlation'] = "%8.6f" % dofCvgResult[1]
-                #TODO run name? and overall result?
                 runEsNode = etree.SubElement(dofNode, "runErrors")
                 for runI, dofError in enumerate(dofErrorsByRun):
                     dofErrorNode = etree.SubElement(runEsNode, "dofError")
-                    dofErrorNode.attrib['run_number'] = str(runI+1)
+                    dofErrorNode.attrib['run_number'] = str(runI)
                     dofErrorNode.attrib['lenScale'] = "%8.6e"\
                         % (lenScales[runI])
                     dofErrorNode.attrib["error"] = "%6e" % dofError

@@ -37,7 +37,7 @@ from credo.modelrun import SimParams
 import credo.jobrunner
 from credo.systest.api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL
 from credo.systest.api import getStdTestNameBasic
-from credo.systest.fieldWithinTolTest import FieldWithinTolTest
+from credo.systest.fieldWithinTolTC import FieldWithinTolTC
 
 DEF_TEST_FIELDS = ['VelocityField','PressureField']
 
@@ -46,7 +46,7 @@ class ReferenceTest(SingleModelSysTest):
     This case simply runs a given model for a set number of steps,
     then checks the resultant solution matches within a tolerance
     of a previously-generated reference solution. Uses a
-    :class:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest`
+    :class:`~credo.systest.fieldWithinTolTC.FieldWithinTolTC`
     test component to perform the check.
 
     Optional constructor keywords:
@@ -57,8 +57,8 @@ class ReferenceTest(SingleModelSysTest):
       :attr:`.DEF_TEST_FIELDS`.
     * defFieldTol: The default tolerance to be applied when comparing
       fields of interest to the reference solution.
-      See also the FieldWithinTolTest's
-      :attr:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
+      See also the FieldWithinTolTC's
+      :attr:`~credo.systest.fieldWithinTolTC.FieldWithinTolTC.defFieldTol`.
     * fieldTols: a dictionary of tolerances to use when testing particular
       fields, rather than the default tolerance as set in the defFieldTol
       argument.
@@ -95,14 +95,14 @@ class ReferenceTest(SingleModelSysTest):
         else:    
             self.fieldsToTest = fieldsToTest
         self.runSteps = runSteps
-        self.testComponents[self.fTestName] = FieldWithinTolTest(
-            fieldsToTest=self.fieldsToTest, defFieldTol=defFieldTol,
+        self.fTests = FieldWithinTolTC(fieldsToTest=self.fieldsToTest,
+            defFieldTol=defFieldTol,
             fieldTols=fieldTols,
             useReference=True,
             referencePath=self.expectedSolnPath,
             testTimestep=self.runSteps)
 
-    def setup(self):
+    def regenerateFixture(self, jobRunner):
         '''Do a run to create the reference solution to use.'''
 
         print "Running the model to create a reference solution after %d"\
@@ -114,7 +114,6 @@ class ReferenceTest(SingleModelSysTest):
             dumpevery=0)
         mRun.cpFields = self.fieldsToTest
         mRun.writeInfoXML()
-        jobRunner = credo.jobrunner.defaultRunner()
         result = jobRunner.runModel(mRun)
         # It's conceivable this could be useful, if we store results about
         # e.g. solver solution times etc.
@@ -124,23 +123,23 @@ class ReferenceTest(SingleModelSysTest):
 
     def genSuite(self):
         """See base class :meth:`~credo.systest.api.SysTest.genSuite`.
-
         For this test, just a single model run is needed, to run
         the model and compare against the reference solution."""
-        mSuite = ModelSuite(outputPathBase=self.outputPathBase)
-        self.mSuite = mSuite
-        # Normal mode
-        mRun = self._createDefaultModelRun(self.testName, self.outputPathBase)
+        mRun = self._createDefaultModelRun(self.testName,
+            os.path.join(self.outputPathBase, "testRun"))
         mRun.simParams = SimParams(nsteps=self.runSteps,
             cpevery=0, dumpevery=0)
-        fTests = self.testComponents[self.fTestName]
-        fTests.attachOps(mRun)
-        mSuite.addRun(mRun, "Run the model, and check results against "\
+        self.mSuite.addRun(mRun, "Run the model, and check results against "\
             "previously generated reference solution.")
-        return mSuite
 
-    def checkResultValid(self, resultsSet):
-        """See base class :meth:`~credo.systest.api.SysTest.checkResultValid`."""
+    def configureTestComps(self):
+        assert len(self.mSuite.runs) == 1
+        self.setupEmptyTestCompsList()
+        self.testComps[0][self.fTestName] = self.fTests
+
+    def checkModelResultsValid(self, resultsSet):
+        """See base class 
+        :meth:`~credo.systest.api.SysTest.checkModelResultsValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:

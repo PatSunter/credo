@@ -29,12 +29,12 @@ from credo.modelsuite import ModelSuite
 from credo.modelrun import SimParams
 import credo.jobrunner
 from . import api
-from credo.systest.imageCompTest import ImageCompTest
+from credo.systest.imageCompTC import ImageCompTC
 
 class ImageReferenceTest(api.SingleModelSysTest):
     '''An image comparison against Reference System test.
     To do this, creates a set of several 
-    :class:`~credo.systest.imageCompTest.ImageCompTest` Test Components for
+    :class:`~credo.systest.imageCompTC.ImageCompTC` Test Components for
     each image you wish to test.
 
     Optional contructor keywords:
@@ -75,17 +75,18 @@ class ImageReferenceTest(api.SingleModelSysTest):
         self.imageTols = imageTols
         if self.imageTols is not None:
             assert isinstance(self.imageTols, dict)
+        self.imageComps = {}
         for ii, imageFilename in enumerate(self.imagesToTest):
             if self.imageTols is not None and imageFilename in self.imageTols:
                 imageTol = self.imageTols[imageFilename]
             else:
                 imageTol = self.defImageTol
-            testName = 'Image(s) Reference Solution compare - %s' \
+            tcName = 'Image(s) Reference Solution compare - %s' \
                 % imageFilename
-            self.testComponents[testName] = ImageCompTest(imageFilename,
+            self.imageComps[tcName] = ImageCompTC(imageFilename,
                 imageTol, refPath=self.expectedSolnPath)
 
-    def setup(self):
+    def regenerateFixture(self, jobRunner):
         '''Do a run to create the reference images to use.'''
 
         print "Running the model to create reference images after %d"\
@@ -95,13 +96,12 @@ class ImageReferenceTest(api.SingleModelSysTest):
             self.expectedSolnPath)
         mRun.simParams = SimParams(nsteps=self.runSteps, cpevery=0,
             dumpevery=1)
-        for imageComp in self.testComponents.itervalues():
+        for imageComp in self.imageComps.itervalues():
             imageComp.attachOps(mRun)
         mRun.writeInfoXML()
-        jobRunner = credo.jobrunner.defaultRunner()
         result = jobRunner.runModel(mRun)
         # Now check the required images were actually created
-        for imageComp in self.testComponents.itervalues():
+        for imageComp in self.imageComps.itervalues():
             refImageFilename = os.path.join(self.expectedSolnPath,
                 imageComp.imageFilename)
             if not os.path.exists(refImageFilename):
@@ -111,7 +111,6 @@ class ImageReferenceTest(api.SingleModelSysTest):
                     " generate the image correctly, and/or the image filename"\
                     " you specified in your test is correct."\
                     % refImageFilename)
-                
         result.writeRecordXML()
 
     # TODO: a pre-check phase - check the reference dir exists?
@@ -121,20 +120,20 @@ class ImageReferenceTest(api.SingleModelSysTest):
 
         For this test, just a single model run is needed, to run
         the model and compare against the reference solution."""
-        mSuite = ModelSuite(outputPathBase=self.outputPathBase)
-        self.mSuite = mSuite
-        # Normal mode
-        mRun = self._createDefaultModelRun(self.testName, self.outputPathBase)
+        mRun = self._createDefaultModelRun(self.testName, 
+            os.path.join(self.outputPathBase, "testRun"))
         mRun.simParams = SimParams(nsteps=self.runSteps,
             cpevery=0, dumpevery=1)
-        for imageComp in self.testComponents.itervalues():
-            imageComp.attachOps(mRun)
-        mSuite.addRun(mRun, "Run the model, and check images against "\
+        self.mSuite.addRun(mRun, "Run the model, and check images against "\
             "previously generated reference images.")
-        return mSuite
 
-    def checkResultValid(self, resultsSet):
-        """See base class :meth:`~credo.systest.api.SysTest.checkResultValid`."""
+    def configureTestComps(self):    
+        assert len(self.mSuite.runs) == 1
+        self.setupEmptyTestCompsList()
+        self.testComps[0] = self.imageComps
+
+    def checkModelResultsValid(self, resultsSet):
+        """See base class :meth:`~credo.systest.api.SysTest.checkModelResultsValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:

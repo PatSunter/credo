@@ -26,7 +26,7 @@ from xml.etree import ElementTree as etree
 
 from credo.modelsuite import ModelSuite
 from credo.systest.api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL
-from credo.systest.fieldWithinTolTest import FieldWithinTolTest
+from credo.systest.fieldWithinTolTC import FieldWithinTolTC
 
 class AnalyticTest(SingleModelSysTest):
     '''An Analytic System test.
@@ -34,15 +34,15 @@ class AnalyticTest(SingleModelSysTest):
        to load an anlytic soln, and compare it to the correct fields.
        Will check that each field flagged to be analysed is within
        the expected tolerance. Uses a
-       :class:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest`
+       :class:`~credo.systest.fieldWithinTolTC.FieldWithinTolTC`
        test component to perform the check.
        
        Optional constructor keywords:
 
        * defFieldTol: The default tolerance to be applied when comparing fields of
          interest to the analytic solution.
-         See also the FieldWithinTolTest's
-         :attr:`~credo.systest.fieldWithinTolTest.FieldWithinTolTest.defFieldTol`.
+         See also the FieldWithinTolTC's
+         :attr:`~credo.systest.fieldWithinTolTC.FieldWithinTolTC.defFieldTol`.
        * fieldTols: a dictionary of tolerances to use when testing particular
          fields, rather than the default tolerance defined by 
          the defFieldTol argument.
@@ -69,28 +69,28 @@ class AnalyticTest(SingleModelSysTest):
             inputFiles, outputPathBase,
             basePath, nproc, timeout,
             paramOverrides, solverOpts, nameSuffix)
-        self.testComponents[self.fTestName] = FieldWithinTolTest(
-            defFieldTol=defFieldTol, fieldTols=fieldTols)
+        self.fTests = FieldWithinTolTC(defFieldTol=defFieldTol,
+            fieldTols=fieldTols)
 
     def genSuite(self):
         """See base class :meth:`~credo.systest.api.SysTest.genSuite`.
 
         For this test, just a single model run is needed, to run
         the model and compare against the analytic solution."""
-        mSuite = ModelSuite(outputPathBase=self.outputPathBase)
-        self.mSuite = mSuite
+        #Hmmm ... could this be refactored as standard practice?
+        # so base class creates suite etc?
+        mRun = self._createDefaultModelRun(self.testName,
+            os.path.join(self.outputPathBase, "testRun"))
+        self.mSuite.addRun(mRun, "Run the model and generate analytic soln.")
 
-        mRun = self._createDefaultModelRun(self.testName, 
-            self.outputPathBase)
-        # For analytic test, read fields to analyse from the XML
-        fTests = self.testComponents[self.fTestName]
-        fTests.attachOps(mRun)
-        mSuite.addRun(mRun, "Run the model and generate analytic soln.")
+    def configureTestComps(self):
+        assert len(self.mSuite.runs) == 1
+        self.setupEmptyTestCompsList()
+        self.testComps[0][self.fTestName] = self.fTests
 
-        return mSuite
-
-    def checkResultValid(self, resultsSet):
-        """See base class :meth:`~credo.systest.api.SysTest.checkResultValid`."""
+    def checkModelResultsValid(self, resultsSet):
+        """See base class
+        :meth:`~credo.systest.api.SysTest.checkModelResultsValid`."""
         # TODO check it's a result instance
         # check number of results is correct
         for mResult in resultsSet:

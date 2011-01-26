@@ -24,9 +24,10 @@
 """
 This module contains the System Testing functionality of CREDO. 
 
-Working at a higher-level than the :mod:`credo.modelrun` and :mod:`credo.analysis`
-modules, it is able to use their capabilities to run system tests of 
-StGermain-based codes, and communicate and record the results.
+Working at a higher-level than the :mod:`credo.modelrun` and
+:mod:`credo.analysis` modules, it is able to use their
+capabilities to run system tests of scientific applications,
+and communicate and record the results.
 
 From a user perspective, doing an::
 
@@ -40,22 +41,27 @@ Examples of how to use this module are provided in the CREDO documentation,
 see :ref:`credo-examples-systesting`.
 """
 
-from credo.systest.api import *
+from .api import *
 
-from credo.systest.systestrunner import SysTestRunner
+from .systestsuite import SysTestSuite
+from .systestrunner import SysTestRunner
+
 # Import all the standard tests so they're available
-from credo.systest.restart import RestartTest
-from credo.systest.analytic import AnalyticTest
-from credo.systest.analyticMultiRes import AnalyticMultiResTest
-from credo.systest.reference import ReferenceTest
-from credo.systest.highResReference import HighResReferenceTest
+from .restartTest import RestartTest
+from .analyticTest import AnalyticTest
+from .analyticMultiResTest import AnalyticMultiResTest
+from .referenceTest import ReferenceTest
+from .highResReferenceTest import HighResReferenceTest
 try:
-    from credo.systest.imageReference import ImageReferenceTest
+    from .imageReferenceTest import ImageReferenceTest
 except ImportError:
     print "Warning, cannot import the ImageReferenceTest for"\
         " use since you don't have required libraries (PIL) installed."
-
 # Import the benchmark test
-from credo.systest.scibenchmark import SciBenchmarkTest
+from .sciBenchmarkTest import SciBenchmarkTest
 
-# TODO: import all test components here too?
+# import all test components here too so available for benchmark tests
+from .fieldCvgWithScaleTC import FieldCvgWithScaleTC
+from .fieldWithinTolTC import FieldWithinTolTC
+from .imageCompTC import ImageCompTC
+from .outputWithinRangeTC import OutputWithinRangeTC

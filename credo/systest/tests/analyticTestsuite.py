@@ -27,7 +27,7 @@ import shutil
 import tempfile
 import unittest
 
-from credo.systest.analytic import AnalyticTest
+from credo.systest.analyticTest import AnalyticTest
 
 class AnalyticTestTestCase(unittest.TestCase):
 
@@ -46,7 +46,7 @@ class AnalyticTestTestCase(unittest.TestCase):
         mrSuite = self.sysTest.genSuite()
         self.fail("Not written yet")
 
-    def test_checkResultValid(self):
+    def test_checkModelResultsValid(self):
         # TODO
         self.fail("Not written yet")
 

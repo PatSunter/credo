@@ -30,7 +30,6 @@ import inspect
 from xml.etree import ElementTree as etree
 
 import credo.jobrunner
-from credo.jobrunner.api import ModelRunError
 import credo.io.stgxml
 from credo.systest.api import *
 
@@ -55,7 +54,7 @@ XML_TESTCASE_ATTR_RECORDFILE = 'recordfile'
 
 class SysTestRunner:
     """Class that runs a set of :class:`~credo.systest.api.SysTest`, usually
-    collected into :class:`~credo.systest.api.SysTestSuite` collections.
+    collected into :class:`~credo.systest.systestsuite.SysTestSuite` collections.
 
     For examples of how to use, see the CREDO documentation, especially
     :ref:`credo-examples-run-systest-direct`.
@@ -64,61 +63,27 @@ class SysTestRunner:
     def __init__(self):
         return
 
-    def runTest(self, sysTest):
-        """Run a given sysTest, and return the 
-        :class:`credo.systest.api.SysTestResult` it produces.
-        Will also write an XML record of the System test, and each ModelRun
-        and ModelResult in the suite that made up the test."""
-        # Change directories in sys test run, just to be careful
-        startDir = os.getcwd()
-        os.chdir(sysTest.basePath)
-        mSuite = sysTest.genSuite()
-        mSuite.cleanAllOutputPaths()
-        mSuite.cleanAllLogFiles()
-        print "Writing pre-test info to XML"
-        sysTest.writePreRunXML()
-        mSuite.writeAllModelRunXMLs()
-        try:
-            # TODO: maybe could allow job-runner type to be over-ridden as
-            # a command line argument, or set on the constructor.
-            jobRunner = credo.jobrunner.defaultRunner()
-            suiteResults = jobRunner.runSuite(mSuite,
-                maxRunTime=sysTest.timeout)
-        except ModelRunError, mre:
-            suiteResults = None
-            testResult = sysTest.setErrorStatus(str(mre))
-        else:    
-            print "Checking test result:"
-            testResult = sysTest.getStatus(suiteResults)
-            # TODO: should we get the below to be run and we write model results
-            # even if there was an error?
-            mSuite.writeAllModelResultXMLs()
-
-        print "Test result was %s" % testResult
-        if isinstance(testResult, CREDO_ERROR):
-            print "Error msg: %s" % (testResult.detailMsg)
-        outFilePath = sysTest.updateXMLWithResult(suiteResults)
-        testResult.setRecordFile(outFilePath)
-        print "Saved test result to %s" % (outFilePath)
-        os.chdir(startDir)
-        return testResult
-
-    def runTests(self, sysTests, projName=None, suiteName=None,
-            printSummary=True):
+    def runTests(self, sysTests, postProcFromExisting=False,
+            projName=None, suiteName=None, printSummary=True):
         """Run all tests in the sysTests list.
-        Will also save all appropriate XMLs (as discussed in :meth:`.runTest`)
-        and print a summary of results."""
+        Will also save all appropriate XMLs and print a summary of results."""
         results = []
         testTotal = len(sysTests)
         for testI, sysTest in enumerate(sysTests):
+            sysTest.setupTest()
+            jobRunner = credo.jobrunner.defaultRunner()
             print "Running System test %d/%d, with name '%s':" \
                 % (testI+1, testTotal, sysTest.testName)
-            results.append(self.runTest(sysTest))
+            testRes, mResults = sysTest.runTest(jobRunner,
+                postProcFromExisting=postProcFromExisting)
+            results.append(testRes)
         if printSummary:
             self.printResultsSummary(sysTests, results, projName, suiteName)
         return results
     
-    def runSuite(self, suite, runSubSuites=True, subSuiteMode=False,
+    def runSuite(self, suite,
+        runSubSuites=True, subSuiteMode=False,
+        postProcFromExisting=False, 
         outputSummaryDir="testLogs"):
         """Runs a suite of system tests, and prints results.
         The suite may contain sub-suites, which will also be run by default.
@@ -141,8 +106,10 @@ class SysTestRunner:
         suiteNode = self._createSuiteNode(suite)
         suiteXMLDoc = etree.ElementTree(suiteNode)
         if testTotal > 0:
-            results += self.runTests(suite.sysTests, suite.projectName,
-                suite.suiteName)
+            results += self.runTests(suite.sysTests, 
+                postProcFromExisting=postProcFromExisting,
+                projName=suite.projectName,
+                suiteName=suite.suiteName)
         # Even if no results, call func below so we get at least empty totals.
         self._addTestResultsInfo(suiteNode, suite, results)
 
@@ -155,7 +122,9 @@ class SysTestRunner:
         if runSubSuites and subSuitesTotal > 0:
             subSuiteResults = []
             for subSuite in suite.subSuites:
-                subResults = self.runSuite(subSuite, subSuiteMode=True,
+                subResults = self.runSuite(subSuite,
+                    subSuiteMode=True,
+                    postProcFromExisting=postProcFromExisting,
                     outputSummaryDir=outputSummaryDir)
                 subSuiteResults.append(subResults)
             for subResults in subSuiteResults:
@@ -164,9 +133,11 @@ class SysTestRunner:
                 suite.suiteName)
         return results
     
-    def runSuites(self, testSuites, outputSummaryDir="testLogs"):
+    def runSuites(self, testSuites, postProcFromExisting=False,
+            outputSummaryDir="testLogs"):
         """Runs a list of suites, and prints a big summary at the end.
         :param testSuites: list of test suites to run.
+        :param postProcFromExisting: see :func:`.runTests`.
         :keyword outputSummaryDir: name of directory to save a summary of
         tests
         to.
@@ -182,6 +153,7 @@ class SysTestRunner:
         resultsLists = []
         for suite in testSuites:
             suiteResults = self.runSuite(suite, 
+                postProcFromExisting=postProcFromExisting,
                 outputSummaryDir=outputSummaryDir)
             resultsLists.append(suiteResults)
         print "-"*80
@@ -393,4 +365,4 @@ def runSuitesFromModules(suiteModNames, outputSummaryDir):
     suites to import and run."""
     suites = getSuitesFromModules(suiteModNames)
     testRunner = SysTestRunner()
-    testRunner.runSuites(suites, outputSummaryDir)
+    testRunner.runSuites(suites, outputSummaryDir=outputSummaryDir)

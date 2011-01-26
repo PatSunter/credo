@@ -23,7 +23,7 @@
 
 import matplotlib.pyplot as plt
 import credo.analysis.fields as fields
-from credo.systest.fieldCvgWithScaleTest import *
+from credo.systest.fieldCvgWithScaleTC import *
 import credo.analysis.fields as fields
 
 # Convergence checker

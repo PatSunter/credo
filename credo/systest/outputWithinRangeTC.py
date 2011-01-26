@@ -23,9 +23,9 @@
 
 from xml.etree import ElementTree as etree
 
-from credo.systest.api import TestComponent, CREDO_PASS, CREDO_FAIL
+from credo.systest.api import SingleRunTestComponent, CREDO_PASS, CREDO_FAIL
 
-class OutputWithinRangeTest(TestComponent):
+class OutputWithinRangeTC(SingleRunTestComponent):
     '''Test component to check that a given output parameter 
     (found in the frequent output) is within a given range, and
     optionally also that this occurs within a given set of model times.
@@ -80,7 +80,7 @@ class OutputWithinRangeTest(TestComponent):
 
     def __init__(self, outputName, reductionOp, allowedRange,  
             tRange=None):
-        TestComponent.__init__(self, "outputWithinRange")
+        SingleRunTestComponent.__init__(self, "outputWithinRange")
         self.outputName = outputName
         self.reductionOp = reductionOp
         self.allowedRange = allowedRange
@@ -96,16 +96,15 @@ class OutputWithinRangeTest(TestComponent):
             value=str(self.allowedRange[0]))
         etree.SubElement(specNode, 'allowedRange-max',
             value=str(self.allowedRange[1]))
-        if self.tRange:
+        if self.tRange is not None:
             etree.SubElement(specNode, 'tRange-min',
                 value=str(self.tRange[0]))
             etree.SubElement(specNode, 'tRange-max',
                 value=str(self.tRange[1]))
                 
-
     def attachOps(self, modelRun):
         """Implements base class
-        :meth:`credo.systest.api.TestComponent.attachOps`.
+        :meth:`credo.systest.api.SingleRunTestComponent.attachOps`.
         
         .. note:: Currently does nothing. Intend to make it ensure the
            correct plugin is set to be loaded (to make sure observable
@@ -113,58 +112,50 @@ class OutputWithinRangeTest(TestComponent):
         # TODO: here we have to make sure the correct plugin is set to be
         # loaded .
         # Maybe with the aid of a lookup table of param->plugins?
+        #  Or maybe user passes this in when creating the test?
         pass
 
-    def check(self, resultsSet):
+    def check(self, mResult):
         """Implements base class
-        :meth:`credo.systest.api.TestComponent.check`."""
+        :meth:`credo.systest.api.SingleRunTestComponent.check`."""
         self.actualVal = None
         self.withinRange = None
         statusMsg = ""
-        numRuns = len(resultsSet)
-        overallResult = True
-        for runI, mResult in enumerate(resultsSet):
-            mResult.readFrequentOutput()
-            self.actualVal, actualTimeStep = mResult.freqOutput.getReductionOp(
-                self.outputName, self.reductionOp)
-            self.actualTime = mResult.freqOutput.getValueAtStep('Time',
-                actualTimeStep)
-            self.withinRange = (self.allowedRange[0] <= self.actualVal \
-                <= self.allowedRange[1])
+        mResult.readFrequentOutput()
+        self.actualVal, actualTimeStep = mResult.freqOutput.getReductionOp(
+            self.outputName, self.reductionOp)
+        self.actualTime = mResult.freqOutput.getValueAtStep('Time',
+            actualTimeStep)
+        self.withinRange = (self.allowedRange[0] <= self.actualVal \
+            <= self.allowedRange[1])
 
-            if not self.withinRange:
-                if numRuns > 1:
-                    statusMsg += "For run %d out of %d: " % (runI, numRuns)
-                statusMsg += "Model output '%s' value %g not within"\
-                    " required range (%g,%g)."\
-                    % (self.outputName, self.actualVal, self.allowedRange[0],\
-                        self.allowedRange[1])
-                overallResult = False    
-            elif self.tRange:
+        if not self.withinRange:
+            statusMsg += "Model output '%s' value %g not within"\
+                " required range (%g,%g)."\
+                % ((self.outputName, self.actualVal,) + self.allowedRange)
+            overallResult = False    
+        else:
+            statusMsg += "Model output '%s' value %g within"\
+                " required range (%g,%g)"\
+                % ((self.outputName, self.actualVal,) + self.allowedRange)
+            if self.tRange is None:
+                statusMsg += "."        
+                overallResult = True
+            else:    
                 tMin, tMax = self.tRange
                 withinTRange = (tMin <= self.actualTime <= tMax)
                 if not withinTRange:
-                    if numRuns > 1:
-                        statusMsg += "For run %d out of %d: " % (runI, numRuns)
-                    statusMsg += "Model output '%s' value %g within"\
-                        " required range (%g,%g), but time at which this"\
+                    statusMsg += ", but time at which this"\
                         " occurred (%s) not within req'd range (%g,%g)."\
-                        % (self.outputName, self.actualVal,\
-                            self.allowedRange[0], self.allowedRange[1],\
-                            self.actualTime, self.tRange[0], self.tRange[1])
-                    overallResult = False        
-
-        if overallResult:
-            statusMsg += "Model output '%s' value %g within"\
-                " required range (%g,%g) for all runs."\
-                % (self.outputName, self.actualVal, self.allowedRange[0],\
-                    self.allowedRange[1])
-
+                        % ((self.actualTime,) + self.tRange)
+                    overallResult = False
+                else:    
+                    statusMsg += ", and time at which this"\
+                        " occurred (%s) within req'd range (%g,%g)."\
+                        % ((self.actualTime,) + self.tRange)
+                    overallResult = True
         print statusMsg
-        if overallResult == False:
-            self.tcStatus = CREDO_FAIL(statusMsg)
-        else:
-            self.tcStatus = CREDO_PASS(statusMsg)
+        self._setStatus(overallResult, statusMsg)
         return overallResult
 
     def _writeXMLCustomResult(self, resNode, resultsSet):
@@ -174,4 +165,3 @@ class OutputWithinRangeTest(TestComponent):
         atNode.text = "%6g" % self.actualTime
         wrNode = etree.SubElement(resNode, 'withinRange')
         wrNode.text = str(self.withinRange)
-

@@ -24,10 +24,10 @@
 import os
 from xml.etree import ElementTree as etree
 
-from credo.systest.api import TestComponent, CREDO_PASS, CREDO_FAIL
+from credo.systest.api import SingleRunTestComponent, CREDO_PASS, CREDO_FAIL
 import credo.analysis.images as imageAnalysis
 
-class ImageCompTest(TestComponent):
+class ImageCompTC(SingleRunTestComponent):
     """Checks whether an image produced by the run (eg by gLucifer)
     is within a given "tolerance" of an expected image, using
     functionality of :mod:`credo.analysis.images` module.
@@ -67,7 +67,7 @@ class ImageCompTest(TestComponent):
             tol=None,
             refPath=None,
             genPath=None):
-        TestComponent.__init__(self, "imagesWithinTol")
+        SingleRunTestComponent.__init__(self, "imagesWithinTol")
         self.imageFilename = imageFilename
         if tol is not None:
             self.tol = tol
@@ -87,51 +87,42 @@ class ImageCompTest(TestComponent):
 
     def attachOps(self, modelRun):
         """Implements base class
-        :meth:`credo.systest.api.TestComponent.attachOps`."""
+        :meth:`credo.systest.api.SingleRunTestComponent.attachOps`."""
         # Nothing to do here - requires that the user has defined their
         # model XMLs correctly to generate the images.
 
-    def check(self, resultsSet):
+    def check(self, mResult):
         """Implements base class
-        :meth:`credo.systest.api.TestComponent.check`."""
+        :meth:`credo.systest.api.SingleRunTestComponent.check`."""
         self.imageResults = []
         self.imageErrors = []
         statusMsg = ""
-        numRuns = len(resultsSet)
         overallResult = True
-        for runI, mResult in enumerate(resultsSet):
-            refImageFname = os.path.join(self.refPath, self.imageFilename)
-            #print refImageFname
-            assert os.path.exists(refImageFname)
-            if self.genPath is not None:
-                genPath = self.genPath
-            else:
-                genPath = mResult.outputPath
-            genImageFname = os.path.join(genPath, self.imageFilename)
-            #print genImageFname
-            assert os.path.exists(genImageFname)
-            imageErrors = imageAnalysis.compare(refImageFname, genImageFname)
-            imageResult = [diff <= tol for diff, tol in zip(imageErrors, self.tol)]
-            if False in imageResult:
-                if numRuns > 1:
-                    statusMsg += "For run %d out of %d: " % (runI, numRuns)
-                statusMsg += "Image comp for image file '%s' errors %s not"\
-                    " within tol %s of reference image\n"\
-                    % (self.imageFilename, imageErrors, self.tol)
-                overallResult = False    
-            
-            self.imageResults.append(imageResult)
-            self.imageErrors.append(imageErrors)
-
-        #print statusMsg
-        if overallResult == False:
-            print statusMsg
-            self.tcStatus = CREDO_FAIL(statusMsg)
+        refImageFname = os.path.join(self.refPath, self.imageFilename)
+        #print refImageFname
+        assert os.path.exists(refImageFname)
+        if self.genPath is not None:
+            genPath = self.genPath
+        else:
+            genPath = mResult.outputPath
+        genImageFname = os.path.join(genPath, self.imageFilename)
+        #print genImageFname
+        assert os.path.exists(genImageFname)
+        self.imageErrors = imageAnalysis.compare(refImageFname, genImageFname)
+        self.imageResults = []
+        for diff, tol in zip(self.imageErrors, self.tol):
+            self.imageResults.append(diff <= tol)
+        overallResult = all(self.imageResults)
+        if not overallResult:
+            statusMsg += "Image comp for image file '%s' errors %s not"\
+                " within tol %s of reference image\n"\
+                % (self.imageFilename, self.imageErrors, self.tol)
         else:
             statusMsg = "Image comp error within tolerances %s"\
-                " of ref image for all runs.\n"\
+                " of ref image.\n"\
                 % (str(self.tol))
-            self.tcStatus = CREDO_PASS(statusMsg)
+        print statusMsg
+        self._setStatus(overallResult, statusMsg)
         return overallResult
 
     def _writeXMLCustomSpec(self, specNode):
@@ -145,15 +136,11 @@ class ImageCompTest(TestComponent):
         if self.genPath is not None:
             etree.SubElement(specNode, 'genPath').text = self.genPath
 
-    def _writeXMLCustomResult(self, resNode, resultsSet):
+    def _writeXMLCustomResult(self, resNode, mResult):
         irNode = etree.SubElement(resNode, 'imageResults')
-        for runI, imageRes in enumerate(self.imageResults):
-            runNode = etree.SubElement(irNode, "run")
-            runNode.attrib['number'] = str(runI+1) 
-            runNode.attrib['withinTol'] = str(imageRes)
-            errorsNode = etree.SubElement(runNode, "imgErrors")
-            for compI, compError in enumerate(self.imageErrors[runI]):
-                eNode = etree.SubElement(errorsNode, "compError")
-                eNode.attrib["num"] = str(compI)
-                eNode.attrib["error"] = "%6e" % compError
-                eNode.attrib["withinTol"] = str(compError <= self.tol[compI]) 
+        errorsNode = etree.SubElement(resNode, "imgErrors")
+        for compI, compError in enumerate(self.imageErrors):
+            eNode = etree.SubElement(errorsNode, "compError")
+            eNode.attrib["num"] = str(compI)
+            eNode.attrib["error"] = "%6e" % compError
+            eNode.attrib["withinTol"] = str(self.imageResults[compI])

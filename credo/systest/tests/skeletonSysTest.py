@@ -44,11 +44,25 @@ class SkeletonSysTest(SysTest):
     
     def genSuite(self):
         # an empty suite
-        self.mSuite = ModelSuite(outputPathBase=self.outputPathBase)
-        return self.mSuite
-    
-    def checkResultValid(self, resultsSet):
         pass
+    
+    def setupEmptyTestCompsList(self):
+        # have to over-ride this to prevent errors with our empty suite
+        pass
+
+    def configureTestComps(self):
+        pass
+
+    def attachAllTestCompOps(self):
+        pass
+
+    def checkModelResultsValid(self, resultsSet):
+        pass
+
+    def runTest(self, jobRunner, postProcFromExisting=False):
+        testStatus = self.getStatus(None)
+        testStatus.setRecordFile("Foo.xml")
+        return testStatus, None
 
     def getStatus(self, resultsSet):
         self.testStatus = self.statusToReturn
@@ -78,7 +92,7 @@ class SkeletonSingleModelSysTest(SingleModelSysTest):
         self.mSuite = ModelSuite(outputPathBase=self.outputPathBase)
         return self.mSuite
     
-    def checkResultValid(self, resultsSet):
+    def checkModelResultsValid(self, resultsSet):
         pass
 
     def getStatus(self, resultsSet):
