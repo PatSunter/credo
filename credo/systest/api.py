@@ -38,6 +38,7 @@ import credo.modelsuite as msuite
 import credo.io.stgxml
 import credo.io.stgpath as stgpath
 import credo.utils
+import credo.jobrunner
 
 class SysTestSetupError(Exception):
     """An exception for when a System test fails to set up correctly."""
@@ -260,7 +261,7 @@ class SysTest:
             try:
                 suiteResults = jobRunner.runSuite(self.mSuite, 
                     maxRunTime=self.timeout, writeRecords=True)
-            except ModelRunError, mre:
+            except credo.jobrunner.ModelRunError, mre:
                 suiteResults = None
                 sysTestResult = self.setErrorStatus(str(mre))
             else:

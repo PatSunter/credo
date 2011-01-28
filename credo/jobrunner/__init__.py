@@ -24,6 +24,8 @@
 """This module allows running CREDO jobs using various approaches - e.g. via
 MPI locally, via PBS scripts in a queueing system, or via grid submission."""
 
+#Import useful API classes/funcs for external use
+from credo.jobrunner.api import JobRunner, ModelRunError
 from credo.jobrunner.mpijobrunner import MPIJobRunner
 
 # TODO: the runPath is temporary I think
