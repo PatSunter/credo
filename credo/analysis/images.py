@@ -35,38 +35,82 @@ def normalise(array, maxval):
    norm = [float(x) / maxval for x in array]
    return norm
 
+def channelDiff(channel, hist1, hist2, pixels, bins):
+    """Calculates histogram difference in one colour channel"""
+    offset = channel * 256
+    #Divide into bins
+    chan1 = [0] * bins
+    chan2 = [0] * bins
+    binrange = 256 / bins
+    for x in range(256):
+        bin = x / binrange
+        #Prevent out of range due to rounding
+        if (bin == bins): bin = bins-1
+        chan1[bin] += hist1[x+offset]
+        chan2[bin] += hist2[x+offset]
+
+    #Subtract histograms to get distance vectors
+    dist = [a - b for a, b in zip(chan1, chan2)]
+    #Normalise values to [-1,1]
+    dist = normalise(dist, pixels)
+
+    #Sum distances and return euclidean distance between
+    return sqrt(sum([x*x for x in (dist)])) / sqrt(2)
+
+def luminanceDiff(img1, img2):
+    """Calculate image difference by luminance histogram.
+
+    :arg img1: open PIL image
+    :arg img2: open PIL image
+    :returns: float representing difference between images
+      in luminance histogram space
+    """
+
+    #Ensure images are in single channel Luminance format
+    im1 = img1.convert('L')
+    im2 = img2.convert('L')
+
+    #Calculate image difference by colour histogram 
+    width, height = im1.size
+    pixels = width * height
+    hist1 = im1.histogram()
+    hist2 = im2.histogram()
+
+    return channelDiff(0, hist1, hist2, pixels, 16)
+
 def colourDiff(img1, img2):
     """Calculate image difference by colour histogram.
 
     :arg img1: open PIL image
     :arg img2: open PIL image
-    :returns: float representing euclidian distance between images
-      in colour histogram space
+    :returns: float representing difference between images
+      by colour histogram
     """
 
+    #Ensure images are in 3 colour channel RGB format
+    im1 = img1.convert('RGB')
+    im2 = img2.convert('RGB')
+
     #Calculate image difference by colour histogram 
-    width, height = img1.size
+    width, height = im1.size
     pixels = width * height
+    hist1 = im1.histogram()
+    hist2 = im2.histogram()
 
-    #Normalise values to [0,1]
-    hist1 = normalise(img1.histogram(), pixels)
-    hist2 = normalise(img2.histogram(), pixels)
+    #Average result from several different bin sizes
+    #This reduces false negatives from the pathological case where
+    #two images with large areas of similar colour differ over a bin boundary
+    rsum = gsum = bsum = 0
+    count = 0
+    for b in range(2,12):
+        #Get diff for each RGB channel
+        rsum += channelDiff(0, hist1, hist2, pixels, b)
+        gsum += channelDiff(1, hist1, hist2, pixels, b)
+        bsum += channelDiff(2, hist1, hist2, pixels, b)
+        count += 3
 
-    #Reduce from 256 to 64 bins per component
-    hist_1 = [0] * (len(hist1) / 4)
-    hist_2 = [0] * (len(hist2) / 4)
-    for x in range(len(hist1)):
-        hist_1[x/4] += hist1[x]
-        hist_2[x/4] += hist2[x]
-
-    #Subtract normalised histograms to get a distance vector
-    dist = [fabs(a - b) for a, b in zip(hist_1, hist_2)]
-
-    #Calculate euclidean distance between images in colour histogram space
-    dist = sqrt(sum([x*x for x in (dist)]))
-
-    #Return value in range [0,1]
-    return dist / sqrt(6)
+    #Average and return
+    return (rsum + gsum + bsum) / count
 
 def pixelDiff20x20(img1, img2):
     """Compare two open images on a 20x20 basis."""
@@ -116,7 +160,7 @@ def compare(imgFilename1, imgFilename2, verbose=False):
     #Colour compare is not sensitive to flip/rotate so do 
     #a simple pixel by pixel compare as well
     dist2 = pixelDiff20x20(img1, img2)
-    if verbose: print "Difference on 4 pixel subsample: %f" % dist2
+    if verbose: print "Difference on 400 pixel subsample: %f" % dist2
     #Test fails if either value outside tolerance
     return dist1, dist2
 
@@ -124,3 +168,4 @@ def compare(imgFilename1, imgFilename2, verbose=False):
 if __name__ == "__main__":
     #Example usage, compare two images passed on command line
     diffs = compare(sys.argv[1], sys.argv[2])
+    print diffs
