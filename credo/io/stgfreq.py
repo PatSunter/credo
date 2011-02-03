@@ -362,8 +362,8 @@ class FreqOutput:
         plt.plot(depArray, valuesArray)
         plt.xlabel(depName)
         plt.ylabel(headerName)
-        plt.title("Output parameter '%s' over time"\
-            % (headerName))
+        plt.title("Output parameter '%s' against %s"\
+            % (headerName, depName))
 
         if save:
             filename = os.path.join(path, headerName+"-timeSeries.png")
