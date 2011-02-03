@@ -60,7 +60,7 @@ class ImageCompTC(SingleRunTestComponent):
        List, indexed by run number, containing errors between reference and
        generated images after comparison.
     """
-    DEFAULT_TOLS = (0.005, 0.01)
+    DEFAULT_TOLS = (0.1, 0.05)
     DEFAULT_REFPATH = os.path.join('.', 'expected')
 
     def __init__(self, imageFilename,

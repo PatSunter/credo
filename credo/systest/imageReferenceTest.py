@@ -60,7 +60,7 @@ class ImageReferenceTest(api.SingleModelSysTest):
             basePath=None, nproc=1, timeout=None,
             paramOverrides=None, solverOpts=None, nameSuffix=None, 
             imageTols=None, expPathPrefix="expected",
-            runSteps=20, defImageTol=(5e-3, 1e-2)):
+            runSteps=20, defImageTol=(1e-1, 5e-2)):
         api.SingleModelSysTest.__init__(self,"ImageReference",
             inputFiles, outputPathBase,
             basePath, nproc, timeout,
