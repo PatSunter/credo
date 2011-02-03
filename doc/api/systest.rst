@@ -39,57 +39,57 @@ most customisation (i.e. generally can't be created in the short-hand form
 of the other tests using the sysTestRunner's
 :meth:`~credo.systest.systestrunner.SysTestRunner.addStdTest` method).
 
-.. inheritance-diagram:: credo.systest.analytic
-    credo.systest.restart credo.systest.reference 
-    credo.systest.analyticMultiRes credo.systest.highResReference
-    credo.systest.scibenchmark
+.. inheritance-diagram:: credo.systest.analyticTest
+    credo.systest.restartTest credo.systest.referenceTest 
+    credo.systest.analyticMultiResTest credo.systest.highResReferenceTest
+    credo.systest.sciBenchmarkTest
 
 depending on whether you have the Python Imaging Library (PIL) installed,
 you can also use the :class:`credo.systest.imageReference.ImageReferenceTest`
 system test.
 
-:mod:`credo.systest.analytic`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:mod:`credo.systest.analyticTest`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: credo.systest.analytic
+.. automodule:: credo.systest.analyticTest
    :members:
    :undoc-members:
    :show-inheritance:
 
-:mod:`credo.systest.reference`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:mod:`credo.systest.referenceTest`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: credo.systest.reference
+.. automodule:: credo.systest.referenceTest
    :members:
    :undoc-members:
 
-:mod:`credo.systest.restart`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:mod:`credo.systest.restartTest`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: credo.systest.restart
+.. automodule:: credo.systest.restartTest
    :members:
    :undoc-members:
 
-:mod:`credo.systest.analyticMultiRes`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:mod:`credo.systest.analyticMultiResTest`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: credo.systest.analyticMultiRes
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-:mod:`credo.systest.imageReference`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. automodule:: credo.systest.imageReference
+.. automodule:: credo.systest.analyticMultiResTest
    :members:
    :undoc-members:
    :show-inheritance:
 
-:mod:`credo.systest.scibenchmark`
-=================================
+:mod:`credo.systest.imageReferenceTest`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: credo.systest.scibenchmark
+.. automodule:: credo.systest.imageReferenceTest
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+:mod:`credo.systest.sciBenchmarkTest`
+=====================================
+
+.. automodule:: credo.systest.sciBenchmarkTest
    :members:
    :undoc-members:
    :show-inheritance:
@@ -97,37 +97,37 @@ system test.
 Core TestComponent implementations
 ==================================
 
-.. inheritance-diagram:: credo.systest.fieldWithinTolTest
-    credo.systest.fieldCvgWithScaleTest credo.systest.outputWithinRangeTest
+.. inheritance-diagram:: credo.systest.fieldWithinTolTC
+    credo.systest.fieldCvgWithScaleTC credo.systest.outputWithinRangeTC
 
-:mod:`credo.systest.fieldWithinTolTest`
+:mod:`credo.systest.fieldWithinTolTC`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: credo.systest.fieldWithinTolTest
+.. automodule:: credo.systest.fieldWithinTolTC
    :members:
    :undoc-members:
    :show-inheritance:
 
-:mod:`credo.systest.fieldCvgWithScaleTest`
+:mod:`credo.systest.fieldCvgWithScaleTC`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: credo.systest.fieldCvgWithScaleTest
+.. automodule:: credo.systest.fieldCvgWithScaleTC
    :members:
    :undoc-members:
    :show-inheritance:
 
-:mod:`credo.systest.outputWithinRangeTest`
+:mod:`credo.systest.outputWithinRangeTC`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: credo.systest.outputWithinRangeTest
+.. automodule:: credo.systest.outputWithinRangeTC
    :members:
    :undoc-members:
    :show-inheritance:
 
-:mod:`credo.systest.imageCompTest`
+:mod:`credo.systest.imageCompTC`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: credo.systest.imageCompTest
+.. automodule:: credo.systest.imageCompTC
    :members:
    :undoc-members:
    :show-inheritance:
