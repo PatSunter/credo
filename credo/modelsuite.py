@@ -226,7 +226,7 @@ def getOtherParamValsByVarRunIs(varRunIsMap, varDicts, otherParam):
 
 def getSubdir_TextParamVals(modelRun, modelVariants, paramIndices, runIndex):
     """Generate an output sub-directory name for a run with
-    a printed version of :attr:`.modelVariants`names, and vales for this run.
+    a printed version of :attr:`.modelVariants` names, and vales for this run.
     (Good in the sense of being fairly self-describing, but can
     be long if you have many model variants)."""
     subPath = getSubdirName(modelVariants, paramIndices)
