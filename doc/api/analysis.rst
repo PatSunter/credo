@@ -39,3 +39,11 @@ Analysis API
    :members:
    :undoc-members:
    :show-inheritance:
+
+:mod:`credo.analysis.modelplots`
+================================
+
+.. automodule:: credo.analysis.modelplots
+   :members:
+   :undoc-members:
+   :show-inheritance:
