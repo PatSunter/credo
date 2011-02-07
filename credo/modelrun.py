@@ -418,7 +418,7 @@ class ModelRun:
         outFile.close()
         return writePath+filename
 
-    def analysisXMLGen(self, filename=CREDO_ANALYSIS_RECORD_FILENAME):
+    def analysisXMLGen(self, filename=None):
         """Generates an XML file, in StGermainData XML format, to over-ride
         necessary parameters of the model as specified on this ModelRun
         instance. Returns the name of the just-written XML file.
@@ -455,6 +455,13 @@ class ModelRun:
             stgxml.writeParamList(root, 'FieldVariablesToCheckpoint',
                 self.cpFields, mt='merge')
 
+        if filename is None:
+            #By default, store this file in the output path.
+            absOutputPath = os.path.join(self.basePath, self.outputPath)
+            if not os.path.exists(absOutputPath):
+                os.makedirs(absOutputPath)
+            filename = os.path.join(absOutputPath,
+                CREDO_ANALYSIS_RECORD_FILENAME)
         stgxml.writeStgDataDocToFile(xmlDoc, filename)
         self.analysisXML = filename
         return filename

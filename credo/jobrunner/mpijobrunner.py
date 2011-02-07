@@ -40,6 +40,7 @@ class MPIJobMetaInfo(JobMetaInfo):
     def __init__(self):
         JobMetaInfo.__init__(self, 0)
         self.runType = "MPI"
+        self.runCommand = None
         self.procHandle = None
 
 class MPIJobRunner(JobRunner):
@@ -79,6 +80,8 @@ class MPIJobRunner(JobRunner):
             os.chdir(startDir)
             return None
 
+        self.archiveRunCommand(modelRun, runCommand)
+
         # Do the actual run
         # NB: We will split the arguments and run directly rather than in 
         # "shell mode":- this allows us to kill all sub-processes properly if
@@ -97,6 +100,7 @@ class MPIJobRunner(JobRunner):
                 " the MPI command used.")
 
         jobMetaInfo = MPIJobMetaInfo()
+        jobMetaInfo.runCommand = runCommand
         jobMetaInfo.procHandle = procHandle
         jobMetaInfo.stdOutFile = stdOutFile
         jobMetaInfo.stdErrFile = stdErrFile
@@ -199,3 +203,14 @@ class MPIJobRunner(JobRunner):
                 (startDir)
             os.chdir(startDir)
         return mResult
+
+    def archiveRunCommand(self, modelRun, runCommand):
+        """Save the given runCommand to a file in output directory."""
+        fName = os.path.join(modelRun.outputPath, "runCommand.sh")
+        f = open(fName, "w")
+        f.write("!#/bin/sh\n")
+        f.write("cd %s\n" % modelRun.basePath)
+        f.write(runCommand+"\n")
+        f.close()
+        #Set as executable
+        os.chmod(fName, 0770)
