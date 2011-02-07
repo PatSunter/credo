@@ -73,7 +73,8 @@ class PBSJobRunner(JobRunner):
 
         modelRun.checkValidRunConfig()
         modelRun.preRunPreparation()
-        modelRunCommand = modelRun.constructModelRunCommandPBS(extraCmdLineOpts)
+        modelRunCommand = modelRun.constructModelRunCommand(extraCmdLineOpts,
+            absXMLPaths=True)
 
         # Construct full run line
         mpiPart = "%s" % (self.mpiRunCommand)
@@ -83,7 +84,6 @@ class PBSJobRunner(JobRunner):
             # command and args ... appropriate for things like timing stuff.
             runCommand = " ".join([prefixStr, runCommand])
         
-        # TODO: Create the PBS script
         pbsFilename = self._writePBSFile(modelRun, runCommand)        
         try:
             pbsQueueStr = "-q %s" % (modelRun.jobParams['PBS']['queue'])
@@ -116,10 +116,10 @@ class PBSJobRunner(JobRunner):
         qsubStdOut.seek(0)
         qsubStdErr.seek(0)
         jobId = self._parseQSubOutput(qsubStdOut.read(), qsubStdErr.read())
-        # TODO: create job meta info
         jobMetaInfo = PBSJobMetaInfo()
         jobMetaInfo.jobId = jobId
-        # TODO: record where the stdout and stderr were set?
+        # TODO: create further job meta info
+        # TODO: record where the stdout and stderr were set, and archive?
         qsubStdOut.close()
         qsubStdErr.close()
         # TODO: delete the qsub files if successful?

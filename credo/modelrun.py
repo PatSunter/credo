@@ -258,44 +258,39 @@ class ModelRun:
         (e.g. "/usr/local/bin/StGermain") """
         return stgpath.getVerifyStgMainExecutablePath()
 
-    def constructModelRunCommand(self, extraCmdLineOpts=None):
+    def constructModelRunCommand(self, extraCmdLineOpts=None,
+            absXMLPaths=False):
         """Given a model run, construct the command needed to run that model,
-        and return as a string."""
+        and return as a string.
+        
+        :keyword extraCmdLineOpts: any extra command line options, to be 
+          passed straight through to the model.
+        :keyword absXMLPaths: if True, converts any Model XML input files to
+          absolute paths first in cmd line."""
         runExe = self.getModelRunAppExeCommand()
         stgRunStr = "%s " % (runExe)
-        for inputFile in self.modelInputFiles:  
-            stgRunStr += inputFile+" "
+        if absXMLPaths == False:
+            inputFiles = self.modelInputFiles
+        else:
+            import pdb
+            pdb.set_trace()
+            inputFiles = [os.path.join(self.basePath, iFile) for iFile in \
+                self.modelInputFiles]
+            inputFiles = map(os.path.abspath, inputFiles)
+        stgRunStr = " ".join([runExe] + inputFiles)
         if self.analysisXML:
-            stgRunStr += self.analysisXML+" "
+            if absXMLPaths == False:
+                stgRunStr += " " + self.analysisXML
+            else:    
+                stgRunStr += " " + os.path.abspath(self.analysisXML)
 
-        stgRunStr += credo.modelrun.getParamOverridesAsStr(self.paramOverrides)
+        stgRunStr += " " + credo.modelrun.getParamOverridesAsStr(
+            self.paramOverrides)
         if self.solverOpts:
             stgRunStr += " " + stgcmdline.solverOptsStr(self.solverOpts)
         if extraCmdLineOpts:
             stgRunStr += " " + extraCmdLineOpts
         return stgRunStr
-
-    def constructModelRunCommandPBS(self, extraCmdLineOpts=None):
-        """Given a model run, construct the PBS command needed to run that model,
-        and return as a string."""
-        runExe = self.getModelRunAppExeCommand()
-        stgRunStr = "%s " % (runExe)
-        startDir = os.getcwd()
-        for inputFile in self.modelInputFiles:  
-            stgRunStr += startDir+"/"+inputFile+" "
-        if self.analysisXML:
-            stgRunStr += self.analysisXML+" "
-
-        stgRunStr += credo.modelrun.getParamOverridesAsStr(self.paramOverrides)
-        if self.solverOpts:
-            stgRunStr += " " + stgcmdline.solverOptsStr(self.solverOpts)
-        if extraCmdLineOpts:
-            stgRunStr += " " + extraCmdLineOpts
-        outPathStr = "%s" % (self.outputPath)
-        outdir = "--outputPath="+startDir+"/"+outPathStr
-        stgRunStr += " "+outdir
-        return stgRunStr
-
 
     def postRunCleanup(self):
         """function designed to be run after a modelRun has completed, and will
