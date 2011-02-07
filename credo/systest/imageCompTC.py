@@ -27,6 +27,10 @@ from xml.etree import ElementTree as etree
 from credo.systest.api import SingleRunTestComponent, CREDO_PASS, CREDO_FAIL
 import credo.analysis.images as imageAnalysis
 
+def floatsToStr(floatList):
+    """Convert a list/tuple of tolerance to a nice string to print"""
+    return "(%s)" % ", ".join(["%g" % val for val in floatList])
+
 class ImageCompTC(SingleRunTestComponent):
     """Checks whether an image produced by the run (eg by gLucifer)
     is within a given "tolerance" of an expected image, using
@@ -116,11 +120,12 @@ class ImageCompTC(SingleRunTestComponent):
         if not overallResult:
             statusMsg += "Image comp for image file '%s' errors %s not"\
                 " within tol %s of reference image\n"\
-                % (self.imageFilename, self.imageErrors, self.tol)
+                % (self.imageFilename, floatsToStr(self.imageErrors),
+                    floatsToStr(self.tol))
         else:
             statusMsg = "Image comp error within tolerances %s"\
                 " of ref image.\n"\
-                % (str(self.tol))
+                % (floatsToStr(self.tol))
         print statusMsg
         self._setStatus(overallResult, statusMsg)
         return overallResult
