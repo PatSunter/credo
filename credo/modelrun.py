@@ -272,8 +272,6 @@ class ModelRun:
         if absXMLPaths == False:
             inputFiles = self.modelInputFiles
         else:
-            import pdb
-            pdb.set_trace()
             inputFiles = [os.path.join(self.basePath, iFile) for iFile in \
                 self.modelInputFiles]
             inputFiles = map(os.path.abspath, inputFiles)
