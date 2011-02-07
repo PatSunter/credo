@@ -168,8 +168,11 @@ class MPIJobRunner(JobRunner):
             #  over-ride later absolute paths.
             absOutPath = os.path.join(modelRun.basePath, modelRun.outputPath)
             absLogPath = os.path.join(modelRun.basePath, modelRun.logPath)
-            print "Model ran successfully (output saved to path %s, std out"\
-                " & std error to %s." % (absOutPath, absLogPath)
+            print "Model ran successfully (output saved to path %s" %\
+                (absOutPath),
+            if absLogPath != absOutPath:
+                print ", std out & std error to %s" % (absLogPath),
+            print ")."
 
         # Now tidy things up after the run.
         jobMetaInfo.stdOutFile.close()

@@ -180,7 +180,7 @@ class ModelRun:
     solverOptsRecordFilename = "solverOptsUsed.opt"
 
     def __init__(self, name, modelInputFiles, outputPath=None, basePath=None,
-            logPath="log",
+            logPath=None,
             cpReadPath=None, nproc=1, simParams=None,
             paramOverrides=None, solverOpts=None, xmlExtras=None,
             inputFilePath=None):
@@ -202,7 +202,10 @@ class ModelRun:
             self.basePath = basePath
         self.basePath = os.path.abspath(self.basePath)    
         self.cpReadPath = self.setPath(cpReadPath)
-        self.logPath = self.setPath(logPath)
+        if logPath is None:
+            self.logPath = self.outputPath
+        else:    
+            self.logPath = self.setPath(logPath)
         self.jobParams = JobParams(nproc=nproc)
         self.simParams = simParams
         self.paramOverrides = paramOverrides
