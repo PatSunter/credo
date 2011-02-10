@@ -295,6 +295,10 @@ class FreqOutput:
         valArray = self.getValuesArray(headerName)
         return sum(valArray, 0.0) / len(valArray)
 
+    def getClosest(self, headerName, target):
+        """Gets the closest value and timestep to the given value."""
+        return self.getReductionOp(headerName, closest, target=target)
+
     def printAllMinMax(self):
         '''Print the maximum and minimum values of all fields in the frequent
         output.'''
@@ -307,7 +311,7 @@ class FreqOutput:
             print "\t%s: min %f (at step %d), max %f (at step %d)"\
                 % (header, min, minStep, max, maxStep)
     
-    def getReductionOp(self, headerName, reduceFunc):
+    def getReductionOp(self, headerName, reduceFunc, target=None):
         '''Utility function for doing comparison operations on the records
         list, e.g. the max or minimum - where reduceFunc can operate on the
         whole records list at once, and support the "key" syntax to pick
@@ -316,7 +320,12 @@ class FreqOutput:
         if len(self.records) == 0: return None, None
         colNum = self.getColNum(headerName)
         tStepColNum = self.getColNum('Timestep')
-        retRecord = reduceFunc(self.records, key=operator.itemgetter(colNum))
+        if target is None:
+            retRecord = reduceFunc(self.records,
+                key=operator.itemgetter(colNum))
+        else:
+            retRecord = reduceFunc(self.records,
+                key=operator.itemgetter(colNum), target=target)
         return retRecord[colNum], retRecord[tStepColNum]
 
     def getComparisonOp(self, headerName, cmpFunc):
@@ -384,3 +393,17 @@ def last(inList, key=None):
     attr:`~.FreqOutput.getReductionOp` for getting the last value from a
     frequent output list."""
     return inList[-1]
+
+def closest(inList, key=None, target=0):
+    closestVal = key(inList[0])
+    closestRec = inList[0]
+    diff = abs(closestVal - target)
+    if len(inList) == 1: return closestVal
+    for listEntry in inList[1:]:
+        eVal = key(listEntry)
+        newDiff = abs(eVal - target)
+        if newDiff < diff:
+            diff = newDiff
+            closestVal = eVal
+            closestRec = listEntry
+    return closestRec
