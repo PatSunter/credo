@@ -615,6 +615,15 @@ class SimParams:
                     " use only one of these methods for setting the parameter."\
                     % modelPath)
 
+    def nearestDumpStep(self, finalStep, inputStep):
+        """Utility method to get the nearest step at which a dump result
+        was created."""
+        dEvery = self.dumpevery
+        lastImgStep = finalStep / dEvery * dEvery
+        nearestDumpStep = int(round(inputStep / float(dEvery))) * dEvery
+        nearestDumpStep = min([nearestDumpStep, lastImgStep])
+        return nearestDumpStep
+
     def writeInfoXML(self, parentNode):
         '''Writes information about this class into an existing, open XML doc
          node, in a child list'''
