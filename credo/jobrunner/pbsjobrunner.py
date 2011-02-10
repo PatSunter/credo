@@ -47,6 +47,11 @@ class PBSJobMetaInfo(JobMetaInfo):
 
 
 class PBSJobRunner(JobRunner):
+    """A JobRunner to submit CREDO jobs via creating PBS script files,
+    and submitting these via command-line utils like qsub.
+
+    .. note:: this module is currently still in development, and needs
+       tuning for different HPC machines."""
     def __init__(self):
         JobRunner.__init__(self)
         # PBS Job Runners should by default submit all jobs first
@@ -123,6 +128,9 @@ class PBSJobRunner(JobRunner):
         qsubStdOut.close()
         qsubStdErr.close()
         # TODO: delete the qsub files if successful?
+        if modelRun.basePath != startDir:
+            print "Restoring initial path '%s'" % (startDir)
+            os.chdir(startDir)
         return jobMetaInfo
 
     def _parseQSubOutput(self, qsubStdOut, qsubStdErr):
@@ -171,6 +179,14 @@ class PBSJobRunner(JobRunner):
         f.write(wallTimeLine+"\n")
         #export bash script vars:
         f.write("%s -V\n" % PBS_PREFIX)
+        #sourcefiles
+        if 'sourcefiles' in jobParams['PBS']:
+            for srcFile in jobParams['PBS']['sourcefiles']:
+                f.write("source %s\n" % srcFile)
+        #modules
+        if 'modules' in jobParams['PBS']:
+            for modName in jobParams['PBS']['modules']:
+                f.write("module load %s\n" % modName)
         #cmd line:
         f.write(runCommand+"\n")
         f.close()
@@ -178,9 +194,14 @@ class PBSJobRunner(JobRunner):
 
     def blockResult(self, modelRun, jobMetaInfo):        
         # Check jobMetaInfo is of type PBS
-	# via self.runType = "PBS" 
+        # via self.runType = "PBS" 
+        startDir = os.getcwd()
+        if modelRun.basePath != startDir:
+            print "Changing to ModelRun's specified base path '%s'" % \
+                (modelRun.basePath)
+            os.chdir(modelRun.basePath)
         jobID = jobMetaInfo.jobId
-        maxRunTime = modelRun.jobParams['maxRunTime']	
+        maxRunTime = modelRun.jobParams['maxRunTime']
         pollInterval = modelRun.jobParams['pollInterval']
         checkOutput = 0
         # periodically based on pollInterval:
@@ -206,55 +227,53 @@ class PBSJobRunner(JobRunner):
             #3505.tweedle              cratonic30t2c3d2 WendySharples   00:15:16 C batch
             # So if we break the command line up into an array of words separated by spaces:
             qstatus = qstatus.split(" ")
-            length = len(qstatus)
             #jobName and modelName MUST be THE SAME 
-            for i in range(1, length):
-                if qstatus[i] == "Unknown":
+            for ii in range(len(qstatus)):
+                if qstatus[ii] == "Unknown":
                     print "job has already run\n"
                     checkOutput = 1
-                if qstatus[i] == "R":
+                if qstatus[ii] == "R":
                     print "job is still running\n"
-                if qstatus[i] == "Q":
+                if qstatus[ii] == "Q":
                     print "job is queued\n"
-                if qstatus[i] == "C":
+                if qstatus[ii] == "C":
                     print "job is cancelled\n"
                     checkOutput = 1
-                if qstatus[i] == "E":
+                if qstatus[ii] == "E":
                     print "job has ended\n"
                     checkOutput = 1
             if checkOutput == 1:
                 timeOut = False
                 break
-        if timeOut == True:
-			# At this point, we know the process has run too long.
-			# From Python 2.6, change this to procHandle.kill()
-			print "Error: passed timeout of %s, sending quit signal." % \
-                    (str(timedelta(seconds=maxRunTime)))
-			qdel = os.popen("qdel "+jobID).readlines()
-			qdelstatus = "%s" % (qdel)
-			print qdelstatus
-			raise ModelRunTimeoutError(modelRun.name, stdOutFilename,
-                stdErrFilename, modelRun.jobParams['maxRunTime'])
-			# Get server info ...
-            # jobMetaInfo.dict['nodeInfo'] = nodeInfo
-            # get retCode, timeOut.
 
         # Check status of run (eg error status)
-
         # TODO: archive PBS file in modelRun output directory.
-
+        # TODO: connect/copy PBS stdout/error files to standard expected names.
         stdOutFilename = modelRun.getStdOutFilename()
         stdErrFilename = modelRun.getStdErrFilename()
             
+        if timeOut == True:
+            # At this point, we know the process has run too long.
+            print "Error: passed timeout of %s, sending quit signal." % \
+                    (str(timedelta(seconds=maxRunTime)))
+            qdel = os.popen("qdel "+jobID).readlines()
+            qdelstatus = "%s" % (qdel)
+            print qdelstatus
+            raise ModelRunTimeoutError(modelRun.name, stdOutFilename,
+                stdErrFilename, modelRun.jobParams['maxRunTime'])
+            # Get server info ...
+            # jobMetaInfo.dict['nodeInfo'] = nodeInfo
+            # get retCode, timeOut.
+
         if checkOutput == 0 and timeOut == False:
-            raise ModelRunRegularError(modelRun.name, retCode, stdOutFilename,
+            raise ModelRunRegularError(modelRun.name, -1, stdOutFilename,
                 stdErrFilename)
         else:
             absOutPath = os.path.join(modelRun.basePath, modelRun.outputPath)
             absLogPath = os.path.join(modelRun.basePath, modelRun.logPath)
             # TODO: Move and rename output and error files created by PBS,
             #  ... to stdOutFilename, stdErrFilename
-			# check PBS output file and make sure there's something in it
+            # check PBS output file and make sure there's something in it
             jobName = "%s" % (modelRun.name)           
             jobid = jobID.split(".")
             jobNo = jobid[0] 
@@ -263,12 +282,11 @@ class PBSJobRunner(JobRunner):
             lines = f.read()
             if lines == "":
                 print "error in file no output obtained\n"
-                raise ModelRunRegularError(modelRun.name, retCode, stdOutFilename,
-                stdErrFilename)
+                raise ModelRunRegularError(modelRun.name, retCode,
+                    stdOutFilename, stdErrFilename)
             else:    
-			    print "Model ran successfully (output saved to path %s, std out"\
+                print "Model ran successfully (output saved to %s, std out"\
                 " & std error to %s." % (absOutPath, absLogPath)
-
         print "Doing post-run tidyup:"
         modelRun.postRunCleanup()
 
@@ -287,11 +305,8 @@ class PBSJobRunner(JobRunner):
         # get performance info
         # attach performance info
         mResult.jobMetaInfo = jobMetaInfo
-		# Navigate to the model's base directory
-        startDir = os.getcwd()
+        # Navigate to the model's base directory
         if modelRun.basePath != startDir:
-            print "Restoring initial path '%s'" % \
-                (startDir)
+            print "Restoring initial path '%s'" % (startDir)
             os.chdir(startDir)
-        
         return mResult
