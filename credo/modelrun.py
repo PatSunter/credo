@@ -524,7 +524,7 @@ class StgParamInfo:
 
        Default value of the parameter.
     '''
-    def __init__( self, stgName, pType, defVal ):
+    def __init__(self, stgName, pType, defVal):
         self.stgName = str(stgName)
         assert isinstance(pType, type)
         assert pType in _allowedModelParamTypes
@@ -535,7 +535,7 @@ class StgParamInfo:
             assert isinstance(defVal, self.pType)
         self.defVal = defVal
 
-    def checkType( self, value ):
+    def checkType(self, value):
         """Checks that the value is of the correct type of this parameter."""
         if (value is not None) and (not isinstance(value, self.pType)):
             raise ValueError("Tried to set StgParam \"%s\" to %s, of type %s,"\

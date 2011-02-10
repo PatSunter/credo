@@ -335,8 +335,9 @@ class ModelSuite:
             commonPrefix = os.path.commonprefix([self.outputPathBase,
                 modelRun.outputPath])
             if commonPrefix != self.outputPathBase:
-                modelRun.outputPath = os.path.join(self.outputPathBase,
-                    modelRun.name)
+                newPath = os.path.join(self.outputPathBase, modelRun.name)
+                modelRun.outputPath = newPath
+                modelRun.logPath = newPath
         self.runs.append(modelRun)
         self.runDescrips.append(runDescrip)
         self.runCustomOptSets.append(runCustomOpts)
@@ -427,9 +428,9 @@ class ModelSuite:
 
             subPath = self.subOutputPathGenFunc(newMRun, self.modelVariants,
                 paramIndices, runI)
-
             newMRun.name += "-%s" % (subPath)
-            newMRun.outputPath = os.path.join(self.outputPathBase, subPath)  
+            newMRun.outputPath = os.path.join(self.outputPathBase, subPath)
+            newMRun.logPath = os.path.join(self.outputPathBase, subPath)
             self.runs.append(newMRun)
             self.runDescrips.append(subPath)
             self.runCustomOptSets.append(None)
