@@ -7,6 +7,9 @@ import reportLabUtils as rl
 from reportlab.lib.units import inch
 from reportlab.graphics import renderSVG
 from reportlab.graphics import renderPDF
+from reportlab.lib import colors
+import PIL
+import credo.modelsuite as msuite
 
 PAGE_WIDTH=defaultPageSize[0]
 PAGE_HEIGHT=defaultPageSize[1]
@@ -48,12 +51,42 @@ def testCompElement(tcName, srTC):
     result = elements
     return result
 
+def modelVariantsTable(mSuite):
+    elements = []
+    elements.append(rl.header("Model Variants", sep=0.1,
+        style=H3Style))
+    data = [[] for runI in range(len(mSuite.runs)+1)]
+    data[0].append("Run")
+    for mVarName in mSuite.modelVariants.iterkeys():
+        data[0].append(mVarName)
+    valIter = msuite.getParamValuesIter(mSuite.modelVariants, mSuite.iterGen)
+    for ii, values in enumerate(valIter):
+        data[ii+1].append(ii)
+        data[ii+1].extend(list(values))
+    table = platypus.Table(data)    
+    tStyle = platypus.TableStyle(
+        [('BOX', (0,0), (-1,-1), 2, colors.black),
+        ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.blue)]
+        )
+    table.setStyle(tStyle)
+    elements.append(table)
+    result = elements
+    return result
+
 def modelImagesDisplay(mSuite, imgPerRow=1):
     imageInfos = mSuite.modelImagesToDisplay
     elements = []
+    if mSuite.iterGen is not None:
+        inIter = msuite.getVariantIndicesIter(mSuite.modelVariants,
+            mSuite.iterGen)
+        varNameDicts = msuite.getVariantNameDicts(mSuite.modelVariants, inIter)
     for runI, imagesPerRun in enumerate(imageInfos):
         elements.append(rl.header("Run %d: %s" % (runI, mSuite.runs[runI].name),
-            sep=0.1, style=H3Style))
+            sep=0.0, style=H3Style))
+        #if mSuite.iterGen is not None:
+        #    elements.append(rl.header("%s" % varNameDicts[runI],
+        #        style=ParaStyle))
         # Put the images in a table
         nRows = int(math.ceil(len(imagesPerRun)/float(imgPerRow)))
         data = [[] for rowI in range(nRows)]
@@ -64,12 +97,21 @@ def modelImagesDisplay(mSuite, imgPerRow=1):
             imgText = platypus.Paragraph(hdrText, style=H4Style)
             imgFName = os.path.join(mSuite.runs[runI].outputPath,
                     'window.%.5d.png' % imgInfo[0])
-            imgEl = platypus.Image(imgFName)
-            # Set correct size
-            ratio = imgEl.drawHeight / float(imgEl.drawWidth)
-            newWidth = (PAGE_WIDTH*.9) / float(imgPerRow)
+            # Save a cropped thumbnail to save space
+            img = PIL.Image.open(imgFName)
+            initWidth, initHeight = img.size
+            ratio = initHeight / float(initWidth)
+            # Calc size for thumbnail
+            tWidth = int(initWidth * (1/float(imgPerRow)))
+            tHeight = int(math.floor(tWidth * ratio))
+            img.thumbnail((tWidth, tHeight), PIL.Image.ANTIALIAS)
+            img.save(imgFName + ".thumbnail", "PNG")
+            imgEl = platypus.Image(imgFName + ".thumbnail")
+            # Set display size on page
+            newWidth = int(math.floor((PAGE_WIDTH*.9) / float(imgPerRow)))
+            newHeight = int(math.floor(newWidth * ratio))
             imgEl.drawWidth = newWidth
-            imgEl.drawHeight = newWidth * ratio
+            imgEl.drawHeight = newHeight
             data[rowI].append([imgText, imgEl])
             if (ii+1) % imgPerRow == 0: rowI += 1
             #elements.append(imgEl)
@@ -89,6 +131,8 @@ def makeSuiteReport(mSuite, outName, imgPerRow=3):
     elements.append(rl.header(title))
     elements.append(rl.header("Specification", sep=0.1, style=H2Style))
     elements.append(rl.table(specDict))
+    if mSuite.iterGen is not None:
+        elements.extend(modelVariantsTable(mSuite))
     # Display requested images
     elements.append(rl.header("Analysis Images", sep=0.1, style=H2Style))
     if mSuite.analysisImages is not None:    
@@ -99,6 +143,7 @@ def makeSuiteReport(mSuite, outName, imgPerRow=3):
         elements.append(rl.header("Model Run Images", sep=0.1, style=H2Style))
         elements.extend(modelImagesDisplay(mSuite, imgPerRow=imgPerRow))
     rl.makePDF(elements, title, outName)
+    print "Saved PDF report at %s." % outName
 
 def makeSciBenchReport(sciBTest, outName, imgPerRow=3):
     #content
@@ -131,3 +176,4 @@ def makeSciBenchReport(sciBTest, outName, imgPerRow=3):
         elements.append(rl.header("Model Run Images", sep=0.1, style=H2Style))
         elements.extend(modelImagesDisplay(sciBTest.mSuite, imgPerRow=imgPerRow))
     rl.makePDF(elements, title, outName)
+    print "Saved PDF report at %s." % outName
