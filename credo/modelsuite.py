@@ -236,6 +236,11 @@ def getSubdir_RunIndex(modelRun, modelVariants, paramIndices, runIndex):
     """Simply prints the index of the run as a subdirectory."""
     return "%.5d" % runIndex
 
+def getSubdir_RunIndexAndText(modelRun, modelVariants, paramIndices, runIndex):
+    """Simply prints the index of the run as a subdirectory."""
+    subPath = getSubdirName(modelVariants, paramIndices)
+    return "%.5d-%s" % (runIndex, subPath)
+
 class ModelSuite:
     '''A class for running a suite of Models (e.g. a group for profiling,
     or a System Test that requires multiple runs).
