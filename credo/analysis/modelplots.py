@@ -55,9 +55,11 @@ def plotOverAllRuns(mResults, outputName, depName='Timestep', show=False,
     plt.title("Output parameter '%s' over %s"\
         % (outputName, depName))
     if save:
-        filename = os.path.join(path, outputName+"-multiRunTimeSeries.png")
         if not os.path.exists(path):
             os.makedirs(path)
-        plt.savefig(filename, format="png")
+        for fmt in ['svg', 'png']:
+            filename = os.path.join(path,
+                outputName+"-multiRunTimeSeries.%s" % fmt)
+            plt.savefig(filename, format=fmt, dpi=120)
     if show: plt.show()
     return plt
