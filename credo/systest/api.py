@@ -192,15 +192,15 @@ class SysTest:
 
     .. attribute:: testComps
 
-       A list of any :class:`.TestComponent` classes used as part of 
-       performing the test (one entry in the list for each run, one
-       test for )
-
-    .. attribute:: testComps
-
-       A list of dictionaries of :class:`.TestComponent` classes used as part of
+       A list of dictionaries of :class:`.TestComponent` (Single run) classes
+       used as part of
        performing this system test. The primary list is indexed by run number of
        the model run in the systest's :attr:`.mSuite`.
+
+    .. attribute:: multiRunTestComps
+
+       A dictionaries of :class:`.MultiRunTestComponent` classes used as
+       part of performing this system test.
     """
     def __init__(self, testType, testName, basePath, outputPathBase, 
             nproc=1, timeout=None):
@@ -337,7 +337,7 @@ class SysTest:
         (as a list of :class:`credo.modelresult.ModelResult`), it must decide
         and return the status of the test (as a :class:`.SysTestResult`).
 
-        It also needs to save this status to :meth:`.testStatus`.
+        It also needs to save this status to :attr:`.testStatus`.
 
         By default, this simply gets each :class:`~.TestComponent` registered
         for the system test do check its status, all must pass for a total
