@@ -352,6 +352,19 @@ class ModelRun:
         else:
             return inPath
 
+    def getSimParams(self):
+        """Utility function to get SimParams - since in the current design
+        the self.simParams parameter may be 'None', and we need to read
+        from the model XML."""
+        if self.simParams is not None:
+            simParams = self.simParams
+        else:
+            simParams = SimParams()
+        paramOverridesStr = getParamOverridesAsStr(self.paramOverrides)
+        simParams.readFromStgXML(self.modelInputFiles, self.basePath,
+            paramOverridesStr)
+        return simParams    
+
     def writeInfoXML(self, writePath="", filename="", update=False,
             prettyPrint=True):
         """Writes an XML recording the key details of this ModelRun, in CREDO
@@ -386,12 +399,7 @@ class ModelRun:
             # In this case:
             # We will write a copy of the simParams read from actual model
             # XMLs, plus the over-ride parameters)
-            simParams = SimParams()
-            # Make sure we include all override parameters
-            # by first writing to XML
-            paramOverridesStr = getParamOverridesAsStr(self.paramOverrides)
-            simParams.readFromStgXML(self.modelInputFiles, self.basePath,
-                paramOverridesStr)
+            simParams = self.getSimParams()
             simParams.writeInfoXML(root)
         else:
             self.simParams.writeInfoXML(root)
