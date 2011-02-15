@@ -26,6 +26,7 @@ import getopt
 import sys
 import os
 from credo.systest import *
+import credo.jobrunner
 
 # Temporary input processing
 opts, args = getopt.getopt(sys.argv[1:], "hs", ["help","setup"])
@@ -46,9 +47,9 @@ refTest = ReferenceTest(inputFiles, outputPath, nproc=1, basePath=os.getcwd())
 
 if setupMode == True:
     print "Running in setup mode only:"
-    refTest.setup()
+    refTest.regenerateFixture()
     print "Setup completed, exiting."
     sys.exit()
 
 testRunner = SysTestRunner()
-testRunner.runTest(refTest)
+testRunner.runSingleTest(refTest)

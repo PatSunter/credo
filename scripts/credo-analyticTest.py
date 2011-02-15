@@ -37,5 +37,6 @@ modelName += "-analyticTest"
 outputPath = 'output/'+modelName
 
 anTest = AnalyticTest(inputFiles, outputPath, nproc=1, basePath=os.getcwd())
+jobRunner = credo.jobrunner.defaultRunner()
 testRunner = SysTestRunner()
-testRunner.runTest(anTest)
+testRunner.runSingleTest(anTest)

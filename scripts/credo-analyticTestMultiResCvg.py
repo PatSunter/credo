@@ -42,4 +42,4 @@ resConvChecker = None
 anTest = AnalyticMultiResTest(inputFiles, outputPath, resSet, nproc=1,
     basePath=os.getcwd())
 testRunner = SysTestRunner()
-testRunner.runTest(anTest)
+testRunner.runSingleTest(anTest)

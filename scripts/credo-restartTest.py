@@ -38,4 +38,4 @@ outputPath = 'output/'+modelName
 
 restartTest = RestartTest(inputFiles, outputPath, nproc=1, basePath=os.getcwd())
 testRunner = SysTestRunner()
-testRunner.runTest(restartTest)
+testRunner.runSingleTest(restartTest)
