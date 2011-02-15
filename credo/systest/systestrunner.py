@@ -63,6 +63,14 @@ class SysTestRunner:
     def __init__(self):
         return
 
+    def runSingleTest(self, sysTest, postProcFromExisting=False):
+        """Convenience function to setup and run a single SysTest."""
+        sysTest.setupTest()
+        jobRunner = credo.jobrunner.defaultRunner()
+        testRes, mResults = sysTest.runTest(jobRunner,
+            postProcFromExisting=postProcFromExisting)
+        return testRes   
+
     def runTests(self, sysTests, postProcFromExisting=False,
             projName=None, suiteName=None, printSummary=True):
         """Run all tests in the sysTests list.

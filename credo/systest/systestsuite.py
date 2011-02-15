@@ -119,7 +119,7 @@ class SysTestSuite:
         stgpath.checkAllXMLInputFilesExist(absInputFiles)
         if 'nproc' not in testOpts:
             testOpts['nproc']=self.nproc
-        outputPath = self._getStdOutputPath(testClass, inputFiles, testOpts)
+        outputPath = testapi.getStdOutputPath(testClass, inputFiles, testOpts)
         newSysTest = testClass(inputFiles, outputPath, basePath=callingPath, 
             **testOpts)
         self.sysTests.append(newSysTest)
@@ -152,28 +152,3 @@ class SysTestSuite:
         
         for subSuite in self.subSuites:
             subSuite.setAllTimeouts(seconds, minutes, applyToSubSuites)
-
-    def _getStdOutputPath(self, testClass, inputFiles, testOpts):
-        """Get the standard name for the test's output path. Attempts to
-        avoid naming collisions where reasonable.
-        
-        TODO: move to be a method of SingleModelSysTest since relies
-         on several of those attributes?"""
-
-        classStr = str(testClass).split('.')[-1]
-        #TODO: resolve fact this already likely has "test" at end, unlike test
-        # type string.
-
-        # Grab any custom options we need
-        nproc = testOpts['nproc']
-        nameSuffix = testOpts['nameSuffix'] if 'nameSuffix' in testOpts\
-            else None
-        paramOverrides = testOpts['paramOverrides']\
-            if 'paramOverrides' in testOpts else None
-        solverOpts = testOpts['solverOpts'] if 'solverOpts' in testOpts\
-            else None
-
-        testName = testapi.getStdTestName(classStr, inputFiles, nproc, 
-            paramOverrides, solverOpts, nameSuffix)
-        outputPath = os.path.join('output', testName)
-        return outputPath

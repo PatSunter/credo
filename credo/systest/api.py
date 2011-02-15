@@ -138,6 +138,25 @@ def getStdTestName(testTypeStr, inputFiles, nproc, paramOverrides,
 
     return testName
 
+def getStdOutputPath(testClass, inputFiles, testOpts):
+    """Get the standard name for the test's output path. Attempts to
+    avoid naming collisions where reasonable."""
+
+    classStr = str(testClass).split('.')[-1]
+    # Grab any custom options we need
+    nproc = testOpts['nproc']
+    nameSuffix = testOpts['nameSuffix'] if 'nameSuffix' in testOpts\
+        else None
+    paramOverrides = testOpts['paramOverrides']\
+        if 'paramOverrides' in testOpts else None
+    solverOpts = testOpts['solverOpts'] if 'solverOpts' in testOpts\
+        else None
+
+    testName = getStdTestName(classStr, inputFiles, nproc, 
+        paramOverrides, solverOpts, nameSuffix)
+    outputPath = os.path.join('output', testName)
+    return outputPath
+
 class SysTest:
     """A class for managing SysTests in CREDO. This is an abstract base
     class: you must sub-class it to create actual system test types.
