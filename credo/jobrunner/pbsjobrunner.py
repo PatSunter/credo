@@ -76,11 +76,15 @@ class PBSJobRunner(JobRunner):
                 (modelRun.basePath)
             os.chdir(modelRun.basePath)
 
+        # For PBS runs, want to ensure the output path is an abs path:-
+        #  given file system complexities etc.
+        #  thus update here.
+        modelRun.outputPath = os.path.abspath(modelRun.outputPath)
+        # Now generate the XML etc
         modelRun.checkValidRunConfig()
         modelRun.preRunPreparation()
         modelRunCommand = modelRun.constructModelRunCommand(extraCmdLineOpts,
             absXMLPaths=True)
-
         # Construct full run line
         mpiPart = "%s" % (self.mpiRunCommand)
         runCommand = " ".join([mpiPart, modelRunCommand])
@@ -203,7 +207,7 @@ class PBSJobRunner(JobRunner):
         jobID = jobMetaInfo.jobId
         pollInterval = modelRun.jobParams['pollInterval']
         checkOutput = 0
-	    # NB: unlike with the MPI Job Runner, we don't check the "maxJobTime" here:- since that was encoded
+        # NB: unlike with the MPI Job Runner, we don't check the "maxJobTime" here:- since that was encoded
         #  in the PBS Walltime used. Wait as long as necessary for job to be queued, run, and completed 
         #  in PBS system.
         pbsWaitTime = 0
