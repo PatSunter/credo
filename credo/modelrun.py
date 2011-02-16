@@ -586,12 +586,13 @@ class SimParams:
                 for paramName, stgParamInfo in self.stgParamInfos.iteritems():
                     if param == stgParamInfo.stgName:
                         paramFound = True
-                        self.setParam(param, val)
+                        self.setParam(paramName, val)
                         break
                     
             if paramFound == False:        
-                valueErrorStr = "provided Sim Parameter %s not in allowed"\
-                    " list of parameters to set" % param
+                valueErrorStr = "provided Sim Parameter '%s' not in allowed"\
+                    " list of parameters to set, which is %s" %\
+                    (param, self.stgParamInfos.keys())
                 raise ValueError(valueErrorStr)
 
     def setParam(self, paramName, val):    
