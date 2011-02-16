@@ -20,7 +20,7 @@ Setup
 The script to run a suite of Rayleigh Taylor model is as included below,
 currently in the Underworld/InputFiles directory:
 
-.. literalinclude:: ../../../Underworld/InputFiles/credo-rayTaySuite.py
+.. literalinclude:: ../../../Underworld/InputFiles/credo_rayTaySuite.py
    :linenos:
 
 As with the script described in the 
@@ -44,7 +44,7 @@ for us automatically.
 
 Looking at the post-processing in more detail:
 
-.. literalinclude:: ../../../Underworld/InputFiles/credo-rayTaySuite.py
+.. literalinclude:: ../../../Underworld/InputFiles/credo_rayTaySuite.py
    :language: python
    :lines: 20-
 

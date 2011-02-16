@@ -51,4 +51,4 @@ if setupMode == True:
     sys.exit()
 
 testRunner = SysTestRunner()
-testRunner.runTest(refTest)
+testRunner.runSingleTest(refTest)

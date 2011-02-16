@@ -138,6 +138,25 @@ def getStdTestName(testTypeStr, inputFiles, nproc, paramOverrides,
 
     return testName
 
+def getStdOutputPath(testClass, inputFiles, testOpts):
+    """Get the standard name for the test's output path. Attempts to
+    avoid naming collisions where reasonable."""
+
+    classStr = str(testClass).split('.')[-1]
+    # Grab any custom options we need
+    nproc = testOpts['nproc']
+    nameSuffix = testOpts['nameSuffix'] if 'nameSuffix' in testOpts\
+        else None
+    paramOverrides = testOpts['paramOverrides']\
+        if 'paramOverrides' in testOpts else None
+    solverOpts = testOpts['solverOpts'] if 'solverOpts' in testOpts\
+        else None
+
+    testName = getStdTestName(classStr, inputFiles, nproc, 
+        paramOverrides, solverOpts, nameSuffix)
+    outputPath = os.path.join('output', testName)
+    return outputPath
+
 class SysTest:
     """A class for managing SysTests in CREDO. This is an abstract base
     class: you must sub-class it to create actual system test types.
@@ -192,15 +211,15 @@ class SysTest:
 
     .. attribute:: testComps
 
-       A list of any :class:`.TestComponent` classes used as part of 
-       performing the test (one entry in the list for each run, one
-       test for )
-
-    .. attribute:: testComps
-
-       A list of dictionaries of :class:`.TestComponent` classes used as part of
+       A list of dictionaries of :class:`.TestComponent` (Single run) classes
+       used as part of
        performing this system test. The primary list is indexed by run number of
        the model run in the systest's :attr:`.mSuite`.
+
+    .. attribute:: multiRunTestComps
+
+       A dictionaries of :class:`.MultiRunTestComponent` classes used as
+       part of performing this system test.
     """
     def __init__(self, testType, testName, basePath, outputPathBase, 
             nproc=1, timeout=None):
@@ -337,7 +356,7 @@ class SysTest:
         (as a list of :class:`credo.modelresult.ModelResult`), it must decide
         and return the status of the test (as a :class:`.SysTestResult`).
 
-        It also needs to save this status to :meth:`.testStatus`.
+        It also needs to save this status to :attr:`.testStatus`.
 
         By default, this simply gets each :class:`~.TestComponent` registered
         for the system test do check its status, all must pass for a total

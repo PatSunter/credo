@@ -353,6 +353,19 @@ class ModelRun:
         else:
             return inPath
 
+    def getSimParams(self):
+        """Utility function to get SimParams - since in the current design
+        the self.simParams parameter may be 'None', and we need to read
+        from the model XML."""
+        if self.simParams is not None:
+            simParams = self.simParams
+        else:
+            simParams = SimParams()
+        paramOverridesStr = getParamOverridesAsStr(self.paramOverrides)
+        simParams.readFromStgXML(self.modelInputFiles, self.basePath,
+            paramOverridesStr)
+        return simParams    
+
     def writeInfoXML(self, writePath="", filename="", update=False,
             prettyPrint=True):
         """Writes an XML recording the key details of this ModelRun, in CREDO
@@ -387,12 +400,7 @@ class ModelRun:
             # In this case:
             # We will write a copy of the simParams read from actual model
             # XMLs, plus the over-ride parameters)
-            simParams = SimParams()
-            # Make sure we include all override parameters
-            # by first writing to XML
-            paramOverridesStr = getParamOverridesAsStr(self.paramOverrides)
-            simParams.readFromStgXML(self.modelInputFiles, self.basePath,
-                paramOverridesStr)
+            simParams = self.getSimParams()
             simParams.writeInfoXML(root)
         else:
             self.simParams.writeInfoXML(root)
@@ -528,7 +536,7 @@ class StgParamInfo:
 
        Default value of the parameter.
     '''
-    def __init__( self, stgName, pType, defVal ):
+    def __init__(self, stgName, pType, defVal):
         self.stgName = str(stgName)
         assert isinstance(pType, type)
         assert pType in _allowedModelParamTypes
@@ -539,7 +547,7 @@ class StgParamInfo:
             assert isinstance(defVal, self.pType)
         self.defVal = defVal
 
-    def checkType( self, value ):
+    def checkType(self, value):
         """Checks that the value is of the correct type of this parameter."""
         if (value is not None) and (not isinstance(value, self.pType)):
             raise ValueError("Tried to set StgParam \"%s\" to %s, of type %s,"\
@@ -620,6 +628,15 @@ class SimParams:
                     " SimParams class and the paramater override list. Please"\
                     " use only one of these methods for setting the parameter."\
                     % modelPath)
+
+    def nearestDumpStep(self, finalStep, inputStep):
+        """Utility method to get the nearest step at which a dump result
+        was created."""
+        dEvery = self.dumpevery
+        lastImgStep = finalStep / dEvery * dEvery
+        nearestDumpStep = int(round(inputStep / float(dEvery))) * dEvery
+        nearestDumpStep = min([nearestDumpStep, lastImgStep])
+        return nearestDumpStep
 
     def writeInfoXML(self, parentNode):
         '''Writes information about this class into an existing, open XML doc

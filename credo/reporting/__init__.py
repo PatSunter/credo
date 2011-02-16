@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ##  Copyright (C), 2010, Monash University
 ##  Copyright (C), 2010, Victorian Partnership for Advanced Computing (VPAC)
 ##  
@@ -22,24 +21,6 @@
 ##  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 ##  MA  02110-1301  USA
 
-import getopt
-import sys
-import os
-from credo.systest import *
-
-# Temporary input processing
-opts, args = getopt.getopt(sys.argv[1:], "h", ["help"])
-
-#For now just copy all args as input files
-inputFiles = args
-modelName, ext = os.path.splitext(args[0])
-modelName += "-analyticMultiResTest"
-outputPath = 'output/'+modelName
-
-resSet = [(10,10),(20,20),(30,30)]
-resConvChecker = None
-
-anTest = AnalyticMultiResTest(inputFiles, outputPath, resSet, nproc=1,
-    basePath=os.getcwd())
-testRunner = SysTestRunner()
-testRunner.runSingleTest(anTest)
+"""This module allows reporting on CREDO's major objects
+:class:`credo.systest.api.SysTest` and potentially others like Suites
+and Experiments."""

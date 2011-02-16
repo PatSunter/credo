@@ -236,6 +236,11 @@ def getSubdir_RunIndex(modelRun, modelVariants, paramIndices, runIndex):
     """Simply prints the index of the run as a subdirectory."""
     return "%.5d" % runIndex
 
+def getSubdir_RunIndexAndText(modelRun, modelVariants, paramIndices, runIndex):
+    """Simply prints the index of the run as a subdirectory."""
+    subPath = getSubdirName(modelVariants, paramIndices)
+    return "%.5d-%s" % (runIndex, subPath)
+
 class ModelSuite:
     '''A class for running a suite of Models (e.g. a group for profiling,
     or a System Test that requires multiple runs).
@@ -335,8 +340,9 @@ class ModelSuite:
             commonPrefix = os.path.commonprefix([self.outputPathBase,
                 modelRun.outputPath])
             if commonPrefix != self.outputPathBase:
-                modelRun.outputPath = os.path.join(self.outputPathBase,
-                    modelRun.name)
+                newPath = os.path.join(self.outputPathBase, modelRun.name)
+                modelRun.outputPath = newPath
+                modelRun.logPath = newPath
         self.runs.append(modelRun)
         self.runDescrips.append(runDescrip)
         self.runCustomOptSets.append(runCustomOpts)
@@ -427,9 +433,9 @@ class ModelSuite:
 
             subPath = self.subOutputPathGenFunc(newMRun, self.modelVariants,
                 paramIndices, runI)
-
             newMRun.name += "-%s" % (subPath)
-            newMRun.outputPath = os.path.join(self.outputPathBase, subPath)  
+            newMRun.outputPath = os.path.join(self.outputPathBase, subPath)
+            newMRun.logPath = os.path.join(self.outputPathBase, subPath)
             self.runs.append(newMRun)
             self.runDescrips.append(subPath)
             self.runCustomOptSets.append(None)

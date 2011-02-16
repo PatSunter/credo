@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ##  Copyright (C), 2010, Monash University
 ##  Copyright (C), 2010, Victorian Partnership for Advanced Computing (VPAC)
 ##  
@@ -22,24 +21,32 @@
 ##  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 ##  MA  02110-1301  USA
 
-import getopt
-import sys
 import os
-from credo.systest import *
+import cPickle as pickle
+import shutil
+import tempfile
+import unittest
 
-# Temporary input processing
-opts, args = getopt.getopt(sys.argv[1:], "h", ["help"])
+import credo.reporting.rstUtils as rstu
 
-#For now just copy all args as input files
-inputFiles = args
-modelName, ext = os.path.splitext(args[0])
-modelName += "-analyticMultiResTest"
-outputPath = 'output/'+modelName
+class RstReportTestCase(unittest.TestCase):
 
-resSet = [(10,10),(20,20),(30,30)]
-resConvChecker = None
+    def setUp(self):
+        pass
 
-anTest = AnalyticMultiResTest(inputFiles, outputPath, resSet, nproc=1,
-    basePath=os.getcwd())
-testRunner = SysTestRunner()
-testRunner.runSingleTest(anTest)
+    def tearDown(self):
+        pass
+
+    def test_getHeaderStr(self):
+        headerStr = rstu.getHeaderStr("Hello!", 1)
+        self.assertEqual(headerStr, "Hello!\n======\n\n")
+        headerStr = rstu.getHeaderStr("Hello!", 2)
+        self.assertEqual(headerStr, "Hello!\n------\n\n")
+
+def suite():
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(RstReportTestCase, 'test'))
+    return suite
+
+if __name__ == '__main__':
+    unittest.main(defaultTest='suite')
