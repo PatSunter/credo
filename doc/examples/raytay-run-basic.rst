@@ -13,7 +13,7 @@ Setup
 The script to run a Rayleigh Taylor model is as included below, currently in the
 Underworld/InputFiles directory:
 
-.. literalinclude:: ../../../Underworld/InputFiles/credo-rayTayBasic.py
+.. literalinclude:: ../../../Underworld/InputFiles/credo_rayTayBasic.py
    :linenos:
 
 The script above the `#-----------------` comment line is setting up and running
@@ -30,7 +30,7 @@ the parameters. We also specify to save information about the model run via the
 
 Looking at the post-processing in more detail:
 
-.. literalinclude:: ../../../Underworld/InputFiles/credo-rayTayBasic.py
+.. literalinclude:: ../../../Underworld/InputFiles/credo_rayTayBasic.py
    :language: python
    :lines: 20-
 
