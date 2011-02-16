@@ -53,6 +53,7 @@ Doing Model analysis with CREDO
 
    examples/raytay-run-basic.rst
    examples/raytay-run-suite.rst
+   examples/ppc-compare.rst
 
 .. _credo-examples-scibenchmarking:
 
