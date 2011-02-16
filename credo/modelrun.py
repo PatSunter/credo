@@ -30,6 +30,7 @@ produce a :class:`credo.modelresult.ModelResult` class.
 """
 
 import os, sys
+from datetime import timedelta
 import shutil
 import inspect
 from xml.etree import ElementTree as etree
@@ -486,6 +487,11 @@ class JobParams(dict):
     easy updating.
     """
     def __init__(self, **kwargs):
+        # allow special handling of maxRunTime
+        if 'maxRunTime' in kwargs and isinstance(kwargs['maxRunTime'], timedelta):
+            mrTime = kwargs['maxRunTime']
+            # Convert to a flat seconds number
+            kwargs['maxRunTime'] = mrTime.days * 24 * 3600 + mrTime.seconds
         dict.__init__(self, kwargs)
         if 'nproc' not in self.keys():
             self['nproc'] = DEF_NPROC
@@ -697,7 +703,7 @@ def getParamOverridesAsStr(paramOverrides):
         overrideStrs.append(stgcmdline.paramStr(modelPath, paramVal))
     paramOverridesStr = " ".join(overrideStrs)
     return paramOverridesStr
-	
+
 
 def writeParamOverridesInfoXML(paramOverrides, parentNode):    
     """Writes a record, under the given parentNode, of all the 

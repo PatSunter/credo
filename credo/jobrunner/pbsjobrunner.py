@@ -201,16 +201,17 @@ class PBSJobRunner(JobRunner):
                 (modelRun.basePath)
             os.chdir(modelRun.basePath)
         jobID = jobMetaInfo.jobId
-        maxRunTime = modelRun.jobParams['maxRunTime']
         pollInterval = modelRun.jobParams['pollInterval']
         checkOutput = 0
-        # periodically based on pollInterval:
-        if pollInterval > maxRunTime: pollInterval = maxRunTime
-        totalTime = 0
-        timeOut = True
-        while totalTime <= maxRunTime:
+	    # NB: unlike with the MPI Job Runner, we don't check the "maxJobTime" here:- since that was encoded
+        #  in the PBS Walltime used. Wait as long as necessary for job to be queued, run, and completed 
+        #  in PBS system.
+        pbsWaitTime = 0
+        gotResult = False
+        pbsError = False
+        while gotResult == False:
             time.sleep(pollInterval)
-            totalTime += pollInterval
+            pbsWaitTime += pollInterval
             # check PBS job output ... (eg using qstat on jobID)
             qstat = os.popen("qstat "+jobID).readlines()
             qstatus = "%s" % (qstat)
@@ -231,20 +232,18 @@ class PBSJobRunner(JobRunner):
             for ii in range(len(qstatus)):
                 if qstatus[ii] == "Unknown":
                     print "job has already run\n"
-                    checkOutput = 1
-                if qstatus[ii] == "R":
+                    gotResult = True
+                elif qstatus[ii] == "R":
                     print "job is still running\n"
-                if qstatus[ii] == "Q":
+                elif qstatus[ii] == "Q":
                     print "job is queued\n"
-                if qstatus[ii] == "C":
+                elif qstatus[ii] == "C":
                     print "job is cancelled\n"
-                    checkOutput = 1
-                if qstatus[ii] == "E":
+                    gotResult = True
+                    pbsError = True
+                elif qstatus[ii] == "E":
                     print "job has ended\n"
-                    checkOutput = 1
-            if checkOutput == 1:
-                timeOut = False
-                break
+                    gotResult = True
 
         # Check status of run (eg error status)
         # TODO: archive PBS file in modelRun output directory.
@@ -252,20 +251,8 @@ class PBSJobRunner(JobRunner):
         stdOutFilename = modelRun.getStdOutFilename()
         stdErrFilename = modelRun.getStdErrFilename()
             
-        if timeOut == True:
-            # At this point, we know the process has run too long.
-            print "Error: passed timeout of %s, sending quit signal." % \
-                    (str(timedelta(seconds=maxRunTime)))
-            qdel = os.popen("qdel "+jobID).readlines()
-            qdelstatus = "%s" % (qdel)
-            print qdelstatus
-            raise ModelRunTimeoutError(modelRun.name, stdOutFilename,
-                stdErrFilename, modelRun.jobParams['maxRunTime'])
-            # Get server info ...
-            # jobMetaInfo.dict['nodeInfo'] = nodeInfo
-            # get retCode, timeOut.
-
-        if checkOutput == 0 and timeOut == False:
+        #qdel = os.popen("qdel "+jobID).readlines()
+        if pbsError:
             raise ModelRunRegularError(modelRun.name, -1, stdOutFilename,
                 stdErrFilename)
         else:
