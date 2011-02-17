@@ -361,10 +361,10 @@ class ModelRun:
             simParams = self.simParams
         else:
             simParams = SimParams()
-        paramOverridesStr = getParamOverridesAsStr(self.paramOverrides)
-        simParams.readFromStgXML(self.modelInputFiles, self.basePath,
-            paramOverridesStr)
-        return simParams    
+            paramOverridesStr = getParamOverridesAsStr(self.paramOverrides)
+            simParams.readFromStgXML(self.modelInputFiles, self.basePath,
+                paramOverridesStr)
+        return simParams
 
     def writeInfoXML(self, writePath="", filename="", update=False,
             prettyPrint=True):
