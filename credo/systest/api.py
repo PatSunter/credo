@@ -693,6 +693,19 @@ class SingleModelSysTest(SysTest):
         stgpath.checkAllXMLInputFilesExist(absInputFiles)
         self.solverOpts = solverOpts
 
+    def updateOutputPaths(self, newOutputPathBase):
+        """Function useful for when modifying suites, and you wish to 
+        change the output Path the suite reports are saved in. Necessary
+        because suites with multiple runs will use different sub-dirs 
+        for each run.
+        
+        .. note:: in current design, _don't_ also update expected/reference
+        soln paths, just output-related paths."""
+        if self.mSuite is not None:
+            raise AttributeError("Can't call setSubPaths() after the suite"\
+                " has already been generated.")
+        self.outputPathBase = newOutputPathBase
+
     def _createDefaultModelRun(self, modelName, outputPath=None):
         """Create and return a :class:`credo.modelrun.ModelRun` with the
         default options as specified for this System Test.

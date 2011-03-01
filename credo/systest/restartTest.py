@@ -77,8 +77,8 @@ class RestartTest(SingleModelSysTest):
             inputFiles, outputPathBase,
             basePath, nproc, timeout,
             paramOverrides, solverOpts, nameSuffix)
-        self.initialOutputPath = os.path.join(self.outputPathBase, "initial")
-        self.restartOutputPath = os.path.join(self.outputPathBase, "restart")
+        #Call this func to save duplication
+        self.updateOutputPaths(outputPathBase)
         self.fieldsToTest = fieldsToTest
         self.fullRunSteps = fullRunSteps
         if self.fullRunSteps % 2 != 0:
@@ -91,6 +91,13 @@ class RestartTest(SingleModelSysTest):
             useReference=True,
             referencePath=self.initialOutputPath,
             testTimestep=self.fullRunSteps)
+
+    def updateOutputPaths(self, newOutputPathBase):
+        """See base class 
+        :meth:`~credo.systest.api.SysTest.updateOutputPaths`."""
+        SingleModelSysTest.updateOutputPaths(self, newOutputPathBase)
+        self.initialOutputPath = os.path.join(newOutputPathBase, "initial")
+        self.restartOutputPath = os.path.join(newOutputPathBase, "restart")
 
     def genSuite(self):
         """See base class :meth:`~credo.systest.api.SysTest.genSuite`.
