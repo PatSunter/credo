@@ -67,6 +67,8 @@ class RestartTest(SingleModelSysTest):
                 " tolerance of full run at end."
     failMsg = "At least one field wasn't within tolerance"\
                 " on restart run of original run."
+    _initialSD = "initial"
+    _restartSD = "restart"
 
     def __init__(self, inputFiles, outputPathBase,
             basePath=None, nproc=1, timeout=None,
@@ -77,14 +79,13 @@ class RestartTest(SingleModelSysTest):
             inputFiles, outputPathBase,
             basePath, nproc, timeout,
             paramOverrides, solverOpts, nameSuffix)
-        #Call this func to save duplication
-        self.updateOutputPaths(outputPathBase)
+        self.initialOutputPath = os.path.join(outputPathBase, self._initialSD)
+        self.restartOutputPath = os.path.join(outputPathBase, self._restartSD)
         self.fieldsToTest = fieldsToTest
         self.fullRunSteps = fullRunSteps
         if self.fullRunSteps % 2 != 0:
             raise ValueError("fullRunSteps parameter must be even so restart"\
                 " can occur half-way - but you provided %d." % (fullRunSteps))
-        #TODO Hmmm ... hard-coding index here is a bit hacky
         self.fTests = FieldWithinTolTC(
             fieldsToTest=self.fieldsToTest, defFieldTol=defFieldTol,
             fieldTols=fieldTols,
@@ -96,8 +97,12 @@ class RestartTest(SingleModelSysTest):
         """See base class 
         :meth:`~credo.systest.api.SysTest.updateOutputPaths`."""
         SingleModelSysTest.updateOutputPaths(self, newOutputPathBase)
-        self.initialOutputPath = os.path.join(newOutputPathBase, "initial")
-        self.restartOutputPath = os.path.join(newOutputPathBase, "restart")
+        self.initialOutputPath = os.path.join(newOutputPathBase,
+            self._initialSD)
+        self.restartOutputPath = os.path.join(newOutputPathBase,
+            self._restartSD)
+        #Also need to re-connect the fTest to use new output path.
+        self.fTests.fComps.referencePath = self.initialOutputPath
 
     def genSuite(self):
         """See base class :meth:`~credo.systest.api.SysTest.genSuite`.
