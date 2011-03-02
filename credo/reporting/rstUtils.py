@@ -8,6 +8,15 @@ rstHeaderChars = ['*', '=', '-', '^', '"', '+']
 #Arbitrary preferred width of page view
 PAGE_WIDTH = 800
 
+rolesList = ['green', 'red']
+
+def getRolesStr():
+    #Currently just for custom colours.
+    rolesStr = ""
+    for role in rolesList:
+        rolesStr += ".. role:: %s\n\n" % role
+    return rolesStr
+
 def dedentAll(s):
     sList = [line.lstrip() for line in s.split('\n')]
     return '\n'.join(sList)
@@ -74,6 +83,8 @@ def listTable(tableData):
 
 def makeRST(elements, title, outName):
     outDoc = open(outName, "w")
+    rolesStr = getRolesStr()
+    outDoc.write(rolesStr)
     for lineStr in elements:
         outDoc.write(lineStr)
     outDoc.close()
