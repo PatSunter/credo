@@ -2,7 +2,8 @@
 import textwrap
 
 #Multiple header lines
-rstHeaderChars = ['=', '-', '^', '+', '|']
+# in Sphinx: ['#', '*', '=', '-', '^', '"']
+rstHeaderChars = ['*', '=', '-', '^', '"', '+']
 
 #Arbitrary preferred width of page view
 PAGE_WIDTH = 800

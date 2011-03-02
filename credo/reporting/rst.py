@@ -3,13 +3,33 @@ import PIL
 import rstUtils as rstu
 import credo.modelsuite as msuite
 
+def getColorTextStr(tcStatus):
+    #TODO: do I need to ensure there is a 'red' role at beginning now?
+    if tcStatus.statusStr == 'Pass':
+        color = 'green'
+    else:
+        color = 'red'
+    return ':%s:`%s`' % (color, tcStatus)
+
 def addTestCompElements(sciBTest):
-    # TODO
-    return []
+    level = 3
+    elements = []
+    elements.append(rstu.getHeaderStr("Single Run Test Components", level))
+    for runI, srTCs in enumerate(sciBTest.testComps):
+        elements.append(rstu.getHeaderStr("Run %d" % runI, level+1))
+        for srName, srTC in srTCs.iteritems():
+            elements.extend(testCompElement(srName, srTC))
+    return elements
 
 def testCompElement(tcName, srTC):
-    # TODO
-    return []
+    level = 5
+    elements = []
+    resultStr = getColorTextStr(srTC.tcStatus)
+    elements.append(rstu.getHeaderStr("'%s' (%s): %s" % \
+            (tcName, srTC.tcType, resultStr), level))
+    elements.append(rstu.getParaStr(srTC.tcStatus.detailMsg))
+    result = elements
+    return result    
 
 def modelVariantsTable(mSuite):
     #TODO
@@ -61,7 +81,7 @@ def makeSciBenchReport(sciBTest, outName, imgPerRow=3):
     #content
     title = "%s Report" % sciBTest.testName
     description = sciBTest.description
-    resultStr = "%s" % sciBTest.testStatus
+    resultStr = getColorTextStr(sciBTest.testStatus)
     specDict = {
         "basePath" : sciBTest.basePath,
         "outputPathBase" : sciBTest.outputPathBase,
