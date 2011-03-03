@@ -422,17 +422,33 @@ class SysTest:
             self.testStatus = CREDO_FAIL(self.failMsg)
         return self.testStatus
     
-    def getTCRes(self, tcName): 
+    def getTCRes(self, tcName, allowMissing=True): 
         """Utility function for single run test components to get lists of 
         test components, and tc results, for each run of a given testComp
         (This can be done by list manipulation in Python, this function
         just makes it easier).
         
+        :keyword allowMissing: if True, runs that don't have a TC of givne
+          name applied to them will have `None` placed in output array.
+          if False, KeyError exception will be propagated.
+
         :returns: a tuple of 2 lists: all test components of a given name
           ordered by model run in the test, and a list of corresponding
-          test component results."""
-        tcByRun = [tComps[tcName] for tComps in self.testComps]
-        tcRes = [tcRes[tcName] for tcRes in self.tcResults]
+          test component results.
+        """
+        nRuns = len(self.testComps)
+        tcByRun = [None] * nRuns
+        tcRes = [None] * nRuns
+        for runI in range(nRuns):
+            try:
+                tcByRun[runI] = self.testComps[runI][tcName]
+                tcRes[runI] = self.tcResults[runI][tcName]
+            except KeyError, e:
+                if allowMissing:
+                    tcByRun[runI] = None
+                    tcRes[runI] = None
+                else:
+                    raise e
         return tcByRun, tcRes
 
     def setErrorStatus(self, errorMsg):
