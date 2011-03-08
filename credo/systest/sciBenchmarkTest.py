@@ -25,13 +25,13 @@ import os
 from xml.etree import ElementTree as etree
 
 from credo.modelsuite import ModelSuite
-from credo.systest.api import SysTest, TestComponent, CREDO_PASS, CREDO_FAIL
+from .api import SysTest, TestComponent, CREDO_PASS, CREDO_FAIL
 import credo.utils
 
 class SciBenchmarkTest(SysTest):
     '''A Science benchmark test.
         This is an open-ended system test, designed for the user to add multiple
-        :class:`~credo.systest.api.TestComponent` s to,
+        :class:`~.api.TestComponent` s to,
         which test the conditions of the benchmark.
         Contains extra capabilities to report more fully on the test result
         than a standard system test.
@@ -74,7 +74,7 @@ class SciBenchmarkTest(SysTest):
                 mRun.outputPath = os.path.join(self.outputPathBase, mRun.name)
 
     def addTestComp(self, runI, testCompName, testComp):
-        """Add a testComponent (:class:`~credo.systest.api.TestComponent`)
+        """Add a testComponent (:class:`~.api.TestComponent`)
         with name testCompName to the list of test
         components to be applied as part of determining if the benchmark
         has passed. Does basic error-checking."""

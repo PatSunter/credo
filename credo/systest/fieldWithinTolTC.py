@@ -23,7 +23,7 @@
 
 from xml.etree import ElementTree as etree
 
-from credo.systest.api import SingleRunTestComponent, CREDO_PASS, CREDO_FAIL
+from .api import SingleRunTestComponent, CREDO_PASS, CREDO_FAIL
 import credo.analysis.fields as fields
 
 class FieldWithinTolTC(SingleRunTestComponent):
@@ -48,7 +48,7 @@ class FieldWithinTolTC(SingleRunTestComponent):
       :meth:`credo.analysis.fields.FieldComparisonList.useHighResReference`
     * referencePath: See   
       :meth:`credo.analysis.fields.FieldComparisonList.referencePath`
-    * referencePath: See   
+    * testTimestep: See   
       :meth:`credo.analysis.fields.FieldComparisonList.testTimestep`
 
     .. attribute:: fieldsToTest 

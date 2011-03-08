@@ -35,9 +35,8 @@ from xml.etree import ElementTree as etree
 from credo.modelsuite import ModelSuite
 from credo.modelrun import SimParams
 import credo.jobrunner
-from credo.systest.api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL
-from credo.systest.api import getStdTestNameBasic
-from credo.systest.fieldWithinTolTC import FieldWithinTolTC
+from .api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL, getStdTestNameBasic
+from .fieldWithinTolTC import FieldWithinTolTC
 
 DEF_TEST_FIELDS = ['VelocityField','PressureField']
 

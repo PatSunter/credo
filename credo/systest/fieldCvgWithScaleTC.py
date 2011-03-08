@@ -23,7 +23,7 @@
 
 from xml.etree import ElementTree as etree
 
-from credo.systest.api import MultiRunTestComponent, CREDO_PASS, CREDO_FAIL
+from .api import MultiRunTestComponent, CREDO_PASS, CREDO_FAIL
 from credo.io import stgcvg
 import credo.analysis.fields as fields
 

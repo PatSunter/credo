@@ -23,7 +23,7 @@
 
 from xml.etree import ElementTree as etree
 
-from credo.systest.api import SingleRunTestComponent, CREDO_PASS, CREDO_FAIL
+from .api import SingleRunTestComponent, CREDO_PASS, CREDO_FAIL
 
 class OutputWithinRangeTC(SingleRunTestComponent):
     '''Test component to check that a given output parameter 

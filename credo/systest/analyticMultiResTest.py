@@ -26,8 +26,8 @@ from xml.etree import ElementTree as etree
 
 from credo.modelsuite import ModelSuite
 import credo.modelrun as mrun
-from credo.systest.api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL
-from credo.systest.fieldCvgWithScaleTC import FieldCvgWithScaleTC
+from .api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL
+from .fieldCvgWithScaleTC import FieldCvgWithScaleTC
 
 class AnalyticMultiResTest(SingleModelSysTest):
     '''A Multiple Resolution system test.

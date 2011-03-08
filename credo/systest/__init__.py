@@ -39,9 +39,23 @@ tests such as Analytic, Restart and Reference.
 
 Examples of how to use this module are provided in the CREDO documentation,
 see :ref:`credo-examples-systesting`.
+
+.. note:: in early CREDO versions, importing credo.systest would have imported
+   into it the entire namespace of the credo.systest.api module. But Python 2.5
+   disallows this for relative imports (although the feature was added
+   back in in Python 2.6) ... so the import of the credo.systest.api namespace
+   into credo.systest was removed, and we only import the 'public interface'
+   of implementations designed to be used from the API in testing.
+
+   As a result, if you want to define new :class:`.api.SysTest` or 
+   :class:`.api.TestComponent` implementations, you should `import 
+   credo.systest.api` to access the base classes of these.
 """
 
-from .api import *
+# NB: Python 2.5 doesn't allow "from .X import *" (import * with relative
+#  import syntax). So removed the previous "from .api import *" that was here
+#  ... and explicitly importing useful implementation variables
+from .api import CREDO_PASS, CREDO_FAIL, CREDO_ERROR
 
 from .systestsuite import SysTestSuite
 from .systestrunner import SysTestRunner

@@ -29,8 +29,8 @@ from credo.io import stgxml as stgxml
 from credo.modelsuite import ModelSuite
 from credo.modelrun import SimParams
 import credo.jobrunner
-from credo.systest.api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL, getStdTestNameBasic
-from credo.systest.fieldWithinTolTC import FieldWithinTolTC
+from .api import SingleModelSysTest, CREDO_PASS, CREDO_FAIL, getStdTestNameBasic
+from .fieldWithinTolTC import FieldWithinTolTC
 
 class HighResReferenceTest(SingleModelSysTest):
     '''A High Res Reference System test.

@@ -24,7 +24,7 @@
 import os
 from xml.etree import ElementTree as etree
 
-from credo.systest.api import SingleRunTestComponent, CREDO_PASS, CREDO_FAIL
+from .api import SingleRunTestComponent, CREDO_PASS, CREDO_FAIL
 import credo.analysis.images as imageAnalysis
 
 def floatsToStr(floatList):

@@ -29,7 +29,7 @@ from credo.modelsuite import ModelSuite
 from credo.modelrun import SimParams
 import credo.jobrunner
 from . import api
-from credo.systest.imageCompTC import ImageCompTC
+from .imageCompTC import ImageCompTC
 
 class ImageReferenceTest(api.SingleModelSysTest):
     '''An image comparison against Reference System test.
