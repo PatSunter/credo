@@ -716,7 +716,7 @@ class SingleModelSysTest(SysTest):
         for each run.
         
         .. note:: in current design, _don't_ also update expected/reference
-        soln paths, just output-related paths."""
+           soln paths, just output-related paths."""
         if self.mSuite is not None:
             raise AttributeError("Can't call setSubPaths() after the suite"\
                 " has already been generated.")
