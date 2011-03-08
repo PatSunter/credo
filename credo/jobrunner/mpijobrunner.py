@@ -208,7 +208,7 @@ class MPIJobRunner(JobRunner):
         """Save the given runCommand to a file in output directory."""
         fName = os.path.join(modelRun.outputPath, "runCommand.sh")
         f = open(fName, "w")
-        f.write("!#/bin/sh\n")
+        f.write("#!/bin/sh\n")
         f.write("cd %s\n" % modelRun.basePath)
         f.write(runCommand+"\n")
         f.close()
