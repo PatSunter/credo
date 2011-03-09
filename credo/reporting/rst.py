@@ -1,114 +1,121 @@
-import os, math
-import PIL
-import rstUtils as rstu
-import credo.modelsuite as msuite
+"""Utils/primitives useful in constructing an RST report doc."""
+import os
+import textwrap
+from .reportGenerator import ReportGenerator
 
-def getColorTextStr(tcStatus):
-    #TODO: do I need to ensure there is a 'red' role at beginning now?
-    if tcStatus.statusStr == 'Pass':
-        color = 'green'
-    else:
-        color = 'red'
-    return ':%s:`%s`' % (color, tcStatus)
+#Multiple header lines
+# in Sphinx: ['#', '*', '=', '-', '^', '"']
+rstHeaderChars = ['*', '=', '-', '^', '"', '+']
 
-def addTestCompElements(sciBTest):
-    level = 3
-    elements = []
-    elements.append(rstu.getHeaderStr("Single Run Test Components", level))
-    for runI, srTCs in enumerate(sciBTest.testComps):
-        elements.append(rstu.getHeaderStr("Run %d" % runI, level+1))
-        for srName, srTC in srTCs.iteritems():
-            elements.extend(testCompElement(srName, srTC))
-    return elements
+#Arbitrary preferred width of page view
+PAGE_WIDTH = 800
 
-def testCompElement(tcName, srTC):
-    level = 5
-    elements = []
-    resultStr = getColorTextStr(srTC.tcStatus)
-    elements.append(rstu.getHeaderStr("'%s' (%s): %s" % \
-            (tcName, srTC.tcType, resultStr), level))
-    elements.append(rstu.getParaStr(srTC.tcStatus.detailMsg))
-    result = elements
-    return result    
+rolesList = ['green', 'red']
 
-def modelVariantsTable(mSuite):
-    #TODO
-    return []
-    
-def modelImagesDisplay(mSuite, imgPerRow=1):
-    level = 3
-    imageInfos = mSuite.modelImagesToDisplay
-    elements = []
-    if mSuite.iterGen is not None:
-        inIter = msuite.getVariantIndicesIter(mSuite.modelVariants,
-            mSuite.iterGen)
-        varNameDicts = msuite.getVariantNameDicts(mSuite.modelVariants, inIter)
-    for runI, imagesPerRun in enumerate(imageInfos):
-        mRun = mSuite.runs[runI]
-        elements.append(rstu.getHeaderStr("Run %d: %s" % (runI,
-            mSuite.runs[runI].name), level))
-        #if mSuite.iterGen is not None:
-        #    elements.append(rl.header("%s" % varNameDicts[runI],
-        #        style=ParaStyle))
-        # Put the images in a table
-        nRows = int(math.ceil(len(imagesPerRun)/float(imgPerRow)))
-        data = [[] for rowI in range(nRows)]
-        rowI = 0
-        for ii, imgInfo in enumerate(imagesPerRun):
-            hdrText = "Timestep %d:" % (imgInfo[0])
-            if imgInfo[1] != "": hdrText += " (%s)" % imgInfo[1]
-            imgText = "**%s**\n" % hdrText
-            imgFName = os.path.join(os.path.relpath(mRun.outputPath,
-                mSuite.outputPathBase), 'window.%.5d.png' % imgInfo[0])
-            imgFName = os.path.join(mRun.outputPath, 
-                'window.%.5d.png' % imgInfo[0])
-            relFName = os.path.relpath(imgFName, mSuite.outputPathBase)
-            img = PIL.Image.open(imgFName)
-            initWidth, initHeight = img.size
-            ratio = initHeight / float(initWidth)
-            # Set display size on page
-            newWidth = int(math.floor((rstu.PAGE_WIDTH*.9) / float(imgPerRow)))
-            newHeight = int(math.floor(newWidth * ratio))
-            imgEl = rstu.regImage(relFName, width=newWidth, height=newHeight)
-            data[rowI].append([imgText, imgEl])
-            if (ii+1) % imgPerRow == 0: rowI += 1
-        table = rstu.listTable(data)    
-        elements.append(table)
-    result = elements
-    return result
+def getRolesStr():
+    #Currently just for custom colours.
+    rolesStr = ""
+    for role in rolesList:
+        rolesStr += ".. role:: %s\n\n" % role
+    return rolesStr
 
-def makeSciBenchReport(sciBTest, outName, imgPerRow=3):
-    #content
-    title = "%s Report" % sciBTest.testName
-    description = sciBTest.description
-    resultStr = getColorTextStr(sciBTest.testStatus)
-    specDict = {
-        "basePath" : sciBTest.basePath,
-        "outputPathBase" : sciBTest.outputPathBase,
-        "nproc" : sciBTest.nproc }
+def dedentAll(s):
+    sList = [line.lstrip() for line in s.split('\n')]
+    return '\n'.join(sList)
 
-    #Build doc layout
-    elements = []
-    level = 1
-    elements.append(rstu.getHeaderStr(title, level))
-    level += 1
-    elements.append(rstu.getHeaderStr("Overall Result: %s" % resultStr, level))
-    level += 1
-    elements.append(rstu.getHeaderStr("Description", level))
-    elements.append(rstu.getParaStr(description))
-    elements.append(rstu.getHeaderStr("Specification", level))
-    elements.append(rstu.getRegList(specDict))
-    tcElements = addTestCompElements(sciBTest)
-    elements.extend(tcElements)
-    # Display requested images
-    elements.append(rstu.getHeaderStr("Analysis Images", level))
-    if sciBTest.mSuite.analysisImages is not None:    
-        for imgFile in sciBTest.mSuite.analysisImages:
-            elements.extend(rstu.regImage(imgFile, scale=80))
-    if sciBTest.mSuite.modelImagesToDisplay is not None:
-        elements.append(rstu.getHeaderStr("Model Run Images", 3))
-        elements.extend(modelImagesDisplay(sciBTest.mSuite,
-            imgPerRow=imgPerRow))
-    rstu.makeRST(elements, title, outName)
-    print "Saved RST report at %s." % outName
+def reIndent(s, numSpaces, keepInitSpaces = True):
+    """Re-Indent a string with given number of numSpaces preceding each line.
+    if keepInitSpaces is true, whitespace at start of initial lines is kept
+    in output and added to numSpaces."""
+    s2 = s.split('\n')
+    sList = []
+    for line in s2:
+        if line == '':
+            sList.append('')
+        else:
+            if not keepInitSpaces:
+                line = line.lstrip()
+            sList.append(' ' * numSpaces + line)
+    s3 = '\n'.join(sList)
+    return s3
 
+class RstGenerator(ReportGenerator):
+    """An RST (ReStructured Text) implementation of the ReportGenerator
+    class."""
+    def __init__(self, basePath):
+        ReportGenerator.__init__(self, "RST")
+        self.PAGE_WIDTH = PAGE_WIDTH
+        self.basePath = basePath
+        self.stdExt = "rst"
+
+    def getHeaderEl(self, txt, level):
+        """Get a string suitable for an RST header."""
+        uLine = rstHeaderChars[level-1] * len(txt)
+        headerStr = "%s\n%s\n\n" % (txt, uLine)
+        return headerStr
+
+    def getParaEl(self, txt, level):
+        #TODO: handle level
+        paraStr = dedentAll(txt)
+        paraStr = textwrap.fill(paraStr, 75)
+        return paraStr + "\n\n"
+
+    def getDefListEls(self, listDict):
+        resStr = ""
+        for key, val in listDict.iteritems():
+            resStr += " * %s: %s\n" % (key, val)
+        resStr += "\n"
+        return [resStr]
+
+    def getTableEl(self, tableData):
+        """Note: we chose the RST list-table syntax, since this allows 
+        arbitrarily long/complex table entries."""
+        resultStr = ".. list-table::\n\n"
+        for dataLine in tableData:
+            for elI, dataEl in enumerate(dataLine):
+                if elI == 0:
+                    prefix1stStr = ' ' * 3 + '* - '
+                else:
+                    prefix1stStr = ' ' * 3 + '  - '
+                elementStr = "\n".join(dataEl)
+                elementStr = reIndent(elementStr, len(prefix1stStr))
+                #Now correct for special precursors
+                elementStr = prefix1stStr + elementStr[len(prefix1stStr):]    
+                resultStr += elementStr
+        return resultStr
+
+    def getImageEls(self, imgFile, hdrText=None, width=None, height=None,
+            scale=None, tScale=None):
+        """
+        .. note:: we ignore the `tScale` param for RST reports, since the 
+           images aren't embedded in the final report anyway."""
+        resultEls = []
+        if hdrText is not None:
+            resultEls.append("**%s**\n" % hdrText)    
+        relImgFile = os.path.relpath(imgFile, self.basePath)
+        resStr = ".. image:: %s\n" % relImgFile
+        if scale is not None:
+            resStr += "   :scale: %d %%\n" % scale
+        if width is not None:
+            resStr += "   :width: %d px\n" % width
+        if height is not None:
+            resStr += "   :height: %d px\n" % height
+        resStr += "\n"
+        resultEls.append(resStr)
+        return resultEls
+
+    def makeDoc(self, docElements, title, outFilename):
+        outDoc = open(outFilename, "w")
+        rolesStr = getRolesStr()
+        outDoc.write(rolesStr)
+        for lineStr in docElements:
+            outDoc.write(lineStr)
+        outDoc.close()
+     
+    def getColorTextStr(self, textStr, colorName):
+        #Note: this relies on the roles function above.
+        return ':%s:`%s`' % (colorName, textStr)    
+
+def generator(basePath):
+    """Factory method."""
+    return RstGenerator(basePath)
