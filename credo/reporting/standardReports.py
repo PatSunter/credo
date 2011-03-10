@@ -45,8 +45,9 @@ def modelImagesDisplay(mSuite, rGen, level, imgPerRow=1):
         mRun = mSuite.runs[runI]
         elements.append(rGen.getHeaderEl("Run %d: %s" % (runI,
             mSuite.runs[runI].name), level))
+        # TODO: optional info to provide with each run.
         #if mSuite.iterGen is not None:
-        #    elements.append(rl.header("%s" % varNameDicts[runI],
+        #    elements.append(rGen.getHeaderEl("%s" % varNameDicts[runI],
         #        style=ParaStyle))
         # Put the images in a table
         nRows = int(math.ceil(len(imagesPerRun)/float(imgPerRow)))
@@ -73,6 +74,39 @@ def modelImagesDisplay(mSuite, rGen, level, imgPerRow=1):
         elements.append(table)
     result = elements
     return result
+
+def defaultAnalysisImgEls(mSuite, rGen, level):
+    elements = []
+    elements.append(rGen.getHeaderEl("Analysis Images", level))
+    if mSuite.analysisImages is not None:    
+        for imgFile in mSuite.analysisImages:
+            elements.extend(rGen.getImageEls(os.path.join(
+                mSuite.outputPathBase, imgFile), width=rGen.PAGE_WIDTH * .6))
+    return elements            
+
+def makeSuiteReport(mSuite, rGen, outName, imgPerRow=3):
+    #content
+    # TODO: would be good is suite had a name here .. use output path for now.
+    title = "Suite Report: %s" % mSuite.outputPathBase
+    specDict = {
+        "outputPathBase" : mSuite.outputPathBase}
+    #Build doc la
+    elements = []
+    level = 1
+    elements.append(rGen.getHeaderEl(title, level))
+    level += 1
+    elements.append(rGen.getHeaderEl("Specification", level))
+    elements.extend(rGen.getDefListEls(specDict))
+    if mSuite.iterGen is not None:
+        elements.extend(modelVariantsTable(mSuite))
+    elements.extend(defaultAnalysisImgEls(mSuite, rGen, level))
+    if mSuite.modelImagesToDisplay is not None:
+        elements.append(rGen.getHeaderEl("Model Run Images", level))
+        elements.extend(modelImagesDisplay(mSuite, rGen, level+1, 
+            imgPerRow=imgPerRow))
+    rGen.makeDoc(elements, title, outName)
+    print "Saved report at %s (%s type)." % (outName, rGen.rType)
+
 
 def makeSciBenchReport(sciBTest, rGen, outName, imgPerRow=3):
     """Make a science benchmark report.
@@ -102,11 +136,7 @@ def makeSciBenchReport(sciBTest, rGen, outName, imgPerRow=3):
     tcElements = addTestCompElements(sciBTest, rGen, level)
     elements.extend(tcElements)
     # Display requested images
-    elements.append(rGen.getHeaderEl("Analysis Images", level))
-    if sciBTest.mSuite.analysisImages is not None:    
-        for imgFile in sciBTest.mSuite.analysisImages:
-            elements.extend(rGen.getImageEls(os.path.join(
-                sciBTest.outputPathBase, imgFile), width=rGen.PAGE_WIDTH * .8))
+    elements.extend(defaultAnalysisImgEls(sciBTest.mSuite, rGen, level))
     if sciBTest.mSuite.modelImagesToDisplay is not None:
         elements.append(rGen.getHeaderEl("Model Run Images", level))
         elements.extend(modelImagesDisplay(sciBTest.mSuite, rGen, level+1,
