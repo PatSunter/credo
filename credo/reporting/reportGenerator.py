@@ -13,6 +13,9 @@ class ReportGenerator:
     def getDefListEls(self, listDict):
         raise NotImplementedError("Abstract base class.")
 
+    def getSimpleTableEl(self, headerEntries, dataEntries):
+        raise NotImplementedError("Abstract base class.")
+
     def getTableEl(self, tableRowEntriesList):
         raise NotImplementedError("Abstract base class.")
     

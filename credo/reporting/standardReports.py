@@ -30,9 +30,20 @@ def testCompElement(tcName, srTC, level, rGen):
     result = elements
     return result
 
-def modelVariantsTable(mSuite):
-    #TODO
-    return []
+def modelVariantsTable(mSuite, rGen, level):
+    elements = []
+    elements.append(rGen.getHeaderEl("Model Variants", level))
+    headers = ["Run"]
+    for mVarName in mSuite.modelVariants.iterkeys():
+        headers.append(mVarName)
+    data = [[] for runI in range(len(mSuite.runs))]
+    valIter = msuite.getParamValuesIter(mSuite.modelVariants, mSuite.iterGen)
+    for ii, values in enumerate(valIter):
+        data[ii].append(ii)
+        data[ii].extend(list(values))
+    table = rGen.getSimpleDataTableEl(headers, data)    
+    elements.append(table)
+    return elements
     
 def modelImagesDisplay(mSuite, rGen, level, imgPerRow=1):
     imageInfos = mSuite.modelImagesToDisplay
@@ -98,7 +109,7 @@ def makeSuiteReport(mSuite, rGen, outName, imgPerRow=3):
     elements.append(rGen.getHeaderEl("Specification", level))
     elements.extend(rGen.getDefListEls(specDict))
     if mSuite.iterGen is not None:
-        elements.extend(modelVariantsTable(mSuite))
+        elements.extend(modelVariantsTable(mSuite, rGen, level))
     elements.extend(defaultAnalysisImgEls(mSuite, rGen, level))
     if mSuite.modelImagesToDisplay is not None:
         elements.append(rGen.getHeaderEl("Model Run Images", level))

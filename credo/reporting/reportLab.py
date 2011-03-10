@@ -2,6 +2,7 @@ import reportlab.platypus as platypus
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.rl_config import defaultPageSize
 from reportlab.lib.units import inch
+from reportlab.lib import colors
 import PIL
 from .reportGenerator import ReportGenerator
  
@@ -66,6 +67,19 @@ class ReportLabGenerator(ReportGenerator):
             bulletParas.append(platypus.Paragraph(txt, style=BulletStyle,
                 bulletText=u"\N{BULLET} "))
         return bulletParas
+
+    def getSimpleDataTableEl(self, headerEntries, dataEntries):
+        data = []
+        data.append(headerEntries)
+        for tableRowData in dataEntries:
+            data.append(tableRowData)
+        t = platypus.Table(data)
+        tStyle = platypus.TableStyle(
+            [('BOX', (0,0), (-1,-1), 1, colors.black),
+            ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
+            ('FONT', (0,0), (-1,0), 'Helvetica-Bold')])
+        t.setStyle(tStyle)
+        return t
 
     def getTableEl(self, tableRowEntriesList):
         data = []

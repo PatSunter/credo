@@ -67,6 +67,16 @@ class RstGenerator(ReportGenerator):
         resStr += "\n"
         return [resStr]
 
+    def getSimpleDataTableEl(self, headers, data):
+        # TODO: Use a proper abbreviated RST table syntax
+        newHeaders = ["*%s*" % hdr for hdr in headers]
+        newData = data[:]
+        for rowI in range(len(newData)):
+            for entryI in range(len(newData[rowI])):
+                newData[rowI][entryI] = str(newData[rowI][entryI])
+        newTableData = [newHeaders] + newData
+        return self.getTableEl(newTableData)
+
     def getTableEl(self, tableData):
         """Note: we chose the RST list-table syntax, since this allows 
         arbitrarily long/complex table entries."""
@@ -78,7 +88,12 @@ class RstGenerator(ReportGenerator):
                     prefix1stStr = ' ' * 3 + '* - '
                 else:
                     prefix1stStr = ' ' * 3 + '  - '
-                elementStr = "\n".join(dataEl)
+                if isinstance(dataEl, list):
+                    elementStr = "\n".join(dataEl)
+                else:
+                    elementStr = dataEl
+                if elementStr[-1] != '\n':
+                    elementStr += '\n'
                 elementStr = reIndent(elementStr, len(prefix1stStr))
                 #Now correct for special precursors
                 elementStr = prefix1stStr + elementStr[len(prefix1stStr):]    
@@ -91,6 +106,7 @@ class RstGenerator(ReportGenerator):
                     prefix1stStr = ' ' * 3 + '  - '
                     resultStr += prefix1stStr + "\n\n"
                     elI += 1
+        resultStr += '\n'
         return resultStr
 
     def getImageEls(self, imgFile, hdrText=None, width=None, height=None,
