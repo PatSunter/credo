@@ -71,6 +71,7 @@ class RstGenerator(ReportGenerator):
         """Note: we chose the RST list-table syntax, since this allows 
         arbitrarily long/complex table entries."""
         resultStr = ".. list-table::\n\n"
+        nEntriesMax = max(map(len, tableData))
         for dataLine in tableData:
             for elI, dataEl in enumerate(dataLine):
                 if elI == 0:
@@ -82,6 +83,14 @@ class RstGenerator(ReportGenerator):
                 #Now correct for special precursors
                 elementStr = prefix1stStr + elementStr[len(prefix1stStr):]    
                 resultStr += elementStr
+            # The list-table syntax requires equal-length rows - so buffer
+            # out if needed.
+            if len(dataLine) < nEntriesMax:
+                elI += 1
+                while elI < nEntriesMax:
+                    prefix1stStr = ' ' * 3 + '  - '
+                    resultStr += prefix1stStr + "\n\n"
+                    elI += 1
         return resultStr
 
     def getImageEls(self, imgFile, hdrText=None, width=None, height=None,
