@@ -53,6 +53,9 @@ def modelImagesDisplay(mSuite, rGen, level, imgPerRow=1):
             mSuite.iterGen)
         varNameDicts = msuite.getVariantNameDicts(mSuite.modelVariants, inIter)
     for runI, imagesPerRun in enumerate(imageInfos):
+        #Allow runs with no images (may not be interesting).
+        if len(imagesPerRun) == 0:
+            continue
         mRun = mSuite.runs[runI]
         elements.append(rGen.getHeaderEl("Run %d: %s" % (runI,
             mSuite.runs[runI].name), level))
@@ -67,7 +70,7 @@ def modelImagesDisplay(mSuite, rGen, level, imgPerRow=1):
         for ii, imgInfo in enumerate(imagesPerRun):
             hdrText = "Timestep %d:" % (imgInfo[0])
             if imgInfo[1] != "": hdrText += " (%s)" % imgInfo[1]
-            imgFName = os.path.join(mRun.outputPath,
+            imgFName = os.path.join(mRun.basePath, mRun.outputPath,
                 'window.%.5d.png' % imgInfo[0])
             # Set possible thumbnail size - can reduce file size if many
             #  images are being used.
@@ -92,7 +95,8 @@ def defaultAnalysisImgEls(mSuite, rGen, level):
     if mSuite.analysisImages is not None:    
         for imgFile in mSuite.analysisImages:
             elements.extend(rGen.getImageEls(os.path.join(
-                mSuite.outputPathBase, imgFile), width=rGen.PAGE_WIDTH * .6))
+                mSuite.runs[0].basePath, mSuite.outputPathBase, imgFile),
+                width=rGen.PAGE_WIDTH * .6))
     return elements            
 
 def makeSuiteReport(mSuite, rGen, outName, imgPerRow=3):

@@ -32,9 +32,10 @@ def header(txt, style=HeaderStyleList[0], klass=platypus.Paragraph, sep=0.3):
 class ReportLabGenerator(ReportGenerator):
     """A report generator to create PDF documents using the Python
     ReportLab toolkit."""
-    def __init__(self):
+    def __init__(self, basePath):
         ReportGenerator.__init__(self, "ReportLab")
         self.PAGE_WIDTH = PAGE_WIDTH
+        self.basePath = basePath
         self.stdExt = "pdf"
 
     def getHeaderEl(self, txt, level):
@@ -132,6 +133,6 @@ class ReportLabGenerator(ReportGenerator):
     def getColorTextStr(self, textStr, colorName):
         return '<font color="%s">%s</font>' % (colorName, textStr)
 
-def generator():
+def generator(basePath):
     """Factory method."""
-    return ReportLabGenerator()
+    return ReportLabGenerator(basePath)

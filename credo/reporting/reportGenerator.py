@@ -28,3 +28,5 @@ class ReportGenerator:
 
     def getColorTextStr(self, textStr, colorName):
         raise NotImplementedError("Abstract base class.")
+
+

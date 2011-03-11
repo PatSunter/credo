@@ -24,3 +24,30 @@
 """This module allows reporting on CREDO's major objects
 :class:`credo.systest.api.SysTest` and potentially others like Suites
 and Experiments."""
+
+# This maps acronyms usable in factory method below to modules to use
+GenNameToModuleMaps = {
+    "RST":"rst", "ReST":"rst", "reST":"rst",
+    "ReportLab":"reportLab", "reportLab":"reportLab"}
+
+def getGenerators(genNames, *args, **kwargs):
+    """Factory method for getting a list of ReportLab generators"""
+    import sys
+    generators = []
+    for genName in genNames:
+        try:
+            modName = GenNameToModuleMaps[genName]
+        except KeyError:
+            raise ValueError("passed in generator name '%s', but this is"\
+                " not one of the known report generators (%s)." \
+                    % (genName, GenNameToModuleMaps.keys()))
+        try:
+            fullName = "credo.reporting.%s" % modName
+            imp = __import__(fullName)
+            mod = sys.modules[fullName]
+        except ImportError, e:
+            print "failed to import and create a generator of type '%s', msg"\
+                " was: %s" % (genName, e)
+            continue
+        generators.append(mod.generator(*args, **kwargs))
+    return generators
