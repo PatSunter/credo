@@ -573,7 +573,7 @@ class SimParams:
     stgParamInfos = { \
         'nsteps':StgParamInfo("maxTimeSteps", int, None), \
         'stoptime':StgParamInfo("stopTime",float, None), \
-        'cpevery':StgParamInfo("checkpointEvery",int, 1), \
+        'cpevery':StgParamInfo("checkpointEvery",int, 100), \
         'dumpevery':StgParamInfo("dumpEvery",int, 1), \
         'restartstep':StgParamInfo("restartTimestep",int, None) }
 
