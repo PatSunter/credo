@@ -30,6 +30,11 @@ Good intoductory tutorials for learning Python.
 
 * Michael Foord's `Python Articles page <http://www.voidspace.org.uk/python/articles.shtml>`_ - includes good articles on eg Testing, and Duck Typing in Python.
   
+* The book `Python for Software Design - how to think like a Computer Scientist 
+  <http://www.greenteapress.com/thinkpython/>`_, 
+  (`direct html link <http://www.greenteapress.com/thinkpython/html>`_)
+  has some good examples couched in general programmer skill training.
+
 Tutorials particularly from the perspective of those with experience in Perl
 scripting, and Bash scripting:
 
