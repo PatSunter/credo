@@ -11,7 +11,7 @@ mgSetup = "MultigridEXPERI.xml"
 mgOpts = "options-uzawa-mg.opt"
 for sysTest in mgSuite.sysTests:
     sysTest.testName += "-mg"
-    sysTest.outputPathBase += "-mg"
+    sysTest.updateOutputPaths(sysTest.outputPathBase + "-mg")
     sysTest.inputFiles.append(mgSetup)
     sysTest.solverOpts = mgOpts
 
