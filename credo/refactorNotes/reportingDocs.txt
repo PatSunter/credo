@@ -21,14 +21,16 @@ Notes:
 20110-03-11:
 ------------
 
+Completed:
+ D top-level interface in benchmarks to easily specify which reports to create (and update all b-marks to use, possibly standard suites also)
+
 Stuff still TODO:
- - top-level interface in benchmarks to easily specify which reports to create (and update all b-marks to use, possibly standard suites also)
- - TODO: better standardise the modelIStumagesToDisplay[] etc data members.
+ - TODO: better standardise the modelImagesToDisplay[] etc data members.
+   (Idea: Save the postproc report images created for modelruns on the modelrun
+   objects themselves.)
  - Document and better unit tests
 
 Ideas/todos:
- - Save the postproc report images created for modelruns on the modelrun
-   objects themselves.
  - Similarly, save suite-wide reported images on some sort of "suite result"
     image
  (THese can then be saved to XML)

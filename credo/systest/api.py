@@ -30,6 +30,7 @@ or Test components need to inherit.
 
 import os
 import copy
+import types
 from datetime import timedelta
 from xml.etree import ElementTree as etree
 import credo.modelrun as mrun
@@ -220,6 +221,11 @@ class SysTest:
 
        A dictionaries of :class:`.MultiRunTestComponent` classes used as
        part of performing this system test.
+    
+    .. attribute:: generatedReports
+
+       A list of the file-names of all generated reports created based on
+       this benchmark.
     """
     def __init__(self, testType, testName, basePath, outputPathBase, 
             nproc=1, timeout=None):
@@ -240,6 +246,8 @@ class SysTest:
         self.mrtcResults = {}
         self.allmrPassed = None
         self.testStatus = None
+        self.customReporting = None
+        self.generatedReports = []
 
     def regenerateFixture(self, jobRunner):
         '''Function to do any setup of tests for the first time they're run,
@@ -252,12 +260,17 @@ class SysTest:
         self.configureSuite()
         self.configureTestComps()
     
-    def runTest(self, jobRunner, postProcFromExisting=False):
+    def runTest(self, jobRunner, postProcFromExisting=False,
+            createReports=True):
         """Run this sysTest, and return the 
         :class:`~credo.systest.api.SysTestResult` it produces.
         Will also write an XML record of the System test, and each ModelRun
         and ModelResult in the suite that made up the test.
-        
+
+        :keyword postProcFromExisting: if True, will not actually run the test,
+            but will read the result from existing modelResults.
+        :keyword createReports: if True, will create external reports
+            (additional to the XML record) this test specifies.
         :returns: SysTestResult, and list of ModelResults
            (since latter may be useful for further post-processing)"""
 
@@ -302,6 +315,9 @@ class SysTest:
             print "Error msg: %s" % (sysTestResult.detailMsg)
         outFilePath = self.updateXMLWithResult(suiteResults)
         print "Saved test result to %s" % (outFilePath)
+        # Don't assume reporting functions know how to handle error runs.
+        if createReports and not isinstance(sysTestResult, CREDO_ERROR):
+            self.createReports(suiteResults)
         sysTestResult.setRecordFile(outFilePath)
         os.chdir(startDir)
         return sysTestResult, suiteResults
@@ -495,7 +511,8 @@ class SysTest:
         outFileName = self._writeXMLDocToFile(xmlDoc, outputPath, filename)
         return outFileName
         
-    def updateXMLWithResult(self, resultsSet, outputPath="", filename="", prettyPrint=True):
+    def updateXMLWithResult(self, resultsSet, outputPath="", filename="",
+            prettyPrint=True):
         """Given resultsSet, a set of model results (list of 
         :class:`~credo.modelresult.ModelResult`), updates a Sys Test XML with
         the results of the test.
@@ -503,8 +520,7 @@ class SysTest:
         :meth:`.defaultSysTestFilename`, then it should be found automatically.
 
         Other arguments and return value same as for 
-        :meth:`.writePreRunXML`.
-        """
+        :meth:`.writePreRunXML`."""
         baseNode, xmlDoc = self._getXMLBaseNodeFromFile(outputPath, filename)
         baseNode.attrib['status'] = str(self.testStatus)
         self._writeXMLResult(baseNode)
@@ -512,6 +528,23 @@ class SysTest:
             # We only do the below if there are actual results to write - for
             # an error run there may not be.
             self._updateXMLTestComponentResults(baseNode, resultsSet)
+        outFileName = self._writeXMLDocToFile(xmlDoc, outputPath, filename)
+        return outFileName
+
+    def updateXMLWithReports(self, outputPath="", filename="",
+            prettyPrint=True):
+        """Updates a Sys Test XML with record of any report files generated
+        as a result of the test.
+        If the XML file has the standard name, as defined by
+        :meth:`.defaultSysTestFilename`, then it should be found automatically.
+
+        Other arguments and return value same as for 
+        :meth:`.writePreRunXML`."""
+        baseNode, xmlDoc = self._getXMLBaseNodeFromFile(outputPath, filename)
+        repsNode = etree.SubElement(baseNode, 'generatedReports')
+        for grFilename in self.generatedReports:
+            repNode = etree.SubElement(repsNode, 'report')
+            repNode.attrib['filename'] = grFilename
         outFileName = self._writeXMLDocToFile(xmlDoc, outputPath, filename)
         return outFileName
 
@@ -656,6 +689,27 @@ class SysTest:
         resNode.attrib['status'] = str(self.testStatus)
         statusMsgNode = etree.SubElement(resNode, 'statusMsg')
         statusMsgNode.text = self.testStatus.detailMsg
+    
+    def createReports(self, mResults):
+        """Create any custom reports, then update record XML"""
+        if self.customReporting is not None:
+            try:
+                # Remember customReports is an attribute function, not a 
+                # bound method currently - see comment in setCustomReporting()
+                self.customReporting(self, mResults)
+            except Exception, e:
+                print "Failed to create report for SysTest %s, exception msg"\
+                    " was: %s" % (self.testName, e)
+
+        self.updateXMLWithReports()
+
+    def setCustomReporting(self, customReportingFunc):
+        """Method to use to set the value of the customReporting method."""
+        self.customReporting = customReportingFunc
+        # Didn't use the below approach to create an actual method, since
+        #  it threw out deepcopy for 2.5/2.6
+        #self.customReporting = types.MethodType(customReportingFunc,
+        #    self, self.__class__)
 
 
 class SingleModelSysTest(SysTest):

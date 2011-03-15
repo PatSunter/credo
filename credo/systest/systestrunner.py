@@ -63,18 +63,31 @@ class SysTestRunner:
     def __init__(self):
         return
 
-    def runSingleTest(self, sysTest, postProcFromExisting=False):
-        """Convenience function to setup and run a single SysTest."""
+    def runSingleTest(self, sysTest, **kwargs):
+        """Convenience function to setup and run a single SysTest.
+        .. note:: all keywords appopriate to 
+           :meth:`credo.systest.api.SysTest.runTest()` are passed
+           through directly in the kwargs parameter.
+        """   
         sysTest.setupTest()
         jobRunner = credo.jobrunner.defaultRunner()
-        testRes, mResults = sysTest.runTest(jobRunner,
-            postProcFromExisting=postProcFromExisting)
+        testRes, mResults = sysTest.runTest(jobRunner, **kwargs)
         return testRes   
 
-    def runTests(self, sysTests, postProcFromExisting=False,
-            projName=None, suiteName=None, printSummary=True):
+    def runTests(self, sysTests, projName=None, suiteName=None,
+            printSummary=True, **kwargs):
         """Run all tests in the sysTests list.
-        Will also save all appropriate XMLs and print a summary of results."""
+        Will also save all appropriate XMLs and print a summary of results.
+
+        :keyword projName: the name of the 'project' to report these tests as
+          belonging to.
+        :keyword suiteName: the name of the suite these tests should be 
+          reported as belonging to.
+        
+        .. note:: all keywords appopriate to 
+           :meth:`credo.systest.api.SysTest.runTest()` are passed
+           through directly in the kwargs parameter.
+        """
         results = []
         testTotal = len(sysTests)
         for testI, sysTest in enumerate(sysTests):
@@ -82,8 +95,7 @@ class SysTestRunner:
             jobRunner = credo.jobrunner.defaultRunner()
             print "Running System test %d/%d, with name '%s':" \
                 % (testI+1, testTotal, sysTest.testName)
-            testRes, mResults = sysTest.runTest(jobRunner,
-                postProcFromExisting=postProcFromExisting)
+            testRes, mResults = sysTest.runTest(jobRunner, kwargs)
             results.append(testRes)
         if printSummary:
             self.printResultsSummary(sysTests, results, projName, suiteName)
@@ -91,8 +103,7 @@ class SysTestRunner:
     
     def runSuite(self, suite,
         runSubSuites=True, subSuiteMode=False,
-        postProcFromExisting=False, 
-        outputSummaryDir="testLogs"):
+        outputSummaryDir="testLogs", **kwargs):
         """Runs a suite of system tests, and prints results.
         The suite may contain sub-suites, which will also be run by default.
 
@@ -100,7 +111,12 @@ class SysTestRunner:
         
         .. note:: Currently, just returns a flat list of results, containing
            results of all tests and all sub-suites. Won't change this into
-           a hierarchy of results by sub-suite, unless really necessary."""
+           a hierarchy of results by sub-suite, unless really necessary.
+        
+        .. note:: all keywords appopriate to 
+           :meth:`credo.systest.api.SysTest.runTest()` are passed
+           through directly in the kwargs parameter.
+        """
 
         results = []
         testTotal = len(suite.sysTests)
@@ -115,9 +131,8 @@ class SysTestRunner:
         suiteXMLDoc = etree.ElementTree(suiteNode)
         if testTotal > 0:
             results += self.runTests(suite.sysTests, 
-                postProcFromExisting=postProcFromExisting,
                 projName=suite.projectName,
-                suiteName=suite.suiteName)
+                suiteName=suite.suiteName, **kwargs)
         # Even if no results, call func below so we get at least empty totals.
         self._addTestResultsInfo(suiteNode, suite, results)
 
@@ -132,8 +147,8 @@ class SysTestRunner:
             for subSuite in suite.subSuites:
                 subResults = self.runSuite(subSuite,
                     subSuiteMode=True,
-                    postProcFromExisting=postProcFromExisting,
-                    outputSummaryDir=outputSummaryDir)
+                    outputSummaryDir=outputSummaryDir,
+                    **kwargs)
                 subSuiteResults.append(subResults)
             for subResults in subSuiteResults:
                 results += subResults
@@ -141,16 +156,18 @@ class SysTestRunner:
                 suite.suiteName)
         return results
     
-    def runSuites(self, testSuites, postProcFromExisting=False,
-            outputSummaryDir="testLogs"):
+    def runSuites(self, testSuites, outputSummaryDir="testLogs", **kwargs):
         """Runs a list of suites, and prints a big summary at the end.
         :param testSuites: list of test suites to run.
-        :param postProcFromExisting: see :func:`.runTests`.
         :keyword outputSummaryDir: name of directory to save a summary of
-        tests
-        to.
+        tests to.
+
         :returns: a list containing lists of results for each suite (results
           list in the same order as testSuites input argument).
+        
+        .. note:: all keywords appopriate to 
+           :meth:`credo.systest.api.SysTest.runTest()` are passed
+           through directly in the kwargs parameter.
         """
 
         print "Running the following system test suites:"
@@ -161,8 +178,8 @@ class SysTestRunner:
         resultsLists = []
         for suite in testSuites:
             suiteResults = self.runSuite(suite, 
-                postProcFromExisting=postProcFromExisting,
-                outputSummaryDir=outputSummaryDir)
+                outputSummaryDir=outputSummaryDir,
+                **kwargs)
             resultsLists.append(suiteResults)
         print "-"*80
         self.printSuiteResultsByProject(testSuites, resultsLists)
@@ -363,14 +380,31 @@ def getSuitesFromModules(suiteModNames):
     for modName in suiteModNames:
         print "Importing suite for %s:" % modName
         # 2-stage process is needed, see Python docs on imp module
-        imp = __import__(modName)
-        mod = sys.modules[modName]
-        suites.append(mod.suite())
+        try:
+            imp = __import__(modName)
+            mod = sys.modules[modName]
+        except:
+            print "Warning: failed to import module '%s' - not adding to set"\
+                " of suites." % (modName)
+            continue    
+        try:
+            suite = mod.suite()
+        except AttributeError:
+            print "Warning: module %s doesn't define a 'suite()' interface"\
+                " function, thus isn't usable as a CREDO suite - skipping."\
+                % (modName)
+            continue    
+        suites.append(suite)
     return suites
 
-def runSuitesFromModules(suiteModNames, outputSummaryDir):
+def runSuitesFromModules(suiteModNames, **kwargs):
     """Runs a set of System test suites, where suiteModNames is a list of 
-    suites to import and run."""
+    suites to import and run.
+
+    .. note:: all keywords appopriate to 
+       :meth:`credo.systest.api.SysTest.runTest()` are passed
+       through directly in the kwargs parameter.
+    """
     suites = getSuitesFromModules(suiteModNames)
     testRunner = SysTestRunner()
-    testRunner.runSuites(suites, outputSummaryDir=outputSummaryDir)
+    testRunner.runSuites(suites, **kwargs)

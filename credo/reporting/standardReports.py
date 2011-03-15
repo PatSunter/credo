@@ -1,5 +1,4 @@
 import os, math
-# TODO: work out if the PIL really needed here.
 import PIL
 import credo.modelsuite as msuite
 
@@ -158,3 +157,5 @@ def makeSciBenchReport(sciBTest, rGen, outName, imgPerRow=3):
             imgPerRow=imgPerRow))
     rGen.makeDoc(elements, title, outName)
     print "Saved report at %s (%s type)." % (outName, rGen.rType)
+    # Update the list of generated reports
+    sciBTest.generatedReports.append(outName)
