@@ -125,7 +125,7 @@ SCons-Check Options:
             " installed (2.5 or greater). Error message was:\n%s" % e)
         else:
             credo.systest.systestrunner.runSuitesFromModules(suiteModNames,
-                xmlOutputDir)
+                outputSummaryDir=xmlOutputDir)
         return None
 
     # Define a builder for a cvg suite: should be dependent on a project
