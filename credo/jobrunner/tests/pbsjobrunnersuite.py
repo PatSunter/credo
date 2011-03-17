@@ -38,13 +38,26 @@ class PBSJobRunnerTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_writePBSFile(self):
+    def test_writePBSFile_basic(self):
         modelRun = SkeletonModelRun("skelMRun1", "output/test1")
         modelRun.jobParams = JobParams(nproc=2, maxRunTime=1000,
             pollInterval=10)
         runCommand = "mpiexec ./someApp Input.xml"
         self.jobRunner._writePBSFile(modelRun, runCommand)       
     
+    def test_writePBSFile_opts(self):
+        """This time test writing with several PBS-specific options."""
+        modelRun = SkeletonModelRun("skelMRun2", "output/test1")
+        modelRun.jobParams = JobParams(nproc=2, maxRunTime=1000,
+            pollInterval=10, 
+            PBS={'queue':"sque", 
+                'jobNameLine':"#PBS -N CoolJob",
+                'nodeLine':"#PBS -l nodes=4:3",
+                'sourcefiles':['/usr/srcfile.sh'],
+                'modules':['hdf5','underworld','petsc']})
+        runCommand = "mpiexec ./someApp Input.xml"
+        self.jobRunner._writePBSFile(modelRun, runCommand)       
+
     def test_blockResult(self):
         self.fail()
         # TODO: set up a fake PBS jobHandle

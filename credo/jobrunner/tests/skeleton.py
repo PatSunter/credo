@@ -21,20 +21,30 @@
 ##  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 ##  MA  02110-1301  USA
 
+import inspect
 from credo.modelrun import ModelRun
 from credo.modelresult import ModelResult
 from credo.modelsuite import ModelSuite
 
 class SkeletonModelRun(ModelRun):
-    def __init__(self, name, outputPath):
+    def __init__(self, name, outputPath=None, basePath=None):
         self.name = name
-        self.outputPath = outputPath
-    pass
+        self.outputPath = outputPath if outputPath != None else "output"
+        self.basePath = basePath if basePath != None else "."
+        self.modelInputFiles = []
+        self.cpReadPath = "."
+        self.jobParams = None
+    
+    def writeInfoXML(self):
+        print "writeInfoXML() called for ModelRun %s." % self.name
 
 class SkeletonModelResult(ModelResult):
     def __init__(self, modelName):
         self.modelName = modelName
-    pass
+
+    def writeRecordXML(self):
+        print "%s() called for ModelResult of model %s." \
+            % (inspect.stack()[0][3], self.modelName)
 
 class SkeletonModelSuite(ModelSuite):
     def __init__(self):

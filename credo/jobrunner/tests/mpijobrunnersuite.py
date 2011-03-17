@@ -39,8 +39,10 @@ class MPIJobRunnerTestCase(unittest.TestCase):
         pass
 
     def test_submitRun(self):
+        self.fail()
         jobMetaInfo = self.jobRunner.submitRun(self, modelRun,
-            prefixStr, extraCmdLineOpts, dryRun=False, maxRunTime)    
+            prefixStr=None, extraCmdLineOpts=None, dryRun=False,
+            maxRunTime=None)    
     
     def test_blockResult(self):
         self.fail()
