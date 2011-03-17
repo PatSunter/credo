@@ -259,7 +259,7 @@ class ModelRun:
         (e.g. "/usr/local/bin/StGermain") """
         return stgpath.getVerifyStgMainExecutablePath()
 
-    def constructModelRunCommand(self, extraCmdLineOpts=None,
+    def getModelRunCommand(self, extraCmdLineOpts=None,
             absXMLPaths=False):
         """Given a model run, construct the command needed to run that model,
         and return as a string.

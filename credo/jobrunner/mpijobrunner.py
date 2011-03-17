@@ -113,7 +113,7 @@ class MPIJobRunner(JobRunner):
         return jobMetaInfo
 
     def _getMPIRunCommandLine(self, modelRun, prefixStr, extraCmdLineOpts):
-        modelRunCommand = modelRun.constructModelRunCommand(extraCmdLineOpts)
+        modelRunCommand = modelRun.getModelRunCommand(extraCmdLineOpts)
         # Construct full run line
         mpiPart = "%s -np %d" % (self.mpiRunCommand,
             modelRun.jobParams['nproc'])

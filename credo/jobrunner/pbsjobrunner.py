@@ -83,7 +83,7 @@ class PBSJobRunner(JobRunner):
         # Now generate the XML etc
         modelRun.checkValidRunConfig()
         modelRun.preRunPreparation()
-        modelRunCommand = modelRun.constructModelRunCommand(extraCmdLineOpts,
+        modelRunCommand = modelRun.getModelRunCommand(extraCmdLineOpts,
             absXMLPaths=True)
         # Construct full run line
         mpiPart = "%s" % (self.mpiRunCommand)
@@ -183,14 +183,17 @@ class PBSJobRunner(JobRunner):
         f.write(wallTimeLine+"\n")
         #export bash script vars:
         f.write("%s -V\n" % PBS_PREFIX)
-        #sourcefiles
-        if 'sourcefiles' in jobParams['PBS']:
+        #Optional PBS script entries
+        try:
             for srcFile in jobParams['PBS']['sourcefiles']:
                 f.write("source %s\n" % srcFile)
-        #modules
-        if 'modules' in jobParams['PBS']:
+        except KeyError:
+            pass
+        try:
             for modName in jobParams['PBS']['modules']:
                 f.write("module load %s\n" % modName)
+        except KeyError:
+            pass
         #cmd line:
         f.write(runCommand+"\n")
         f.close()

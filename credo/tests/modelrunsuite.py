@@ -55,7 +55,7 @@ class ModelRunTestCase(unittest.TestCase):
         #TODO
         self.fail()
 
-    def test_constructModelRunCommand(self):
+    def test_getModelRunCommand(self):
         #TODO
         self.fail()
 
