@@ -30,6 +30,10 @@
 import os
 import credo
 try:
+    # For why we use Agg backend, see
+    # http://matplotlib.sourceforge.net/faq/howto_faq.html#matplotlib-in-a-web-application-server
+    import matplotlib
+    matplotlib.use('Agg')
     import matplotlib.pyplot as plt
 except ImportError:
     print "Error, to use CREDO built-in plot functions, please "\

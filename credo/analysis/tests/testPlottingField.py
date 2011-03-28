@@ -38,6 +38,8 @@ fr.plotOverTime(show=True, dofIndex=0, path="./output/realistic")
 #Plotting
 #dofErrors = stgcvg.getDofErrors_ByDof( fr.cvgFileInfo )
 
+#import matplotlib
+#matplotlib.use('Agg')
 #import matplotlib.pyplot as plt
 #plt.plot(dofErrors[0])
 #plt.axhline(y=fr.tol, label='tolerance', linewidth=3, color='r')

@@ -357,6 +357,8 @@ class FreqOutput:
         be saved under.
         """
         try:
+            import matplotlib
+            matplotlib.use('Agg')
             import matplotlib.pyplot as plt
         except ImportError:
             print "Error, to use CREDO built-in plot functions, please "\

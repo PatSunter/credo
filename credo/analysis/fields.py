@@ -162,6 +162,8 @@ class FieldComparisonResult:
         parameter allows you to only plot a particular DOF of the field,
         otherwise all dofs will be plotted on separate graphs."""
         try:
+            import matplotlib
+            matplotlib.use('Agg')
             import matplotlib.pyplot as plt
         except ImportError:
             print "Error, to use CREDO built-in plot functions, please "\

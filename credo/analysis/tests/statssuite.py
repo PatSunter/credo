@@ -21,6 +21,8 @@
 ##  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 ##  MA  02110-1301  USA
 
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.stats import linregress as scipylinregress
 from credo.analysis.stats import linreg as credolinreg
