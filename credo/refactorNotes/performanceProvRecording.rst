@@ -64,6 +64,8 @@ Log/Notes
 
 TODO next:
 
+* BUG: fix the jobMetaInfo writing to XML, so that hte MPI part isn't
+   separated from the parent class part (need to think about XML design here)
 * Add an API for saving performance info to the ModelResult JobMetaInfo;
 * Really, the jobMetaInfo should be saved into the modelResult
   * And separate the jobMetaInfo from necessary "jobHandle" to be passed
