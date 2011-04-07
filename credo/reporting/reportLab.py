@@ -60,6 +60,7 @@ class ReportLabGenerator(ReportGenerator):
         t = platypus.Table(data)
         ts = platypus.TableStyle([('FONT', (0, 0), (-1, -1), 'Helvetica', 8)])
         t.setStyle(ts)
+        t.hAlign = 'LEFT'
         return [t]
 
     def getList(self, listTextLines):
@@ -90,6 +91,9 @@ class ReportLabGenerator(ReportGenerator):
         ts = platypus.TableStyle([('FONT', (0, 0), (-1, -1), 'Helvetica', 8)])
         t.setStyle(ts)
         return t
+
+    def getPageBreak(self):
+        return platypus.PageBreak()
 
     def getImageEls(self, imgFilename, hdrText=None, width=None, height=None,
             scale=None, tScale=None):

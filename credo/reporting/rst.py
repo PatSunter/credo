@@ -109,6 +109,10 @@ class RstGenerator(ReportGenerator):
         resultStr += '\n'
         return resultStr
 
+    def getPageBreak(self):
+        #This doesn't really make sense for RST, just print a comment here
+        return ".. %s\n\n" % ('*' * 75)
+
     def getImageEls(self, imgFile, hdrText=None, width=None, height=None,
             scale=None, tScale=None):
         """
