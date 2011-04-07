@@ -65,6 +65,9 @@ Log/Notes
 TODO next:
 
 * Add an API for saving performance info to the ModelResult JobMetaInfo;
+* Really, the jobMetaInfo should be saved into the modelResult
+  * And separate the jobMetaInfo from necessary "jobHandle" to be passed
+    around to store MPI, PBS relevant stuff.
 * Investigate best way to save time and memory usage here...
 
  * Use the relevant plugins in StGermain and parse freq output? (eg CPU_Time)
