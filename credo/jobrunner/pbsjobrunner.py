@@ -26,7 +26,7 @@ import signal
 import subprocess
 import time
 import shlex
-from datetime import timedelta
+from datetime import timedelta, datetime
 from credo.jobrunner.api import *
 from credo.modelresult import ModelResult, JobMetaInfo
 from credo.modelresult import getSimInfoFromFreqOutput
@@ -110,12 +110,14 @@ class PBSJobRunner(JobRunner):
             os.chdir(startDir)
             return None
 
-        # Do the actual run
-        runAsArgs = shlex.split(pbsSubCmd)
+        # Submit the command to PBS
+        pbsSubArgs = shlex.split(pbsSubCmd)
+        jobMetaInfo = PBSJobMetaInfo()
+        jobMetaInfo.submitTime = datetime.now()
         try:
             qsubStdOut = open("%s.stdout" % pbsFilename, "w+")
             qsubStdErr = open("%s.stderr" % pbsFilename, "w+")
-            retCode = subprocess.call(runAsArgs, shell=False,
+            retCode = subprocess.call(pbsSubArgs, shell=False,
                 stdout=qsubStdOut, stderr=qsubStdErr)
         except OSError, ose:
             raise ModelRunLaunchError(modelRun.name, pbsSubCmd,
@@ -125,7 +127,6 @@ class PBSJobRunner(JobRunner):
         qsubStdOut.seek(0)
         qsubStdErr.seek(0)
         jobId = self._parseQSubOutput(qsubStdOut.read(), qsubStdErr.read())
-        jobMetaInfo = PBSJobMetaInfo()
         jobMetaInfo.jobId = jobId
         # TODO: create further job meta info
         # TODO: record where the stdout and stderr were set, and archive?

@@ -25,6 +25,8 @@ import os
 import shutil
 import tempfile
 import unittest
+import datetime
+import platform
 
 from credo.jobrunner.api import JobRunner
 from credo.modelresult import ModelResult, JobMetaInfo
@@ -53,6 +55,7 @@ class TestJobRunner(JobRunner):
         print "Blocking in modelRun %s" % (modelRun.name)
         return SkeletonModelResult(modelRun.name)
 
+
 class JobRunnerTestCase(unittest.TestCase):
     def setUp(self):
         self.jobRunner = TestJobRunner()
@@ -78,6 +81,11 @@ class JobRunnerTestCase(unittest.TestCase):
             extraCmdLineOpts=extraCmdLineOpts, dryRun=False, maxRunTime=200)
         self.assertTrue(isinstance(result, ModelResult))
         self.assertEqual(result.modelName, self.skelMRun1.name)
+
+        # Code to test time being correctly recorded.
+        #timeDiff = datetime.datetime.now() - jobMI.submitTime
+        #self.assertEqual(timeDiff.days, 0)
+        #self.assertTrue(timeDiff.seconds < 1)
 
     def test_submitSuite(self):
         extraCmdLineOpts = "extraCmdLineOpts=1"
@@ -128,6 +136,16 @@ class JobRunnerTestCase(unittest.TestCase):
         for resI, res in enumerate(results):
             self.assertTrue(isinstance(res, ModelResult))
             self.assertEqual(res.modelName, self.skelMSuite.runs[resI].name)
+
+    def test_attachPlatformInfo(self):
+        res = None
+        jobMI = JobMetaInfo(None)
+        self.jobRunner.attachPlatformInfo(jobMI)
+        self.assertEqual(jobMI.platform['system'], platform.system())
+        self.assertEqual(jobMI.platform['version'], platform.version())
+        self.assertEqual(jobMI.platform['release'], platform.release())
+        self.assertEqual(jobMI.platform['machine'], platform.machine())
+        self.assertEqual(jobMI.platform['node'], platform.node())
 
 def suite():
     suite = unittest.TestSuite()

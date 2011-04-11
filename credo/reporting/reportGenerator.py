@@ -23,10 +23,14 @@ class ReportGenerator:
             scale=None, tScale=None):
         raise NotImplementedError("Abstract base class.")
 
+    def getPageBreak(self):
+        raise NotImplementedError("Abstract base class.")
+
     def makeDoc(self, docElements, title, outFilename):
         raise NotImplementedError("Abstract base class.")
 
     def getColorTextStr(self, textStr, colorName):
         raise NotImplementedError("Abstract base class.")
+
 
 

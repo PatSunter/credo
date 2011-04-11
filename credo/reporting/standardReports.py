@@ -98,7 +98,7 @@ def defaultAnalysisImgEls(mSuite, rGen, level):
                 width=rGen.PAGE_WIDTH * .6))
     return elements            
 
-def makeSuiteReport(mSuite, rGen, outName, imgPerRow=3):
+def makeSuiteReport(mSuite, mResults, rGen, outName, imgPerRow=3):
     #content
     # TODO: would be good is suite had a name here .. use output path for now.
     title = "Suite Report: %s" % mSuite.outputPathBase
@@ -122,7 +122,7 @@ def makeSuiteReport(mSuite, rGen, outName, imgPerRow=3):
     print "Saved report at %s (%s type)." % (outName, rGen.rType)
 
 
-def makeSciBenchReport(sciBTest, rGen, outName, imgPerRow=3):
+def makeSciBenchReport(sciBTest, mResults, rGen, outName, imgPerRow=3):
     """Make a science benchmark report.
     :param sciBTest: a science benchmark test to create report of.
     :param rGen: a report generator instatiation.
@@ -133,9 +133,22 @@ def makeSciBenchReport(sciBTest, rGen, outName, imgPerRow=3):
     description = sciBTest.description
     resultStr = getColorStatusStr(sciBTest.testStatus, rGen)
     specDict = {
-        "basePath" : sciBTest.basePath,
         "outputPathBase" : sciBTest.outputPathBase,
-        "nproc" : sciBTest.nproc }
+        "nproc" : sciBTest.nproc}
+    #Assume for now all results gathered from same machine.
+    initRes = mResults[0]
+    if initRes.jobMetaInfo is not None:
+        provDict = {
+            "node" : initRes.jobMetaInfo.platform['node'],
+            "platform" : initRes.jobMetaInfo.verbPlatformString(),
+            "basePath" : sciBTest.basePath,
+            "start time" : initRes.jobMetaInfo.submitTime,
+            "run type" : initRes.jobMetaInfo.runType}
+        #TODO: info on model app version used.
+    else:
+        provDict = {"": ""}
+    #TODO: performance
+    perfDict = {"": ""}
 
     #Build doc layout
     elements = []
@@ -147,6 +160,12 @@ def makeSciBenchReport(sciBTest, rGen, outName, imgPerRow=3):
     elements.append(rGen.getParaEl(description, level))
     elements.append(rGen.getHeaderEl("Specification", level))
     elements.extend(rGen.getDefListEls(specDict))
+    elements.append(rGen.getHeaderEl("Provenance", level))
+    elements.extend(rGen.getDefListEls(provDict))
+    elements.append(rGen.getHeaderEl("Performance Info", level))
+    elements.extend(rGen.getDefListEls(perfDict))
+    # Force a page break here in Document output
+    #elements.append(rGen.getPageBreak())
     tcElements = addTestCompElements(sciBTest, rGen, level)
     elements.extend(tcElements)
     # Display requested images

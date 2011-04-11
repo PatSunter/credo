@@ -21,7 +21,9 @@
 ##  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 ##  MA  02110-1301  USA
 
-from datetime import timedelta
+import platform
+import operator
+from datetime import timedelta, datetime
 import credo.modelrun
 import credo.modelresult
 from credo.io import stgcmdline
@@ -168,6 +170,15 @@ class JobRunner:
 
         return modelSuite.resultsList
 
+    def attachPlatformInfo(self, jobMI):    
+        """Attach provenance info relevant to the platform used to run the
+        job to the JobMetaInfo object."""
+        jobMI.platform = {}
+        platInfo = ['system', 'version', 'release', 'machine', 'node'] 
+        aGetter = operator.attrgetter(*platInfo)
+        pFuncs = aGetter(platform)
+        for prop, pFunc in zip(platInfo, pFuncs):
+            jobMI.platform[prop] = pFunc()
 
 class ModelRunError(Exception):
     """Base class of ModelRunError exception hierarchy."""

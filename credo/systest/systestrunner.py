@@ -158,9 +158,10 @@ class SysTestRunner:
     
     def runSuites(self, testSuites, outputSummaryDir="testLogs", **kwargs):
         """Runs a list of suites, and prints a big summary at the end.
+
         :param testSuites: list of test suites to run.
         :keyword outputSummaryDir: name of directory to save a summary of
-        tests to.
+          tests to.
 
         :returns: a list containing lists of results for each suite (results
           list in the same order as testSuites input argument).

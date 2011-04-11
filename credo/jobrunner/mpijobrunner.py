@@ -26,7 +26,9 @@ import signal
 import subprocess
 import time
 import shlex
-from datetime import timedelta
+import operator
+from xml.etree import ElementTree as etree
+from datetime import timedelta, datetime
 from credo.jobrunner.api import *
 from credo.modelrun import JobParams
 from credo.modelresult import ModelResult, JobMetaInfo
@@ -42,6 +44,11 @@ class MPIJobMetaInfo(JobMetaInfo):
         self.runType = "MPI"
         self.runCommand = None
         self.procHandle = None
+    
+    def writeInfoXML(self, xmlNode):
+        JobMetaInfo.writeInfoXML(self, xmlNode)
+        jmNode = etree.SubElement(xmlNode, self.XML_INFO_TAG)
+        etree.SubElement(jmNode, 'runCommand').text = str(self.runCommand)
 
 class MPIJobRunner(JobRunner):
     def __init__(self):
@@ -82,6 +89,8 @@ class MPIJobRunner(JobRunner):
 
         self.archiveRunCommand(modelRun, runCommand)
 
+        jobMI = MPIJobMetaInfo()
+        jobMI.runCommand = runCommand
         # Do the actual run
         # NB: We will split the arguments and run directly rather than in 
         # "shell mode":- this allows us to kill all sub-processes properly if
@@ -89,28 +98,27 @@ class MPIJobRunner(JobRunner):
         runAsArgs = shlex.split(runCommand)
         stdOutFilename = modelRun.getStdOutFilename()
         stdErrFilename = modelRun.getStdErrFilename()
+        stdOutFile = open(stdOutFilename, "w+")
+        stdErrFile = open(stdErrFilename, "w+")
+        jobMI.stdOutFile = stdOutFile
+        jobMI.stdErrFile = stdErrFile
+        jobMI.submitTime = datetime.now()
         try:
-            stdOutFile = open(stdOutFilename, "w+")
-            stdErrFile = open(stdErrFilename, "w+")
             procHandle = subprocess.Popen(runAsArgs, shell=False,
                 stdout=stdOutFile, stderr=stdErrFile)
+            jobMI.procHandle = procHandle
         except OSError:
             raise ModelRunLaunchError(modelRun.name, runAsArgs[0],
                 "You can set the MPI_RUN_COMMAND env. variable to control"
                 " the MPI command used.")
 
-        jobMetaInfo = MPIJobMetaInfo()
-        jobMetaInfo.runCommand = runCommand
-        jobMetaInfo.procHandle = procHandle
-        jobMetaInfo.stdOutFile = stdOutFile
-        jobMetaInfo.stdErrFile = stdErrFile
-        # TODO: record extra info in "provenance" dict of jobMetaInfo,
+        # TODO: record extra info in "provenance" dict of jobMI,
         #  eg hostname, run command used, prefix, etc...
         if modelRun.basePath != startDir:
             print "Restoring initial path '%s'" % \
                 (startDir)
             os.chdir(startDir)
-        return jobMetaInfo
+        return jobMI
 
     def _getMPIRunCommandLine(self, modelRun, prefixStr, extraCmdLineOpts):
         modelRunCommand = modelRun.getModelRunCommand(extraCmdLineOpts)
@@ -124,11 +132,11 @@ class MPIJobRunner(JobRunner):
             runCommand = " ".join([prefixStr, runCommand])
         return runCommand
 
-    def blockResult(self, modelRun, jobMetaInfo):        
-        # CHeck jobMetaInfo is of type MPI ...
+    def blockResult(self, modelRun, jobMI):        
+        # CHeck jobMI is of type MPI ...
         maxRunTime = modelRun.jobParams['maxRunTime']
         pollInterval = modelRun.jobParams['pollInterval']
-        procHandle = jobMetaInfo.procHandle
+        procHandle = jobMI.procHandle
 
         # Navigate to the model's base directory
         startDir = os.getcwd()
@@ -145,6 +153,10 @@ class MPIJobRunner(JobRunner):
             totalTime = 0
             timeOut = True
             while totalTime <= maxRunTime:
+                # Note: current strategy in this loop means 'totalTime'
+                #  recorded here will only be as accurate as size of 
+                #  pollInterval.
+                #  Thus this is a fall-back for recording time taken.
                 time.sleep(pollInterval)
                 totalTime += pollInterval
                 retCode = procHandle.poll()
@@ -157,6 +169,7 @@ class MPIJobRunner(JobRunner):
                 print "Error: passed timeout of %s, sending quit signal." % \
                     (str(timedelta(seconds=maxRunTime)))
                 os.kill(procHandle.pid, signal.SIGQUIT)
+        # TODO: set finishTime
 
         # Check status of run (eg error status)
         stdOutFilename = modelRun.getStdOutFilename()
@@ -179,24 +192,21 @@ class MPIJobRunner(JobRunner):
             print ")."
 
         # Now tidy things up after the run.
-        jobMetaInfo.stdOutFile.close()
-        jobMetaInfo.stdErrFile.close()
+        jobMI.stdOutFile.close()
+        jobMI.stdErrFile.close()
         print "Doing post-run tidyup:"
         modelRun.postRunCleanup()
 
         # Construct a modelResult
         mResult = ModelResult(modelRun.name, absOutPath)
-        # Now attach appropriate Job meta info
+        mResult.jobMetaInfo = jobMI
+        self.attachPlatformInfo(jobMI)
         try:
             tSteps, simTime = getSimInfoFromFreqOutput(modelRun.outputPath)
         except ValueError:
             # For now, allow runs that didn't create a freq output
             tSteps, simTime = None, None
-        # get provenance info
-        # attach provenance info
-        # get performance info
-        # attach performance info
-        mResult.jobMetaInfo = jobMetaInfo
+        self.attachPerformanceInfo(jobMI)
 
         if modelRun.basePath != startDir:
             print "Restoring initial path '%s'" % \
@@ -214,3 +224,10 @@ class MPIJobRunner(JobRunner):
         f.close()
         #Set as executable
         os.chmod(fName, 0770)
+
+    def attachProvenanceInfo(self, modelRun, jobMI):
+        JobRunner.attachProvenanceInfo(self, modelRun, jobMI)
+        # TODO: MPI-specific info.
+
+    def attachPerformanceInfo(self, jobMI):
+        pass

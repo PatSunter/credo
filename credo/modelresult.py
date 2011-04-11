@@ -151,6 +151,8 @@ class JobMetaInfo:
 
     def __init__(self, simtime):
         self.runType = None
+        self.submitTime = None
+        self.platform = {}
         if simtime is None:
             self.simtime = "unknown"
         else:     
@@ -160,7 +162,19 @@ class JobMetaInfo:
         '''Writes information about this class into an existing, open
          XML doc node'''
         jmNode = etree.SubElement(xmlNode, self.XML_INFO_TAG)
+        etree.SubElement(jmNode, 'runType').text = str(self.runType)
         etree.SubElement(jmNode, 'simtime').text = str(self.simtime)
+        etree.SubElement(jmNode, 'submitTime').text = str(self.submitTime)
+        piNode = etree.SubElement(jmNode, 'platformInfo')
+        #Just write out each entry in the platform dictionary.
+        for kw, val in self.platform.iteritems():
+            etree.SubElement(piNode, kw).text = str(val)
+    
+    def verbPlatformString(self):
+        '''Returns a useful string about the platform, for printing.'''
+        return "Node '%s', of type %s, running %s (%s)" \
+            % tuple([self.platform[kw] for kw in 'node', 'machine', 'system',
+                'release'])
 
 #####
 
