@@ -10,13 +10,14 @@ CREDO's capabilities
 Can I get CREDO to submit PBS jobs, or run it via PBS?
 ------------------------------------------------------
 
-The answer to the first of these is: no, not currently. The ability to get
-CREDO to create and submit PBS scripts is a possible future feature.
+The answer to the first of these is: yes, but this is an experimental feature
+still in beta. Check out :mod:`credo.jobrunner.pbsjobrunner` if you are
+interested in this, and if you have an Underworld checkout, the script
+in `Underworld/InputFiles/credo_rayTaySuitePBS.py`.
 
-You can however submit a Python CREDO script in parallel on a HPC system
-running PBS by writing the appropriate PBS script.
-
-See :ref:`credo-examples-joblaunch` for an example.
+You can also submit a Python CREDO script in parallel on a HPC system
+running PBS by writing the appropriate PBS script yourself, and embedding
+the CREDO call within it - see :ref:`credo-examples-joblaunch` for an example.
 
 Problems running tests
 ======================
@@ -27,6 +28,23 @@ When I try to run a CREDO system test script get an "ImportError" message
 This problem is usually because you haven't add the directory containing
 the CREDO Python source to your PYTHONPATH. See :ref:`environment_setup`
 for the various ways to do this.
+
+Errors trying to run one of the Underworld Science benchmarks from command line
+-------------------------------------------------------------------------------
+
+Currently (11/4/2011), these tests have been written so that by default when
+run from the command line, they expect to post-process the benchmark tests
+and reporting from an existing set of results.
+
+If you want to modify this behaviour so that you *do* first run and generate
+the models required by the benchmark, then set the `postProcessFromExisting`
+flag to `False` in the __main__ section at the bottom of a benchmark, e.g. ::
+
+    if __name__ == "__main__":
+        postProcFromExisting = False
+        jobRunner = credo.jobrunner.defaultRunner()
+        testResult, mResults = sciBTest.runTest(jobRunner, postProcFromExisting,
+            createReports=True)
 
 Problem with parallel system tests, a CVGReadError occurs trying to read CVGs
 -----------------------------------------------------------------------------
@@ -56,3 +74,4 @@ What are the ways of dealing with this?
    MPI_RUN_COMMAND to tell it to use a custom mpirun/mpiexec rather than
    the default one in your PATH. (E.g. setting
    MPI_RUN_COMMAND="/usr/local/packages/mpich2-1.2.1p1-debug/bin/".) 
+   

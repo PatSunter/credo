@@ -24,3 +24,12 @@ JobRunner API
    :undoc-members:
    :show-inheritance:
 
+:mod:`credo.jobrunner.pbsjobrunner`
+===================================
+
+.. inheritance-diagram:: credo.jobrunner.pbsjobrunner
+
+.. automodule:: credo.jobrunner.pbsjobrunner
+   :members:
+   :undoc-members:
+   :show-inheritance:
