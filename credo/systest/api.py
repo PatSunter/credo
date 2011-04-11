@@ -302,8 +302,14 @@ class SysTest:
         else:
             print "(Reading existing results from %s)" % \
                 (os.path.join(self.basePath, self.outputPathBase))
-            suiteResults = self.mSuite.readResultsFromPath(self.basePath,
-                overrideOutputPath=self.outputPathBase)
+            try:
+                suiteResults = self.mSuite.readResultsFromPath(self.basePath,
+                    overrideOutputPath=self.outputPathBase)
+            except msuite.ModelResultNotExistError, e:
+                raise ValueError("%s (Do you need to generate"\
+                    " results first by running this method with" \
+                    " postProcFromExisting=False?)" \
+                      % (e))
             print "Processing sys test result:"
             sysTestResult = self.getStatus(suiteResults)
         

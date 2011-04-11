@@ -52,6 +52,11 @@ except AttributeError:
     import credo.utils
     product = credo.utils.productCalc
 
+class ModelResultNotExistError(Exception):
+    """Exception for specifying that a Model Result that CREDO was asked
+    to read in, doesn't exist."""
+    pass
+
 class StgXMLVariant:
     """A class that can be added to a :class:`.ModelSuite` to help 
     auto-generate a suite of ModelRuns to perform, where a particular
@@ -509,7 +514,8 @@ class ModelSuite:
             resultNames = [res.modelName for res in mResults]
             for runI, mRun in enumerate(self.runs):
                 if mRun.name not in resultNames:
-                    raise ValueError(" Error, given basePath for reading model"\
+                    raise ModelResultNotExistError("Error, given basePath"\
+                        " for reading model"\
                         " results from, %s, with output path %s, is missing"\
                         " result for suite's run '%s' (index %d)." %
                         (basePath, outputPathBase, mRun.name, runI))
