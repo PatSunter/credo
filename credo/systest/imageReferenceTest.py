@@ -39,7 +39,8 @@ class ImageReferenceTest(api.SingleModelSysTest):
 
     Optional contructor keywords:
     
-    * runSteps: Number of steps the model should be run for before
+    * runSteps: Number of steps the model should be run for.
+    * compareEvery: Number of steps the model should be run for before
        comparing images.
     * defImageTol: Default tolerance to use when comparing images (as a tuple
        as required by :func:`credo.analysis.images.compare`).
@@ -60,7 +61,7 @@ class ImageReferenceTest(api.SingleModelSysTest):
             basePath=None, nproc=1, timeout=None,
             paramOverrides=None, solverOpts=None, nameSuffix=None, 
             imageTols=None, expPathPrefix="expected",
-            runSteps=20, defImageTol=(1e-1, 5e-2)):
+            runSteps=20, compareEvery=1, defImageTol=(1e-1, 5e-2)):
         api.SingleModelSysTest.__init__(self,"ImageReference",
             inputFiles, outputPathBase,
             basePath, nproc, timeout,
@@ -71,6 +72,7 @@ class ImageReferenceTest(api.SingleModelSysTest):
         self.imagesToTest = imagesToTest
         assert isinstance(self.imagesToTest, list)
         self.runSteps = runSteps
+        self.compareEvery = compareEvery
         self.defImageTol = defImageTol
         self.imageTols = imageTols
         if self.imageTols is not None:
@@ -89,13 +91,13 @@ class ImageReferenceTest(api.SingleModelSysTest):
     def regenerateFixture(self, jobRunner):
         '''Do a run to create the reference images to use.'''
 
-        print "Running the model to create reference images after %d"\
+        print "Running the model for % steps creating reference images every %d"\
             " steps, and saving in dir '%s'" % \
-            (self.runSteps, self.expectedSolnPath)
+            (self.runSteps, self.compareEvery, self.expectedSolnPath)
         mRun = self._createDefaultModelRun(self.testName+"-createReference",
             self.expectedSolnPath)
         mRun.simParams = SimParams(nsteps=self.runSteps, cpevery=0,
-            dumpevery=1)
+            dumpevery=self.compareEvery)
         for imageComp in self.imageComps.itervalues():
             imageComp.attachOps(mRun)
         mRun.writeInfoXML()
@@ -123,7 +125,7 @@ class ImageReferenceTest(api.SingleModelSysTest):
         mRun = self._createDefaultModelRun(self.testName, 
             os.path.join(self.outputPathBase, "testRun"))
         mRun.simParams = SimParams(nsteps=self.runSteps,
-            cpevery=0, dumpevery=1)
+            cpevery=0, dumpevery=self.compareEvery)
         self.mSuite.addRun(mRun, "Run the model, and check images against "\
             "previously generated reference images.")
 
@@ -142,6 +144,7 @@ class ImageReferenceTest(api.SingleModelSysTest):
 
     def _writeXMLCustomSpec(self, specNode):
         etree.SubElement(specNode, 'runSteps').text = str(self.runSteps)
+        etree.SubElement(specNode, 'compareEvery').text = str(self.compareEvery)
         imagesToTestNode = etree.SubElement(specNode, 'imagesToTest')
         for imageName in self.imagesToTest:
             imageNode = etree.SubElement(imagesToTestNode, 'image',
