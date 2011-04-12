@@ -153,6 +153,7 @@ class JobMetaInfo:
         self.runType = None
         self.submitTime = None
         self.platform = {}
+        self.performance = {}
         if simtime is None:
             self.simtime = "unknown"
         else:     
@@ -169,6 +170,14 @@ class JobMetaInfo:
         #Just write out each entry in the platform dictionary.
         for kw, val in self.platform.iteritems():
             etree.SubElement(piNode, kw).text = str(val)
+        perfNode = etree.SubElement(jmNode, 'performanceInfo')
+        #Just write out each entry in the performance dictionaries
+        for profType, subDict in self.performance.iteritems():
+            perfProfNode = etree.SubElement(perfNode, "profilerInfo")
+            perfProfNode.attrib["profType"] = profType
+            for kw, val in subDict.iteritems():
+                #TODO: good to save units here as an attrib?
+                etree.SubElement(perfProfNode, kw).text = str(val)
     
     def verbPlatformString(self):
         '''Returns a useful string about the platform, for printing.'''
