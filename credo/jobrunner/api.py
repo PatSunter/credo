@@ -29,9 +29,54 @@ import credo.modelresult
 from credo.io import stgcmdline
 from credo.io import stgpath
 
+class PerformanceProfiler:
+    """Class to use to attach to :class:`JobRunner` instances, which will then
+    profile performance of each ModelRun ran by given JobRunner.
+    
+    This is an abstract base class, user code will have to select a concrete
+    instantiation."""
+    def __init__(self, typeStr):
+        self.typeStr = typeStr
+
+    def setup(self, modelName, modelBasePath, modelOutputPath, jobMetaInfo):
+        """Do any necessary setup functions."""
+        raise NotImplementedError("Error, virtual func on base class")
+    
+    def modifyRun(self, modelRun, modelRunCommand, jobMetaInfo):
+        raise NotImplementedError("Error, virtual func on base class")
+
+    def attachPerformanceInfo(self, jobMetaInfo, modelResult):
+        #Open result filename    
+        #getResDict(filename)
+        #Save this resDict on the jobMetaInfo (in a subdirectory)
+        raise NotImplementedError("Error, virtual func on base class")
+
+
 class JobRunner:
+    """Class used for running ModelRun instances. This is an abstract base
+    class, user code will need to choose a concrete implementation.
+    Is designed to allow both serial, and parallel non-blocking job
+    submission and reporting.
+    
+    .. attribute:: runSuiteNonBlockingDefault
+
+       Determines that for a given job runner, whether suites should be run
+       in non-blocking mode by default, or
+
+    .. attribute:: profilers
+
+       List of :class:`.PerformanceProfiler` that will be applied to report
+       on any ModelRuns that this JobRunner is used for.
+
+    .. attribute:: defaultProfiler
+
+       Profiler that will be used to provide "default" results in the 
+       JobMetaInfo.
+    """
     def __init__(self):
         self.runSuiteNonBlockingDefault = False
+        self.profilers = []
+        self.defaultProfiler = None
 
     def setup(self):
         """Does any necessary setup checks to run models.
@@ -179,11 +224,19 @@ class JobRunner:
         pFuncs = aGetter(platform)
         for prop, pFunc in zip(platInfo, pFuncs):
             jobMI.platform[prop] = pFunc()
+            
+    def attachPerformanceInfo(self, jobMI):    
+        """Attach relevant performance information to the jobMI
+        (:class:`credo.modelresult.JobMetaInfo`), such as time use,
+        memory use, etc"""
+        raise NotImplementedError("Error, virtual func on base class")
+
 
 class ModelRunError(Exception):
     """Base class of ModelRunError exception hierarchy."""
     def __init__(self, modelName):
         self.modelName = modelName
+
 
 class ModelRunRegularError(ModelRunError):
     """An Exception for when Models fail to run."""

@@ -33,6 +33,7 @@ from credo.jobrunner.api import *
 from credo.modelrun import JobParams
 from credo.modelresult import ModelResult, JobMetaInfo
 from credo.modelresult import getSimInfoFromFreqOutput
+from credo.jobrunner.unixTimeCmdProfiler import UnixTimeCmdProfiler
 
 # Allow MPI command to be overriden by env var.
 MPI_RUN_COMMAND = "MPI_RUN_COMMAND"
@@ -50,6 +51,7 @@ class MPIJobMetaInfo(JobMetaInfo):
         jmNode = etree.SubElement(xmlNode, self.XML_INFO_TAG)
         etree.SubElement(jmNode, 'runCommand').text = str(self.runCommand)
 
+
 class MPIJobRunner(JobRunner):
     def __init__(self):
         JobRunner.__init__(self)
@@ -57,6 +59,10 @@ class MPIJobRunner(JobRunner):
             self.mpiRunCommand = os.environ[MPI_RUN_COMMAND]
         else:
             self.mpiRunCommand = DEFAULT_MPI_RUN_COMMAND
+        # Add at least a UnixTimeCmdProfiler
+        defProfiler = UnixTimeCmdProfiler()
+        self.profilers.append(defProfiler)
+        self.defaultProfiler = self.profilers[:-1]
 
     def setup(self):
         # TODO: check mpd is running, if necessary
@@ -65,6 +71,7 @@ class MPIJobRunner(JobRunner):
     def submitRun(self, modelRun, prefixStr=None, extraCmdLineOpts=None,
             dryRun=False, maxRunTime=None):
         """See :meth:`credo.jobrunner.api.JobRunner.submit`."""     
+        jobMI = MPIJobMetaInfo()
 
         # Navigate to the model's base directory
         startDir = os.getcwd()
@@ -74,7 +81,7 @@ class MPIJobRunner(JobRunner):
             os.chdir(modelRun.basePath)
 
         modelRun.checkValidRunConfig()
-        modelRun.preRunPreparation()
+        modelRun.preRunPreparation() #This includes finalising input files
         runCommand = self._getMPIRunCommandLine(modelRun, prefixStr,
             extraCmdLineOpts)
 
@@ -87,19 +94,21 @@ class MPIJobRunner(JobRunner):
             os.chdir(startDir)
             return None
 
+        #NB: currently archiving this without the detailed profiler info.
+        jobMI.runCommand = runCommand
         self.archiveRunCommand(modelRun, runCommand)
 
-        jobMI = MPIJobMetaInfo()
-        jobMI.runCommand = runCommand
+        for profiler in self.profilers:
+            profiler.setup(modelRun.name, modelRun.basePath,
+                modelRun.outputPath, jobMI)
+            #The func below may add extra things to the input files, as well
+            #As run command line
+            runCommand = profiler.modifyRun(modelRun, runCommand, jobMI)
+
         # Do the actual run
-        # NB: We will split the arguments and run directly rather than in 
-        # "shell mode":- this allows us to kill all sub-processes properly if
-        # necessary.
         runAsArgs = shlex.split(runCommand)
-        stdOutFilename = modelRun.getStdOutFilename()
-        stdErrFilename = modelRun.getStdErrFilename()
-        stdOutFile = open(stdOutFilename, "w+")
-        stdErrFile = open(stdErrFilename, "w+")
+        stdOutFile = open(modelRun.getStdOutFilename(), "w+")
+        stdErrFile = open(modelRun.getStdErrFilename(), "w+")
         jobMI.stdOutFile = stdOutFile
         jobMI.stdErrFile = stdErrFile
         jobMI.submitTime = datetime.now()
@@ -118,6 +127,7 @@ class MPIJobRunner(JobRunner):
             print "Restoring initial path '%s'" % \
                 (startDir)
             os.chdir(startDir)
+        self.attachPlatformInfo(jobMI)
         return jobMI
 
     def _getMPIRunCommandLine(self, modelRun, prefixStr, extraCmdLineOpts):
@@ -200,13 +210,15 @@ class MPIJobRunner(JobRunner):
         # Construct a modelResult
         mResult = ModelResult(modelRun.name, absOutPath)
         mResult.jobMetaInfo = jobMI
-        self.attachPlatformInfo(jobMI)
         try:
-            tSteps, simTime = getSimInfoFromFreqOutput(modelRun.outputPath)
+            #TODO: the below should be a standard method of ModelResult
+            tSteps, simTime = getSimInfoFromFreqOutput(mResult.outputPath)
         except ValueError:
             # For now, allow runs that didn't create a freq output
             tSteps, simTime = None, None
-        self.attachPerformanceInfo(jobMI)
+        #Now collect profiler performance info.
+        for profiler in self.profilers:
+            profiler.attachPerformanceInfo(jobMI, mResult)
 
         if modelRun.basePath != startDir:
             print "Restoring initial path '%s'" % \
@@ -225,9 +237,6 @@ class MPIJobRunner(JobRunner):
         #Set as executable
         os.chmod(fName, 0770)
 
-    def attachProvenanceInfo(self, modelRun, jobMI):
-        JobRunner.attachProvenanceInfo(self, modelRun, jobMI)
+    def attachPlatformInfo(self, jobMI):
+        JobRunner.attachPlatformInfo(self, jobMI)
         # TODO: MPI-specific info.
-
-    def attachPerformanceInfo(self, jobMI):
-        pass

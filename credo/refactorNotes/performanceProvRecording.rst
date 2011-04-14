@@ -54,6 +54,7 @@ Log/Notes
 =========
 
 7/4/2011:
+---------
 
 * Have now got "platform" info being logged to XML
 * And included in PDF/RST reports
@@ -64,16 +65,43 @@ Log/Notes
 
 TODO next:
 
+TODO: And separate the jobMetaInfo from necessary "jobHandle" to be passed
+    around to store MPI, PBS relevant stuff.
+
 * BUG: fix the jobMetaInfo writing to XML, so that hte MPI part isn't
    separated from the parent class part (need to think about XML design here)
 * Add an API for saving performance info to the ModelResult JobMetaInfo;
 * Really, the jobMetaInfo should be saved into the modelResult
-  * And separate the jobMetaInfo from necessary "jobHandle" to be passed
-    around to store MPI, PBS relevant stuff.
 * Investigate best way to save time and memory usage here...
 
  * Use the relevant plugins in StGermain and parse freq output? (eg CPU_Time)
  * Just do a simple implementation and use the "time" function?
  * Or one of the more advanced methods used above?
 
+12/4/2011:
+----------
 
+
+TODO with current design:
+
+* Create basic PerformanceProfilers class
+* Update the JobRunner to do basic management of a PerformanceProfilers list
+  (And a default PerformanceProfiler)
+* Update the essentials of the UnixTimeCmdProfiler
+* Test!
+* Create a ParallelScaling test suite
+  * Create ParallelScaling report graphs, and add to that test suite
+* Create a PetscOptions test suite
+  * And add to this test.
+
+Cleanups:
+
+* Abstract relevant profiler function handling up into the JobRunner base class
+
+Design Qtns to consider:
+
+* Should the PerformanceProfiler just be a special class of AnalysisOp?
+  (Hmmm ... but that would require AnalysisOps to be able to modify the 
+  RunCommand ... not very appropriate probably).
+* Related to above ... have a bit of an issue with ordering of profiler setup
+  vs final "write" of analysis input files.

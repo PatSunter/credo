@@ -276,12 +276,12 @@ class FreqOutput:
     def getMin(self, headerName):
         '''get the Minimum of the records for a given header, including
         the timestep at which that minimum occured.'''
-        return self.getReductionOp(headerName, min)
+        return self.getReductionOp(headerName, minOp)
         
     def getMax(self, headerName):
         '''get the Maximum of the records for a given header, including
         the timestep at which that minimum occured.'''
-        return self.getReductionOp(headerName, max)
+        return self.getReductionOp(headerName, maxOp)
 
     def getMean(self, headerName):
         '''gets the Mean of the records for a given header.
@@ -295,9 +295,9 @@ class FreqOutput:
         valArray = self.getValuesArray(headerName)
         return sum(valArray, 0.0) / len(valArray)
 
-    def getClosest(self, headerName, target):
+    def getClosest(self, headerName, targVal):
         """Gets the closest value and timestep to the given value."""
-        return self.getReductionOp(headerName, closest, target=target)
+        return self.getReductionOp(headerName, closestToVal, targVal=targVal)
 
     def printAllMinMax(self):
         '''Print the maximum and minimum values of all fields in the frequent
@@ -311,21 +311,22 @@ class FreqOutput:
             print "\t%s: min %f (at step %d), max %f (at step %d)"\
                 % (header, min, minStep, max, maxStep)
     
-    def getReductionOp(self, headerName, reduceFunc, target=None):
+    def getReductionOp(self, headerName, reduceFunc, **kwargs):
         '''Utility function for doing comparison operations on the records
         list, e.g. the max or minimum - where reduceFunc can operate on the
         whole records list at once, and support the "key" syntax to pick
-        correct field out of tuples for comparison.'''
+        correct field out of tuples for comparison.
+        
+        .. note:: This has been written to allow both standard Python
+        'reduction ops' like `max()` and `min()`, and also more complex
+        operators defined in this module, or by the user.'''
         if not self.populated: self.populateFromFile()
         if len(self.records) == 0: return None, None
         colNum = self.getColNum(headerName)
         tStepColNum = self.getColNum('Timestep')
-        if target is None:
-            retRecord = reduceFunc(self.records,
-                key=operator.itemgetter(colNum))
-        else:
-            retRecord = reduceFunc(self.records,
-                key=operator.itemgetter(colNum), target=target)
+        # Note passing in a couple of specific keywords first - see docstring
+        retRecord = reduceFunc(self.records,
+            key=operator.itemgetter(colNum), stgFreq=self, **kwargs)
         return retRecord[colNum], retRecord[tStepColNum]
 
     def getComparisonOp(self, headerName, cmpFunc):
@@ -384,26 +385,62 @@ class FreqOutput:
         if show: plt.show()
         return plt
 
-def first(inList, key=None):
+def maxOp(inList, key, stgFreq):
+    return max(inList, key=key)
+
+def minOp(inList, key, stgFreq):
+    return min(inList, key=key)
+
+def firstOp(inList, key, stgFreq):
     """A utility function designed to pass to 
     attr:`~.FreqOutput.getReductionOp` for getting the first value from a
     frequent output list."""
     return inList[0]
 
-def last(inList, key=None):
+def lastOp(inList, key, stgFreq):
     """A utility function designed to pass to 
     attr:`~.FreqOutput.getReductionOp` for getting the last value from a
     frequent output list."""
     return inList[-1]
 
-def closest(inList, key=None, target=0):
+def closestToStep(inList, key, stgFreq, targStep):
+    """Utilitiy function for use with attr:`~.FreqOutput.getReductionOp`:
+    Gets the value at a given timestep.
+
+    :keyword target: the target timestep."""
+    assert stgFreq != None
+    return closestToVal(inList, key, stgFreq, targVal=targStep,
+        targObsName='Timestep')
+    
+def closestToSimTime(inList, key, stgFreq, targTime):
+    """Utilitiy function for use with attr:`~.FreqOutput.getReductionOp`:
+    Gets the value at a given timestep.
+
+    :keyword target: the target simulation time."""
+    assert stgFreq != None
+    return closestToVal(inList, key, stgFreq, targVal=targTime,
+        targObsName='Time')
+
+def closestToVal(inList, key, stgFreq, targVal, targObsName=None):
+    """Utilitiy function for use with attr:`~.FreqOutput.getReductionOp`:
+    Gets the entry where the value of chosen observable (eg VRMS) is closest
+    to a target value.
+
+    :keyword targVal: the target observable value.
+    :keyword targObsName: the target header to check value at. If `None`,
+       then use the same as for the observable we'll return.
+    """
+    if targObsName != None:
+        colNum = stgFreq.getColNum(targObsName)
+        key=operator.itemgetter(colNum)
+
     closestVal = key(inList[0])
     closestRec = inList[0]
-    diff = abs(closestVal - target)
+    diff = abs(closestVal - targVal)
     if len(inList) == 1: return closestVal
     for listEntry in inList[1:]:
         eVal = key(listEntry)
-        newDiff = abs(eVal - target)
+        newDiff = abs(eVal - targVal)
         if newDiff < diff:
             diff = newDiff
             closestVal = eVal

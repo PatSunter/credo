@@ -76,15 +76,22 @@ class OutputWithinRangeTC(SingleRunTestComponent):
 
        After the check is performed, records a Bool saying whether
        the test component passed.
+    
+    .. attribute:: opDict
+
+       (Optional) - will be later passed as keyword arguments to the 
+       :attr:`.reductionOp` function - so use if the reduction op
+       function requires these.
     '''
 
     def __init__(self, outputName, reductionOp, allowedRange,  
-            tRange=None):
+            tRange=None, opDict=None):
         SingleRunTestComponent.__init__(self, "outputWithinRange")
         self.outputName = outputName
         self.reductionOp = reductionOp
         self.allowedRange = allowedRange
         self.tRange = tRange
+        self.opDict = {} if opDict == None else dict(opDict)
         self.actualVal = None
         self.actualTime = None
         self.withinRange = None
@@ -101,6 +108,12 @@ class OutputWithinRangeTC(SingleRunTestComponent):
                 value=str(self.tRange[0]))
             etree.SubElement(specNode, 'tRange-max',
                 value=str(self.tRange[1]))
+        opDictNode = etree.SubElement(specNode, 'opDict')
+        for kw, val in self.opDict.iteritems():
+            opItemNode = etree.SubElement(opDictNode, 'opItem')
+            opItemNode.attrib['name'] = kw
+            opItemNode.text = str(val)
+                
                 
     def attachOps(self, modelRun):
         """Implements base class
@@ -123,7 +136,7 @@ class OutputWithinRangeTC(SingleRunTestComponent):
         statusMsg = ""
         mResult.readFrequentOutput()
         self.actualVal, actualTimeStep = mResult.freqOutput.getReductionOp(
-            self.outputName, self.reductionOp)
+            self.outputName, self.reductionOp, **self.opDict)
         self.actualTime = mResult.freqOutput.getValueAtStep('Time',
             actualTimeStep)
         self.withinRange = (self.allowedRange[0] <= self.actualVal \
