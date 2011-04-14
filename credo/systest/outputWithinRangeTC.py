@@ -76,6 +76,12 @@ class OutputWithinRangeTC(SingleRunTestComponent):
 
        After the check is performed, records a Bool saying whether
        the test component passed.
+    
+    .. attribute:: opDict
+
+       (Optional) - will be later passed as keyword arguments to the 
+       :attr:`.reductionOp` function - so use if the reduction op
+       function requires these.
     '''
 
     def __init__(self, outputName, reductionOp, allowedRange,  
@@ -85,10 +91,10 @@ class OutputWithinRangeTC(SingleRunTestComponent):
         self.reductionOp = reductionOp
         self.allowedRange = allowedRange
         self.tRange = tRange
+        self.opDict = {} if opDict == None else dict(opDict)
         self.actualVal = None
         self.actualTime = None
         self.withinRange = None
-        self.opDict = {} if opDict == None else dict(opDict)
 
     def _writeXMLCustomSpec(self, specNode):
         etree.SubElement(specNode, 'outputName', value=self.outputName)
