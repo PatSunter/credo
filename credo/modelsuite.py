@@ -180,7 +180,7 @@ def getVariantCmdLineOverrides(modelVariants, indicesIt):
         overrideCmdLines.append(" ".join(overStrs))
     return overrideCmdLines
 
-def getSubdirName(modelVariants, paramIndices):
+def getSubdirTextParamVals(modelVariants, paramIndices):
     """Creates a subdirectory text based on the names and values of each
     variant."""
     subDirName = ""
@@ -193,9 +193,11 @@ def getSubdirName(modelVariants, paramIndices):
     return subDirName
 
 def getTextParamValsSubdirs(modelVariants, indicesIt):
+    """Given a list of :class:`ModelVariants` and an index iterator,
+    returns a list of all subDirs to use."""
     subDirs = []
     for indexSet in indicesIt:
-        subDirs.append(getSubdirName(modelVariants, indexSet))
+        subDirs.append(getSubdirTextParamVals(modelVariants, indexSet))
     return subDirs
 
 def getVarRunIs(varName, modelVariants, runDicts):
@@ -231,10 +233,11 @@ def getOtherParamValsByVarRunIs(varRunIsMap, varDicts, otherParam):
 
 def getSubdir_TextParamVals(modelRun, modelVariants, paramIndices, runIndex):
     """Generate an output sub-directory name for a run with
-    a printed version of :attr:`.modelVariants` names, and vales for this run.
+    a printed version of :attr:`ModelSuite.modelVariants` names, 
+    and vales for this run.
     (Good in the sense of being fairly self-describing, but can
     be long if you have many model variants)."""
-    subPath = getSubdirName(modelVariants, paramIndices)
+    subPath = getSubdirTextParamVals(modelVariants, paramIndices)
     return subPath
 
 def getSubdir_RunIndex(modelRun, modelVariants, paramIndices, runIndex):
@@ -242,8 +245,8 @@ def getSubdir_RunIndex(modelRun, modelVariants, paramIndices, runIndex):
     return "%.5d" % runIndex
 
 def getSubdir_RunIndexAndText(modelRun, modelVariants, paramIndices, runIndex):
-    """Simply prints the index of the run as a subdirectory."""
-    subPath = getSubdirName(modelVariants, paramIndices)
+    """Subdir is based on both the run index, and the textual variant names."""
+    subPath = getSubdirTextParamVals(modelVariants, paramIndices)
     return "%.5d-%s" % (runIndex, subPath)
 
 class ModelSuite:
@@ -517,8 +520,10 @@ class ModelSuite:
                     raise ModelResultNotExistError("Error, given basePath"\
                         " for reading model"\
                         " results from, %s, with output path %s, is missing"\
-                        " result for suite's run '%s' (index %d)." %
-                        (basePath, outputPathBase, mRun.name, runI))
+                        " result for suite's run '%s' (index %d)."\
+                        "\n(names read are %s)." %\
+                        (basePath, outputPathBase, mRun.name, runI,
+                         resultNames))
         return mResults  
             
 # TODO: here perhaps would be where we have tools to generate stats/plots
