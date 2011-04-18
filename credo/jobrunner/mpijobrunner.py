@@ -22,6 +22,7 @@
 ##  MA  02110-1301  USA
 
 import os
+import sys
 import signal
 import subprocess
 import time
@@ -59,10 +60,16 @@ class MPIJobRunner(JobRunner):
             self.mpiRunCommand = os.environ[MPI_RUN_COMMAND]
         else:
             self.mpiRunCommand = DEFAULT_MPI_RUN_COMMAND
-        # Add at least a UnixTimeCmdProfiler
-        defProfiler = UnixTimeCmdProfiler()
-        self.profilers.append(defProfiler)
-        self.defaultProfiler = self.profilers[:-1]
+        defProfiler = None
+        # TODO: perhaps a more declarative approach to choosing profiler 
+        #  to use better in future than what's below ... e.g. have a profiler
+        #  factory that chooses based on platform info, job runner type,
+        #  and installed software.
+        if sys.platform[0:len("linux")] == "linux":
+            # Add at least a UnixTimeCmdProfiler
+            defProfiler = UnixTimeCmdProfiler()
+            self.profilers.append(defProfiler)
+        self.defaultProfiler = defProfiler
 
     def setup(self):
         # TODO: check mpd is running, if necessary
