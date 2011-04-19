@@ -318,8 +318,9 @@ class FreqOutput:
         correct field out of tuples for comparison.
         
         .. note:: This has been written to allow both standard Python
-        'reduction ops' like `max()` and `min()`, and also more complex
-        operators defined in this module, or by the user.'''
+           'reduction ops' like `max()` and `min()`, and also more complex
+           operators defined in this module, or by the user.
+        '''
         if not self.populated: self.populateFromFile()
         if len(self.records) == 0: return None, None
         colNum = self.getColNum(headerName)
