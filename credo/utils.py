@@ -50,3 +50,16 @@ def productCalc(*args, **kwds):
         result = [x+[y] for x in result for y in pool]
     for prod in result:
         yield tuple(prod)
+
+def dictAsPrettyStr(inDict):
+    """A small function to create a string representation of a dictionary,
+    by getting the str() of each item in a dict, not
+    the repr(). Useful for floating points for example to be 'prettier'
+    (less zeros after the number).
+    
+    .. note:: No effort has been made to ensure this is super-efficient for
+       large dictionaries, it's suited to small lists of parameters"""
+    strings = []
+    for kw, val in inDict.iteritems():
+        strings.append("'%s': %s" % (str(kw), str(val)))
+    return "{%s}" % (", ".join(strings))
