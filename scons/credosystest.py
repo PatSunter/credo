@@ -52,18 +52,21 @@ def generate(env, **kw):
     env['TEST_OUTPUT_PATH'] = os.path.abspath(testOutput)
 
     env.SetDefault(CHECK_INTEGRATION_TARGET="check-integration")
+    env.SetDefault(CHECK_VISUALISATION_TARGET="check-viz")
     env.SetDefault(CHECK_CONVERGENCE_TARGET="check-convergence")
     env.SetDefault(CHECK_LOWRES_TARGET="check-lowres")
     env.SetDefault(CHECK_SCIBENCH_TARGET="check-scibench")
 
     LOWRES_SUITES = []
     INTEGRATION_SUITES = []
+    VISUALISATION_SUITES = []
     CONVERGENCE_SUITES = []
     SCIBENCH_SUITES = []
     # Need to use Export rather than saving on env object, since we clone
     #  the env for each sub-project
     Export('LOWRES_SUITES')
     Export('INTEGRATION_SUITES')
+    Export('VISUALISATION_SUITES')
     Export('CONVERGENCE_SUITES')
     Export('SCIBENCH_SUITES')
 
@@ -77,6 +80,7 @@ SCons-Check Options:
           './scons.py check-integration' to run the normal-res integration tests,
           './scons.py check-lowres' to run the low-res integration tests.
           './scons.py check-scibench' to run the science benchmark tests.
+          './scons.py check-viz' to run the glucifer viz tests.
 """ )
 
     def pathToPyModuleName(relPath):
@@ -172,6 +176,12 @@ SCons-Check Options:
         Export('INTEGRATION_SUITES')
         return retVal
 
+    def addVisualisationTestSuite(env, suiteFilename):
+        Import('VISUALISATION_SUITES')
+        retVal = addSysTestSuite(env, suiteFilename, VISUALISATION_SUITES)
+        Export('VISUALISATION_SUITES')
+        return retVal
+
     def addConvergenceTestSuite(env, suiteFilename):
         Import('CONVERGENCE_SUITES')
         retVal = addSysTestSuite(env, suiteFilename, CONVERGENCE_SUITES)
@@ -197,6 +207,7 @@ SCons-Check Options:
     #  See http://www.scons.org/doc/HTML/scons-user/c3805.html
     env.AddMethod(addLowResTestSuite, "AddLowResTestSuite")
     env.AddMethod(addIntegrationTestSuite, "AddIntegrationTestSuite")
+    env.AddMethod(addVisualisationTestSuite, "AddVisualisationTestSuite")
     env.AddMethod(addConvergenceTestSuite, "AddConvergenceTestSuite")
     env.AddMethod(addSciBenchTestSuite, "AddSciBenchTestSuite")
 
