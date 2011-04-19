@@ -21,9 +21,11 @@
 ##  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 ##  MA  02110-1301  USA
 
+import inspect
 from xml.etree import ElementTree as etree
 
 from .api import SingleRunTestComponent, CREDO_PASS, CREDO_FAIL
+from credo.utils import dictAsPrettyStr
 
 class OutputWithinRangeTC(SingleRunTestComponent):
     '''Test component to check that a given output parameter 
@@ -98,7 +100,10 @@ class OutputWithinRangeTC(SingleRunTestComponent):
 
     def _writeXMLCustomSpec(self, specNode):
         etree.SubElement(specNode, 'outputName', value=self.outputName)
-        etree.SubElement(specNode, 'reductionOp', value=str(self.reductionOp))
+        etree.SubElement(specNode, 'reductionOp', 
+            funcName=str(self.reductionOp.func_name),
+            modName=str(inspect.getmodule(self.reductionOp).__name__),
+            module=str(inspect.getmodule(self.reductionOp)))
         etree.SubElement(specNode, 'allowedRange-min',
             value=str(self.allowedRange[0]))
         etree.SubElement(specNode, 'allowedRange-max',
@@ -113,7 +118,6 @@ class OutputWithinRangeTC(SingleRunTestComponent):
             opItemNode = etree.SubElement(opDictNode, 'opItem')
             opItemNode.attrib['name'] = kw
             opItemNode.text = str(val)
-                
                 
     def attachOps(self, modelRun):
         """Implements base class
@@ -142,15 +146,20 @@ class OutputWithinRangeTC(SingleRunTestComponent):
         self.withinRange = (self.allowedRange[0] <= self.actualVal \
             <= self.allowedRange[1])
 
+        statusMsg += "Model output '%s', at reduction op '%s'" % \
+            (self.outputName, self.reductionOp.func_name)
+        if len(self.opDict) > 0:
+            statusMsg += " (%s)" % (dictAsPrettyStr(self.opDict))
+        statusMsg += ":\n"
+        statusMsg += "\tvalue %g (at time %g)" % \
+            (self.actualVal, self.actualTime)
         if not self.withinRange:
-            statusMsg += "Model output '%s' value %g not within"\
-                " required range (%g,%g)."\
-                % ((self.outputName, self.actualVal,) + self.allowedRange)
+            statusMsg += " not within required range (%g,%g)." % \
+                self.allowedRange
             overallResult = False    
         else:
-            statusMsg += "Model output '%s' value %g within"\
-                " required range (%g,%g)"\
-                % ((self.outputName, self.actualVal,) + self.allowedRange)
+            statusMsg += " within required range (%g,%g)" % \
+                self.allowedRanbge
             if self.tRange is None:
                 statusMsg += "."        
                 overallResult = True
@@ -178,3 +187,4 @@ class OutputWithinRangeTC(SingleRunTestComponent):
         atNode.text = "%6g" % self.actualTime
         wrNode = etree.SubElement(resNode, 'withinRange')
         wrNode.text = str(self.withinRange)
+
