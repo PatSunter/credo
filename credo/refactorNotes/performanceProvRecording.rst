@@ -105,3 +105,21 @@ Design Qtns to consider:
   RunCommand ... not very appropriate probably).
 * Related to above ... have a bit of an issue with ordering of profiler setup
   vs final "write" of analysis input files.
+
+
+18/2/2011:
+----------
+
+Dealing with reported issue en:320, "time" command doesn't accept proper
+ format on a Mac ....
+
+* Make the "time" profiler only be used on Linux systems
+
+* Look for other default profilers to use on Mac systems e.g.:
+ * Dtrace (http://www.mactech.com/articles/mactech/Vol.23/23.11/ExploringLeopardwithDTrace/index.html)
+ * Syrupy (interfaces with PS, Python): http://jeetworks.org/programs/syrupy
+   (Problem is this is GPL? - Redistribution issues?)
+
+
+TODO: ideally we want to be able to tell SCons/CREDO what profiler to use,
+so this can be configured for different regression systems.
