@@ -21,8 +21,8 @@
 ##  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 ##  MA  02110-1301  USA
 
-"""Package for manipulation of a suite of system tests. Analogous to the role
-of the Pythun unittest TestRunner."""
+"""Package for manipulation of a suite of system tests.
+Analogous to the role of the Pythun unittest TestRunner."""
 
 import os
 import sys
