@@ -80,11 +80,11 @@ The core ModelRun, ModelResult and Analysis hierarchy:
 
 And several key System testing classes:
 
-.. inheritance-diagram:: credo.systest.api credo.systest.analytic
-    credo.systest.restart credo.systest.reference
-    credo.systest.analyticMultiRes credo.systest.scibenchmark
-    credo.systest.fieldWithinTolTest credo.systest.fieldCvgWithScaleTest
-    credo.systest.outputWithinRangeTest
+.. inheritance-diagram:: credo.systest.api credo.systest.analyticTest
+    credo.systest.restartTest credo.systest.referenceTest
+    credo.systest.analyticMultiResTest credo.systest.sciBenchmarkTest
+    credo.systest.fieldWithinTolTC credo.systest.fieldCvgWithScaleTC
+    credo.systest.outputWithinRangeTC
     :parts: 1
 
 .. rubric:: Footnotes
