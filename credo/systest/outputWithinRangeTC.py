@@ -92,7 +92,7 @@ class OutputWithinRangeTC(SingleRunTestComponent):
         self.outputName = outputName
         self.reductionOp = reductionOp
         self.allowedRange = tuple(allowedRange)
-        self.tRange = tuple(tRange)
+        self.tRange = None if tRange == None else tuple(tRange)
         self.opDict = {} if opDict == None else dict(opDict)
         self.actualVal = None
         self.actualTime = None
