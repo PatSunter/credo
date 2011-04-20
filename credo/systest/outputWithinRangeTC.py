@@ -91,8 +91,8 @@ class OutputWithinRangeTC(SingleRunTestComponent):
         SingleRunTestComponent.__init__(self, "outputWithinRange")
         self.outputName = outputName
         self.reductionOp = reductionOp
-        self.allowedRange = allowedRange
-        self.tRange = tRange
+        self.allowedRange = tuple(allowedRange)
+        self.tRange = tuple(tRange)
         self.opDict = {} if opDict == None else dict(opDict)
         self.actualVal = None
         self.actualTime = None
@@ -159,7 +159,7 @@ class OutputWithinRangeTC(SingleRunTestComponent):
             overallResult = False    
         else:
             statusMsg += " within required range (%g,%g)" % \
-                self.allowedRanbge
+                self.allowedRange
             if self.tRange is None:
                 statusMsg += "."        
                 overallResult = True
