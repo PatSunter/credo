@@ -28,9 +28,8 @@ import tempfile
 import unittest
 import itertools
 
-from credo import modelsuite as msuite
 from credo.modelrun import ModelRun
-from credo.modelsuite import ModelSuite, StgXMLVariant
+from credo.modelsuite import ModelSuite, StgXMLVariant, JobParamVariant
 import credo.modelsuite as msuite
 
 # Skeleton classes
@@ -43,8 +42,10 @@ class ModelSuiteTestCase(unittest.TestCase):
         self.mRun1 = ModelRun("testRun1",["Input1.xml"],"./output/tr1")
         self.yRange = [-16000, -10000, -3000]
         self.zRange = [10000, 11000]
+        self.procRange = [1, 2, 4, 8]
         self.stgI1 = StgXMLVariant("minY", self.yRange)
         self.stgI2 = StgXMLVariant("maxZ", self.zRange)
+        self.jobI1 = JobParamVariant("nproc", self.procRange)
         self.varDict = {"Y":self.stgI1, "Z":self.stgI2}
 
     def tearDown(self):
@@ -61,6 +62,11 @@ class ModelSuiteTestCase(unittest.TestCase):
             self.stgI2.applyToModel(self.mRun1, paramI)
             self.assertEqual(self.mRun1.paramOverrides['maxZ'],
                 self.zRange[paramI])
+
+        for paramI in range(self.jobI1.valLen()):
+            self.jobI1.applyToModel(self.mRun1, paramI)
+            self.assertEqual(self.mRun1.jobParams['nproc'],
+                self.procRange[paramI])
 
     def test_getVariantParamPathDicts(self):
         indicesIt = msuite.getVariantIndicesIter(self.varDict, itertools.izip)
@@ -86,25 +92,37 @@ class ModelSuiteTestCase(unittest.TestCase):
     def test_generateRuns_product(self):        
         mSuite = ModelSuite(os.path.join("output","genSuiteTest"),
             templateMRun = self.mRun1)
+        #TODO: since currently mVariants implemented as a dict, the order
+        # these are added doesn't currently matter.
         mSuite.addVariant("depthVary", self.stgI1)
         mSuite.addVariant("ZVary", self.stgI2)
-        mSuite.generateRuns()
-        self.assertEqual(len(mSuite.runs), len(self.yRange) * len(self.zRange))
+        mSuite.addVariant("scaleTests", self.jobI1)
+        mSuite.generateRuns(msuite.product)
+        self.assertEqual(len(mSuite.runs),
+            len(self.yRange) * len(self.zRange) * len(self.procRange))
         # These are indices into lists above, created manually for testing
-        expIndices = [(0,0),(0,1),(1,0),(1,1)]
+        # TODO: below is an experimentally-determined order - bad!
+        expIndices = list(msuite.product(
+            range(len(self.procRange)),
+            range(len(self.yRange)), 
+            range(len(self.zRange))
+            ))
         for ii, expIndexTuple in enumerate(expIndices):
-            yIndex, zIndex = expIndexTuple
+            pIndex, yIndex, zIndex = expIndexTuple
             self.assertEqual(mSuite.runs[ii].paramOverrides['minY'],
                 self.yRange[yIndex])
             self.assertEqual(mSuite.runs[ii].paramOverrides['maxZ'],
                 self.zRange[zIndex])
+            self.assertEqual(mSuite.runs[ii].jobParams['nproc'],
+                self.procRange[pIndex])
             self.assertEqual(mSuite.runs[ii].outputPath,
                 os.path.join("output", "genSuiteTest",
                     mSuite.subOutputPathGenFunc(mSuite.runs[ii],
                         mSuite.modelVariants, expIndexTuple, ii)))
         # Now test regenerating produces correct length again
         mSuite.generateRuns()
-        self.assertEqual(len(mSuite.runs), len(self.yRange) * len(self.zRange))
+        self.assertEqual(len(mSuite.runs),
+            len(self.yRange) * len(self.zRange) * len(self.procRange))
 
     def test_generateRuns_izip(self):        
         mSuite = ModelSuite(os.path.join("output","genSuiteTest"),
