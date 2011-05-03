@@ -36,7 +36,7 @@ class AnalysisOperation:
         '''Virtual method for writing Information XML about an analysis op,
         that will be saved as a record of the analysis applied.'''
 
-        raise NotImplementedError("This is a virtual method and must be"
+        raise NotImplementedError("This is a virtual method and must be"\
             " overwritten")       
 
     def writeStgDataXML(self, rootNode):
@@ -45,7 +45,7 @@ class AnalysisOperation:
         and adding them to the Components dictionary. See
         :mod:`credo.io.stgxml` for the interface for setting these up.'''
 
-        raise NotImplementedError("This is a virtual method and must be"
+        raise NotImplementedError("This is a virtual method and must be"\
             " overwritten")       
 
     def postRun(self, modelRun, runPath):
@@ -54,5 +54,5 @@ class AnalysisOperation:
         a reference to a :class:`~credo.modelrun.ModelRun`, so can use it's
         attributes such as :attr:`~credo.modelrun.ModelRun.outputPath`.'''
 
-        raise NotImplementedError("This is a virtual method and must be"
+        raise NotImplementedError("This is a virtual method and must be"\
             " overwritten")       
