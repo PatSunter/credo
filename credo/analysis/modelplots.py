@@ -69,23 +69,6 @@ def plotOverAllRuns(mResults, outputName, depName='Timestep', show=False,
     if show: plt.show()
     return plt
 
-def parseUnixTimeElapsed(timeElapsedStr):
-    secStrs = timeElapsedStr.split(":")
-    if len(secStrs) == 2:
-        hours = 0
-        mins = int(secStrs[0])
-        secs = float(secStrs[1])
-    elif len(secStrs) == 3:
-        hours = int(secStrs[0])
-        mins = int(secStrs[1])
-        secs = float(secStrs[2])
-    else:
-        raise ValueError("Error, time elapsed string given, '%s',"\
-            "doesn't conform to Unix time command's elapsed string format."\
-            % timeElapsedStr)
-    return hours * (60*60) + mins * 60 + secs        
-        
-
 def getSpeedups(mRuns, mResults, profilerName=None):
     if profilerName == None:
         #TODO: get a default
@@ -94,7 +77,7 @@ def getSpeedups(mRuns, mResults, profilerName=None):
     for mRun, mRes in zip(mRuns, mResults):
         nProc = mRun.jobParams["nproc"]
         wallTimeStr = mRes.jobMetaInfo.performance[profilerName]['walltime']
-        wallTime = parseUnixTimeElapsed(wallTimeStr)
+        wallTime = float(wallTimeStr)
         resList.append((nProc, wallTime))
     lowestProcEntry = min(resList)
     lowestProc = lowestProcEntry[0]

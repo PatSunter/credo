@@ -605,7 +605,8 @@ def getModelResultsArray(baseName, baseDir):
                 modelName = dirName
             else:    
                 modelName = "%s-%s" % (baseName, dirName)
-            mResult = mres.ModelResult(modelName, fullPath)
+            mResult = mres.readModelResultFromPath(fullPath)
+            #ModelResult(modelName, fullPath)
             # TODO: When func ready, search for an XML file containing
             #  job meta info, and attach here
             # mResult.jobMetaInfo = ...

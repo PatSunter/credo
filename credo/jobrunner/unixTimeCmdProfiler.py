@@ -17,8 +17,8 @@ TIME_FMT_SEP = "\n"
 STD_NAMES = {
     "walltime": "E",
     "pageFaults": "F",
-    "avgMem(KB)": "K",
-    "maxMem(KB)": "M"}
+    "avgMem_KB": "K",
+    "maxMem_KB": "M"}
 
 #This could be customised to a sub-set if desired
 DEFAULT_FMT_ELS = [(kw, val) for (kw, val) in STD_NAMES.items()]
@@ -48,8 +48,6 @@ class UnixTimeCmdProfiler(PerformanceProfiler):
         if os.path.exists(resFName):
             os.unlink(resFName)
         h = UnixTimeCmdHandle(resFName)
-        # TODO - generalise this up into JobMetaInfo/JobHandle base
-        jobMetaInfo.profilerHandles = {}
         jobMetaInfo.profilerHandles[self.typeStr] = h
 
     def modifyRun(self, modelRun, oldModelRunCommand, jobMetaInfo):
@@ -63,6 +61,9 @@ class UnixTimeCmdProfiler(PerformanceProfiler):
 
     def attachPerformanceInfo(self, jobMetaInfo, modelResult):
         h = jobMetaInfo.profilerHandles[self.typeStr]
+        #TODO: either here, or in the subfunction:
+        # we have h.fmtEls - need to extend that so we can be smarter in parsing
+        #  e.g. units of memory, or time units. 
         resDict = getResDict(h.resFName)
         jobMetaInfo.performance[self.typeStr] = dict(resDict)
 
@@ -93,14 +94,35 @@ def getResDict(resFName, fmtSpec=TIME_FMT_SPEC, fmtSep=TIME_FMT_SEP):
         try:
             name, val = infoSpec.split(fmtSpec)
         except ValueError:
-            print "Bad performance info spec '%s' - splits into too many entries"\
-                % (infoSpec)
+            print "Bad performance info spec '%s' - splits into too many"\
+                " entries" % (infoSpec)
             pass
         else:
             #NB: assuming all values here are floats.
             #resDict[name] = float(val)
+            #TODO: temporary hack, need a system
+            if name == "walltime":
+                val = parseUnixTimeElapsed(val)
+            else:
+                val = float(val)
             resDict[name] = val
     return resDict
+
+def parseUnixTimeElapsed(timeElapsedStr):
+    secStrs = timeElapsedStr.split(":")
+    if len(secStrs) == 2:
+        hours = 0
+        mins = int(secStrs[0])
+        secs = float(secStrs[1])
+    elif len(secStrs) == 3:
+        hours = int(secStrs[0])
+        mins = int(secStrs[1])
+        secs = float(secStrs[2])
+    else:
+        raise ValueError("Error, time elapsed string given, '%s',"\
+            "doesn't conform to Unix time command's elapsed string format."\
+            % timeElapsedStr)
+    return hours * (60*60) + mins * 60 + secs   
 
 def getRunPrefix(resFName, fmtStr):
     """Get the prefix for a run that will apply the time command.

@@ -107,7 +107,7 @@ Design Qtns to consider:
   vs final "write" of analysis input files.
 
 
-18/2/2011:
+18/4/2011:
 ----------
 
 Dealing with reported issue en:320, "time" command doesn't accept proper
@@ -123,3 +123,17 @@ Dealing with reported issue en:320, "time" command doesn't accept proper
 
 TODO: ideally we want to be able to tell SCons/CREDO what profiler to use,
 so this can be configured for different regression systems.
+
+3/5/2011:
+---------
+
+Done:
+ * Converting output of Unix time to seconds
+ * 
+
+TODOs:
+ * Ability to read back in results for performance from jobMetaInfos
+ * Perhaps do the time conversion straight away after getting the result
+  * (ie within UnixTimeCmd module)
+  * Or at least refactor into this module
+ * Should this become an analysis op?

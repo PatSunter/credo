@@ -28,8 +28,9 @@ The primary interface is via the :class:`~credo.modelrun.ModelRun` class.
 
 .. seealso:: :mod:`credo.modelrun`."""
 
-from xml.etree import ElementTree as etree
 import os
+import glob
+from xml.etree import ElementTree as etree
 
 from credo.io import stgfreq
 from credo.io.stgxml import writeXMLDoc
@@ -134,8 +135,31 @@ class ModelResult:
         outFile.close()
         return fullPath
 
-#####
+    def readFromRecordXML(self, xmlFilename):
+        # parse in doc
+        xmlDoc = etree.parse(xmlFilename)
+        root = xmlDoc.getroot()
+        assert root.tag == self.XML_INFO_TAG
+        self.modelName = root.find('modelName').text
+        self.outputPath = root.find('outputPath').text
+        jmiNode = root.find('jobMetaInfo')
+        #TODO: temporarily put import in here to avoid cyclic import
+        import credo.jobrunner
+        self.jobMetaInfo = credo.jobrunner.readJobMetaInfoFromXMLNode(jmiNode)
+        # TODO: here we would also read analysisOp results, if they were
+        #  being recorded.
 
+def readModelResultFromPath(path):
+    xmlFiles = glob.glob(os.path.join(path, "ModelResult*.xml"))
+    if len(xmlFiles) != 1:
+        raise ValueError("Expected directory to only contain 1 ModelResult"\
+            " XML file, but it contained %d." % len(xmlFiles))
+    recordFile = xmlFiles[0]
+    mRes = ModelResult("place", path)
+    mRes.readFromRecordXML(recordFile)
+    return mRes
+
+#####
 
 def getSimInfoFromFreqOutput(outputPath):
     """utility function to get basic information about the simulation

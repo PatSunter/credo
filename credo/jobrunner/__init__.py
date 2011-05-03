@@ -24,11 +24,24 @@
 """This module allows running CREDO jobs using various approaches - e.g. via
 MPI locally, via PBS scripts in a queueing system, or via grid submission."""
 
-#Import useful API classes/funcs for external use
-from credo.jobrunner.api import JobRunner, ModelRunError
-from credo.jobrunner.mpijobrunner import MPIJobRunner
+from credo.jobrunner.mpijobrunner import MPIJobRunner, MPIJobMetaInfo
+from credo.jobrunner.pbsjobrunner import PBSJobMetaInfo
 
-# TODO: the runPath is temporary I think
+jobMetaInfoMapping = {
+    "MPI": MPIJobMetaInfo,
+    "PBS": PBSJobMetaInfo}
+
+def jobMetaInfoFactoryCreate(runTypeStr):
+    jmiClass = jobMetaInfoMapping[runTypeStr]
+    jobMetaInfo = jmiClass()
+    return jobMetaInfo
+
 def defaultRunner():
     defRunner = MPIJobRunner()
     return defRunner
+
+def readJobMetaInfoFromXMLNode(jmiNode):
+    runTypeStr = jmiNode.find('runType').text
+    jobMetaInfo = jobMetaInfoFactoryCreate(runTypeStr)
+    jobMetaInfo.readFromXMLNode(jmiNode)
+    return jobMetaInfo   

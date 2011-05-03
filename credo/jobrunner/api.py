@@ -51,10 +51,8 @@ class PerformanceProfiler:
         #getResDict(filename)
         #Save this resDict on the jobMetaInfo (in a subdirectory)
         raise NotImplementedError("Error, virtual func on base class")
+ 
 
-# TODO: can the below just be collapsed into a dictionary? Then have
-# standard write facilities.
-# Or maybe sub-class from dict, and just add some parameter checking.
 class JobMetaInfo:
     '''A simple class for recording meta info about a job, such as walltime,
     memory usage, etc.
@@ -75,6 +73,8 @@ class JobMetaInfo:
             self.simtime = "unknown"
         else:     
             self.simtime = float(simtime)
+        # Will be used if you pass handlers around.
+        self.profilerHandles = {}
 
     def writeInfoXML(self, xmlNode):
         '''Writes information about this class into an existing, open
@@ -101,6 +101,23 @@ class JobMetaInfo:
         return "Node '%s', of type %s, running %s (%s)" \
             % tuple([self.platform[kw] for kw in 'node', 'machine', 'system',
                 'release'])
+    
+    def readFromXMLNode(self, xmlNode):
+        self.simtime = float(xmlNode.find('simtime').text)
+        #TODO: how to convert ...
+        #self.submitTime = xmlNode.find('submitTime').text
+        #TODO: platformInfo
+        #TODO: profiler info
+        profilersNode = xmlNode.find('performanceInfo')
+        for profNode in profilersNode.findall('profilerInfo'):
+            profType = profNode.attrib['profType']
+            self.performance[profType] = {}
+            perfDict = self.performance[profType]
+            for profStatNode in profNode:
+                # TODO: hack assuming as floats, ideally should read and
+                #  handle properly based on some sort of saved unit.
+                perfDict[profStatNode.tag] = float(profStatNode.text)
+        return
 
 class JobRunner:
     """Class used for running ModelRun instances. This is an abstract base

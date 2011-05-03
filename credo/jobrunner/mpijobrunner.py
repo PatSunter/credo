@@ -31,7 +31,6 @@ import operator
 from xml.etree import ElementTree as etree
 from datetime import timedelta, datetime
 from credo.jobrunner.api import *
-from credo.modelrun import JobParams
 from credo.modelresult import ModelResult
 from credo.modelresult import getSimInfoFromFreqOutput
 from credo.jobrunner.unixTimeCmdProfiler import UnixTimeCmdProfiler
