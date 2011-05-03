@@ -28,6 +28,7 @@
 #!/usr/bin/env python
 
 import os
+import operator as op
 import credo
 try:
     # For why we use Agg backend, see
@@ -64,6 +65,68 @@ def plotOverAllRuns(mResults, outputName, depName='Timestep', show=False,
         for fmt in ['svg', 'png']:
             filename = os.path.join(path,
                 outputName+"-multiRunTimeSeries.%s" % fmt)
+            plt.savefig(filename, format=fmt, dpi=120)
+    if show: plt.show()
+    return plt
+
+def parseUnixTimeElapsed(timeElapsedStr):
+    secStrs = timeElapsedStr.split(":")
+    if len(secStrs) == 2:
+        hours = 0
+        mins = int(secStrs[0])
+        secs = float(secStrs[1])
+    elif len(secStrs) == 3:
+        hours = int(secStrs[0])
+        mins = int(secStrs[1])
+        secs = float(secStrs[2])
+    else:
+        raise ValueError("Error, time elapsed string given, '%s',"\
+            "doesn't conform to Unix time command's elapsed string format."\
+            % timeElapsedStr)
+    return hours * (60*60) + mins * 60 + secs        
+        
+
+def getSpeedups(mRuns, mResults, profilerName=None):
+    if profilerName == None:
+        #TODO: get a default
+        profilerName = "UnixTimeCmd"
+    resList = []
+    for mRun, mRes in zip(mRuns, mResults):
+        nProc = mRun.jobParams["nproc"]
+        wallTimeStr = mRes.jobMetaInfo.performance[profilerName]['walltime']
+        wallTime = parseUnixTimeElapsed(wallTimeStr)
+        resList.append((nProc, wallTime))
+    lowestProcEntry = min(resList)
+    lowestProc = lowestProcEntry[0]
+    lowestTime = lowestProcEntry[1]
+    #NB: if lowestProc == 1 (often will be), then serialTime == lowestTime
+    serialTime = lowestTime * lowestProc
+    speedups = [serialTime / res[1] for res in resList]
+    return speedups
+
+def plotSpeedups(mRuns, mResults, profiler=None, show=False,
+        save=True, path=".", showIdeal=True):
+    """Plot the speedup of a set of mResults, by processor."""
+    nprocs = [mRun.jobParams["nproc"] for mRun in mRuns]
+    speedups = getSpeedups(mRuns, mResults, profiler)
+    plot = plt.clf()   # Start by clearing any pre-existing figure
+    plt.xlabel("# procs")
+    plt.ylabel("speedup")
+    #plt.legend(loc='best', prop={'size':'small'})
+    plt.plot(nprocs, speedups, "o:", label="actual")
+    if showIdeal == True:
+        idealProcs = [1, nprocs[-1]]
+        idealSpeedup = [1, nprocs[-1]]
+        plt.plot(idealProcs, idealSpeedup, "g-", label="ideal")
+    plt.ylim(ymin=0)
+    plt.title("Parallel Speedup for given runs.")
+    plt.legend(loc='best', prop={'size':'small'})
+    if save:
+        if not os.path.exists(path):
+            os.makedirs(path)
+        for fmt in ['svg', 'png']:
+            filename = os.path.join(path,
+                "speedups.%s" % fmt)
             plt.savefig(filename, format=fmt, dpi=120)
     if show: plt.show()
     return plt
