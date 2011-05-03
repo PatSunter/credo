@@ -29,10 +29,10 @@ import shutil
 import tempfile
 import unittest
 
-from lxml import etree
+from xml.etree import ElementTree as etree
 
 from credo import modelresult as mres
-from credo.modelresult import ModelResult, JobMetaInfo
+from credo.modelresult import ModelResult
 
 class ModelResultTestCase(unittest.TestCase):
 
@@ -49,20 +49,6 @@ class ModelResultTestCase(unittest.TestCase):
     def tearDown(self):
         # TODO: tear down lxml document?
         shutil.rmtree(self.basedir)
-
-    def test_WriteJobMetaInfo(self):
-        simT = 10.7
-        jmInfo = JobMetaInfo( simtime=simT )
-        jmInfo.writeInfoXML(self.xmlRoot)
-        childEls = self.xmlRoot.getchildren()
-        self.assertEqual(len(childEls),1)
-        jmEl = childEls[0]
-        self.assertEqual(jmEl.tag, JobMetaInfo.XML_INFO_TAG)
-        self.assertEqual(jmEl.text, None)
-        jmChildren = jmEl.getchildren()
-        self.assertEqual(len(jmChildren),1)
-        self.assertEqual(jmChildren[0].tag,'simtime')
-        self.assertEqual(jmChildren[0].text,str(simT))
 
     def test_writeModelResultsXML(self):
         results = mres.ModelResult('TestModel', "./output")

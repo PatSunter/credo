@@ -28,7 +28,7 @@ import time
 import shlex
 from datetime import timedelta, datetime
 from credo.jobrunner.api import *
-from credo.modelresult import ModelResult, JobMetaInfo
+from credo.modelresult import ModelResult
 from credo.modelresult import getSimInfoFromFreqOutput
 
 MPI_RUN_COMMAND = "MPI_RUN_COMMAND"
@@ -41,10 +41,14 @@ PBS_PREFIX = "#PBS"
 
 class PBSJobMetaInfo(JobMetaInfo):
     def __init__(self):
-        JobMetaInfo.__init__(self, 0)
+        JobMetaInfo.__init__(self)
         self.runType = "PBS"
         self.jobId = None
-
+    
+    def writeInfoXML(self, xmlNode):
+        JobMetaInfo.writeInfoXML(self, xmlNode)
+        jmNode = xmlNode.find(self.XML_INFO_TAG)
+        etree.SubElement(jmNode, 'jobId').text = str(self.jobId) 
 
 class PBSJobRunner(JobRunner):
     """A JobRunner to submit CREDO jobs via creating PBS script files,

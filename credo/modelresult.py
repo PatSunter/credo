@@ -53,8 +53,8 @@ class ModelResult:
 
      .. attribute:: jobMetaInfo
 
-        A :class:`.JobMetaInfo`, recording information about the run such as
-        time taken, Memory usage etc (generally attached by a 
+        A :class:`jobrunner.api.JobMetaInfo`, recording information about the
+        run such as time taken, Memory usage etc (generally attached by a 
         :class:`credo.jobrunner.api.JobRunner` soon after the
         ModelResult created).
 
@@ -133,57 +133,6 @@ class ModelResult:
         writeXMLDoc(xmlDoc, outFile, prettyPrint)
         outFile.close()
         return fullPath
-
-
-# TODO: can the below just be collapsed into a dictionary? Then have
-# standard write facilities.
-# Or maybe sub-class from dict, and just add some parameter checking.
-class JobMetaInfo:
-    '''A simple class for recording meta info about a job, such as walltime,
-    memory usage, etc.
-
-    .. attribute:: simtime
-
-       Simulated time the model ran for.
-    '''
-
-    XML_INFO_TAG = "jobMetaInfo"
-
-    def __init__(self, simtime):
-        self.runType = None
-        self.submitTime = None
-        self.platform = {}
-        self.performance = {}
-        if simtime is None:
-            self.simtime = "unknown"
-        else:     
-            self.simtime = float(simtime)
-
-    def writeInfoXML(self, xmlNode):
-        '''Writes information about this class into an existing, open
-         XML doc node'''
-        jmNode = etree.SubElement(xmlNode, self.XML_INFO_TAG)
-        etree.SubElement(jmNode, 'runType').text = str(self.runType)
-        etree.SubElement(jmNode, 'simtime').text = str(self.simtime)
-        etree.SubElement(jmNode, 'submitTime').text = str(self.submitTime)
-        piNode = etree.SubElement(jmNode, 'platformInfo')
-        #Just write out each entry in the platform dictionary.
-        for kw, val in self.platform.iteritems():
-            etree.SubElement(piNode, kw).text = str(val)
-        perfNode = etree.SubElement(jmNode, 'performanceInfo')
-        #Just write out each entry in the performance dictionaries
-        for profType, subDict in self.performance.iteritems():
-            perfProfNode = etree.SubElement(perfNode, "profilerInfo")
-            perfProfNode.attrib["profType"] = profType
-            for kw, val in subDict.iteritems():
-                #TODO: good to save units here as an attrib?
-                etree.SubElement(perfProfNode, kw).text = str(val)
-    
-    def verbPlatformString(self):
-        '''Returns a useful string about the platform, for printing.'''
-        return "Node '%s', of type %s, running %s (%s)" \
-            % tuple([self.platform[kw] for kw in 'node', 'machine', 'system',
-                'release'])
 
 #####
 

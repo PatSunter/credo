@@ -32,7 +32,7 @@ from xml.etree import ElementTree as etree
 from datetime import timedelta, datetime
 from credo.jobrunner.api import *
 from credo.modelrun import JobParams
-from credo.modelresult import ModelResult, JobMetaInfo
+from credo.modelresult import ModelResult
 from credo.modelresult import getSimInfoFromFreqOutput
 from credo.jobrunner.unixTimeCmdProfiler import UnixTimeCmdProfiler
 
@@ -49,7 +49,7 @@ class MPIJobMetaInfo(JobMetaInfo):
     
     def writeInfoXML(self, xmlNode):
         JobMetaInfo.writeInfoXML(self, xmlNode)
-        jmNode = etree.SubElement(xmlNode, self.XML_INFO_TAG)
+        jmNode = xmlNode.find(self.XML_INFO_TAG)
         etree.SubElement(jmNode, 'runCommand').text = str(self.runCommand)
 
 

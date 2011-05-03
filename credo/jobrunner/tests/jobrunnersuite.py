@@ -27,9 +27,10 @@ import tempfile
 import unittest
 import datetime
 import platform
+from xml.etree import ElementTree as etree
 
-from credo.jobrunner.api import JobRunner
-from credo.modelresult import ModelResult, JobMetaInfo
+from credo.jobrunner.api import JobRunner, JobMetaInfo
+from credo.modelresult import ModelResult
 from skeleton import SkeletonModelRun, SkeletonModelResult, SkeletonModelSuite
 
 class TestJobRunner(JobRunner):
@@ -146,6 +147,32 @@ class JobRunnerTestCase(unittest.TestCase):
         self.assertEqual(jobMI.platform['release'], platform.release())
         self.assertEqual(jobMI.platform['machine'], platform.machine())
         self.assertEqual(jobMI.platform['node'], platform.node())
+
+    def test_WriteJobMetaInfo(self):
+        xmlRoot = etree.Element("root")
+        simT = 10.7
+        jmInfo = JobMetaInfo(simtime=simT)
+        jmInfo.writeInfoXML(xmlRoot)
+        childEls = xmlRoot.getchildren()
+        self.assertEqual(len(childEls),1)
+        jmEl = childEls[0]
+        self.assertEqual(jmEl.tag, JobMetaInfo.XML_INFO_TAG)
+        self.assertEqual(jmEl.text, None)
+        jmChildren = jmEl.getchildren()
+        self.assertEqual(len(jmChildren),5)
+        elI = 0
+        self.assertEqual(jmChildren[elI].tag,'runType')
+        self.assertEqual(jmChildren[elI].text,str(None))
+        elI += 1
+        self.assertEqual(jmChildren[elI].tag,'simtime')
+        self.assertEqual(jmChildren[elI].text,str(simT))
+        elI += 1
+        self.assertEqual(jmChildren[elI].tag,'submitTime')
+        self.assertEqual(jmChildren[elI].text,str(None))
+        elI += 1
+        self.assertEqual(jmChildren[elI].tag,'platformInfo')
+        elI += 1
+        self.assertEqual(jmChildren[elI].tag,'performanceInfo')
 
 def suite():
     suite = unittest.TestSuite()

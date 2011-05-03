@@ -24,6 +24,7 @@
 import platform
 import operator
 from datetime import timedelta, datetime
+from xml.etree import ElementTree as etree
 import credo.modelrun
 import credo.modelresult
 from credo.io import stgcmdline
@@ -51,6 +52,55 @@ class PerformanceProfiler:
         #Save this resDict on the jobMetaInfo (in a subdirectory)
         raise NotImplementedError("Error, virtual func on base class")
 
+# TODO: can the below just be collapsed into a dictionary? Then have
+# standard write facilities.
+# Or maybe sub-class from dict, and just add some parameter checking.
+class JobMetaInfo:
+    '''A simple class for recording meta info about a job, such as walltime,
+    memory usage, etc.
+
+    .. attribute:: simtime
+
+       Simulated time the model ran for.
+    '''
+
+    XML_INFO_TAG = "jobMetaInfo"
+
+    def __init__(self, simtime):
+        self.runType = None
+        self.submitTime = None
+        self.platform = {}
+        self.performance = {}
+        if simtime is None:
+            self.simtime = "unknown"
+        else:     
+            self.simtime = float(simtime)
+
+    def writeInfoXML(self, xmlNode):
+        '''Writes information about this class into an existing, open
+         XML doc node'''
+        jmNode = etree.SubElement(xmlNode, self.XML_INFO_TAG)
+        etree.SubElement(jmNode, 'runType').text = str(self.runType)
+        etree.SubElement(jmNode, 'simtime').text = str(self.simtime)
+        etree.SubElement(jmNode, 'submitTime').text = str(self.submitTime)
+        piNode = etree.SubElement(jmNode, 'platformInfo')
+        #Just write out each entry in the platform dictionary.
+        for kw, val in self.platform.iteritems():
+            etree.SubElement(piNode, kw).text = str(val)
+        perfNode = etree.SubElement(jmNode, 'performanceInfo')
+        #Just write out each entry in the performance dictionaries
+        for profType, subDict in self.performance.iteritems():
+            perfProfNode = etree.SubElement(perfNode, "profilerInfo")
+            perfProfNode.attrib["profType"] = profType
+            for kw, val in subDict.iteritems():
+                #TODO: good to save units here as an attrib?
+                etree.SubElement(perfProfNode, kw).text = str(val)
+    
+    def verbPlatformString(self):
+        '''Returns a useful string about the platform, for printing.'''
+        return "Node '%s', of type %s, running %s (%s)" \
+            % tuple([self.platform[kw] for kw in 'node', 'machine', 'system',
+                'release'])
 
 class JobRunner:
     """Class used for running ModelRun instances. This is an abstract base
@@ -227,7 +277,7 @@ class JobRunner:
             
     def attachPerformanceInfo(self, jobMI):    
         """Attach relevant performance information to the jobMI
-        (:class:`credo.modelresult.JobMetaInfo`), such as time use,
+        (:class:`~JobMetaInfo`), such as time use,
         memory use, etc"""
         raise NotImplementedError("Error, virtual func on base class")
 

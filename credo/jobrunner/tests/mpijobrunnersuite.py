@@ -27,9 +27,9 @@ import tempfile
 import unittest
 
 from credo.modelrun import ModelRun
-from credo.modelresult import ModelResult, JobMetaInfo
+from credo.modelresult import ModelResult
 from credo.modelsuite import ModelSuite
-from credo.jobrunner.mpijobrunner import MPIJobRunner
+from credo.jobrunner.mpijobrunner import MPIJobRunner, MPIJobMetaInfo
 
 class MPIJobRunnerTestCase(unittest.TestCase):
     def setUp(self):
@@ -50,7 +50,7 @@ class MPIJobRunnerTestCase(unittest.TestCase):
         result = self.jobRunner.blockResult(self, modelRun, jobMetaInfo)
     
     def test_attachPlatformInfo(self):
-        jobMI = JobMetaInfo(None)
+        jobMI = MPIJobMetaInfo()
         self.jobRunner.attachPlatformInfo(jobMI)
         #TODO: check MPI-specific info
         pass

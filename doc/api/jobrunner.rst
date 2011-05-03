@@ -33,3 +33,13 @@ JobRunner API
    :members:
    :undoc-members:
    :show-inheritance:
+
+:mod:`credo.jobrunner.unixTimeCmdProfiler`
+==========================================
+
+.. inheritance-diagram:: credo.jobrunner.unixTimeCmdProfiler
+
+.. automodule:: credo.jobrunner.unixTimeCmdProfiler
+   :members:
+   :undoc-members:
+   :show-inheritance:
