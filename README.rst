@@ -1,21 +1,18 @@
-CREDO Readme 
+CREDO README 
 ============ 
 
-CREDO is a toolkit for running, analysing and benchmarking computational models:
+CREDO is a toolkit for running, analysing and benchmarking computational models.
+
 currently those based on the StGermain framework such as Underworld.
 
-The current CREDO website with links to documentation, release info etc is:
-https://www.mcc.monash.edu.au/trac/AuScopeEngineering/wiki/CREDO
-
-(For more info on StGermain and Underworld, see http://www.stgermainproject.org,
-and http://www.underworldproject.org).
+CREDO was originally developed to support better benchmarking and profiling
+of the Underworld Geophysics modelling application, based on the StGermain
+framework. For more on Underworld and StGermain, see 
+http://www.underworldcode.org, and http://www.stgermainproject.org
+respectively.
 
 For more details about the design of CREDO and how to run it, see the
-documentation in the "doc" sub-directory.
-
-The CREDO docs are re-generated daily from the repository and placed online at
-https://www.mcc.monash.edu.au/credo-doc/ - for a downloadable PDF version, go to
-https://www.mcc.monash.edu.au/credo-doc/CREDO.pdf.
+documentation in the doc sub-directory.
 
 License and authors
 -------------------
@@ -23,13 +20,13 @@ License and authors
 CREDO is licensed under the LGPLv2.1, see COPYING.txt.
 
 The main contributors to CREDO's coding, design and development thus far are:
- * Patrick Sunter (patdevelop@gmail.com)
- * Wendy Sharples (wendy.sharples@monash.edu)
- * Jerico Revote (jerico.revote@monash.edu)
- * Julian Giordani (julian.giordani@monash.edu)
- * Owen Kaluza (owen.kaluza@monash.edu)
- * Louis Moresi (louis.moresi@monash.edu)
- * Steve Quenette (steve.quenette@monash.edu)
+ * Patrick Sunter (patdevelop AT gmail.com)
+ * Wendy Sharples
+ * Jerico Revote
+ * Julian Giordani
+ * Owen Kaluza 
+ * Louis Moresi
+ * Steve Quenette
 
 Acknowledgements
 ----------------
@@ -52,11 +49,6 @@ Basic Installation instructions
 
 (For more detailed installation instructions, see the "Installation & setup
 quickstart instructions" section of the CREDO documentation.)
-
-Currently, CREDO is designed to be distributed with a StGermain-based
-application collection such as stgUnderworld. If you just want to run
-system tests via SCons of these applications, you shouldn't need to
-perform any additional setup.
 
 To run CREDO scripts directly from the command line, you need to set up several
 environment variables. These are:
