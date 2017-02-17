@@ -1,15 +1,12 @@
-CREDO README 
-============ 
+CREDO
+=====
 
 CREDO is a toolkit for running, analysing and benchmarking computational models.
 
-currently those based on the StGermain framework such as Underworld.
-
 CREDO was originally developed to support better benchmarking and profiling
 of the Underworld Geophysics modelling application, based on the StGermain
-framework. For more on Underworld and StGermain, see 
-http://www.underworldcode.org, and http://www.stgermainproject.org
-respectively.
+framework. For more on Underworld (and StGermain), see
+http://www.underworldcode.org.
 
 For more details about the design of CREDO and how to run it, see the
 documentation in the doc sub-directory.
@@ -20,6 +17,7 @@ License and authors
 CREDO is licensed under the LGPLv2.1, see COPYING.txt.
 
 The main contributors to CREDO's coding, design and development thus far are:
+
  * Patrick Sunter (patdevelop AT gmail.com)
  * Wendy Sharples
  * Jerico Revote
